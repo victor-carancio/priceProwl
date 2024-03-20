@@ -18,3 +18,13 @@ export interface steamPrice{
         final_formatted:string
     }
 }
+
+export interface epicGames{
+    gameName:string | null,
+    typeS:string | null,
+    url:string | null,
+    discount_percent:string | null,
+    inital_price:string | null,
+    final_price:string | null
+    
+}
