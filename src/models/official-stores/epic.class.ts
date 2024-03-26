@@ -21,6 +21,7 @@ export class EpicStore extends Store {
     const page = await context.newPage();
     await page.goto(this.modifyUrl(query));
     // await page.waitForSelector("div.css-uwwqev") imagen
+    await page.waitForTimeout(2000);
     await page.waitForSelector("section.css-1ufzxyu");
 
     const content = await page.evaluate(() => {
@@ -64,6 +65,8 @@ export class EpicStore extends Store {
       console.log(results);
       return results;
     });
+
+    return content;
 
     const games = content.filter((game: any) =>
       game.gameName.toLowerCase().includes(query.trim().toLowerCase())

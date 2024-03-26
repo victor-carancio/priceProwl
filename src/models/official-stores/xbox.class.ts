@@ -62,6 +62,8 @@ export class XboxStore extends Store {
       return results;
     });
 
+    return content;
+
     const games = content.filter((game: any) =>
       game.gameName.toLowerCase().includes(query.trim().toLowerCase())
     );
