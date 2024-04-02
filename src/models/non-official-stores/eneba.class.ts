@@ -1,12 +1,13 @@
-import { BrowserContext } from "playwright";
+import { Page } from "playwright";
 import { parseUrl } from "../../utils/game";
 import { Store } from "../store.class";
+import { GamePriceInfo, StoreInfo } from "../../types";
 
 export class EnebaStore extends Store {
   constructor() {
     super(
       "Eneba",
-      "https://www.eneba.com/latam/store/all?os[]=WINDOWS&page=1&regions[]=global&regions[]=latam&text="
+      "https://www.eneba.com/latam/store/all?drms[]=steam&page=1&regions[]=global&regions[]=latam&text="
     );
   }
 
@@ -16,20 +17,12 @@ export class EnebaStore extends Store {
     return this.getUrl();
   }
 
-  async scrapeGames(context: BrowserContext, query: string): Promise<any> {
-    const page = await context.newPage();
+  async scrapeGames(page: Page, query: string): Promise<StoreInfo | []> {
     await page.goto(this.modifyUrl(query));
     // await page.waitForLoadState("networkidle");
 
     await page.waitForSelector("div.Gn2rwQ section");
 
-    page.keyboard.press("End");
-    await page.waitForTimeout(2000);
-
-    // const element = page.locator("ul.rc-pagination");
-    // await element.scrollIntoViewIfNeeded();
-    // await page.waitForTimeout(2000);
-    // await page.screenshot({ path: "jio.png" });
     const notFound = await page.evaluate(() =>
       document.querySelector("div.ZM481c")
     );
@@ -38,65 +31,81 @@ export class EnebaStore extends Store {
       return [];
     }
 
-    const conteent = await page.$$eval("div.pFaGHa", (elements) => {
-      return elements.map((el) => {
-        const gameName: HTMLSpanElement | null = el.querySelector(
-          "div.tUUnLz span.YLosEL"
-        );
+    // await page.locator("li.rc-pagination-item.rc-pagination-item-3").click();
+    // await page.waitForLoadState("networkidle");
+    // page.keyboard.press("End");
+    // await page.waitForTimeout(2000);
+    // const paginationCount = await page
+    //   .locator("li[aria-disabled=true].rc-pagination-next")
+    //   .count();
+    // console.log(paginationCount);
 
-        const url: HTMLAnchorElement | null = el.querySelector(
-          "div.b3POZC a.oSVLlh"
-        );
+    // if (paginationCount <= 0) {
+    //   console.log("avanza a la siguiente");
+    // } else {
+    //   console.log("se detiene");
+    // }
 
-        const gameFinalPrice: HTMLDivElement | null = el.querySelector(
-          "div.b3POZC span.L5ErLT"
-        );
-        return {
-          gameName: gameName?.innerText,
-          url: url?.href,
-          final_price: gameFinalPrice?.innerText,
-        };
-      });
-    });
-    console.log("----------------usando $$eval--------------");
-    console.log(conteent);
+    const newGameList = [];
 
-    const content = await page.evaluate(() => {
-      let results: any = [];
-      // const notFound = document.querySelector("div.ZM481c");
-      // if (notFound) {
-      //   return "Not found in store";
-      // }
+    for (let i = 0; i < 5; i++) {
+      console.log("numero de loop: " + i);
+      page.keyboard.press("End");
+      await page.waitForTimeout(2500);
+      await page.waitForLoadState("networkidle");
 
-      const urls: NodeListOf<HTMLAnchorElement> =
-        document.querySelectorAll("div.pFaGHa");
+      const content: GamePriceInfo[] = await page.$$eval(
+        "div.pFaGHa",
+        (elements) => {
+          return elements.map((el) => {
+            const gameName: HTMLSpanElement | null = el.querySelector(
+              "div.tUUnLz span.YLosEL"
+            );
 
-      for (let item of urls) {
-        const gameName: HTMLSpanElement | null = item.querySelector(
-          "div.tUUnLz span.YLosEL"
-        );
+            const url: HTMLAnchorElement | null = el.querySelector(
+              "div.b3POZC a.oSVLlh"
+            );
 
-        const url: HTMLAnchorElement | null = item.querySelector(
-          "div.b3POZC a.oSVLlh"
-        );
+            const gameFinalPrice: HTMLDivElement | null = el.querySelector(
+              "div.b3POZC span.L5ErLT"
+            );
+            return {
+              gameName: gameName?.innerText,
+              url: url?.href,
+              final_price: gameFinalPrice?.innerText,
+            };
+          });
+        }
+      );
 
-        const gameFinalPrice: HTMLDivElement | null = item.querySelector(
-          "div.b3POZC span.L5ErLT"
-        );
-
-        const game: any = {
-          gameName: gameName?.innerText,
-          url: url?.href,
-          final_price: gameFinalPrice?.innerText,
-        };
-
-        results.push(game);
+      for (const game of content) {
+        newGameList.push(game);
       }
 
-      return results;
-    });
+      const nextPageCount = await page.locator("li.rc-pagination-next").count();
+      if (nextPageCount <= 0) {
+        break;
+      }
 
-    return content;
+      const paginationCount = await page
+        .locator("li[aria-disabled=true].rc-pagination-next")
+        .count();
+
+      if (paginationCount > 0) {
+        console.log("se scrapeo toda la informacion");
+        break;
+      }
+      await page.locator("li.rc-pagination-next").click();
+      await page.waitForSelector("div.pFaGHa");
+      await page.waitForTimeout(1000);
+    }
+    console.log("numero de juegos encontrados: " + newGameList.length);
+    return { [this.name]: newGameList };
+
+    // const element = page.locator("ul.rc-pagination");
+    // await element.scrollIntoViewIfNeeded();
+    // await page.waitForTimeout(2000);
+    // await page.screenshot({ path: "jio.png" });
 
     // const games = content.filter((game: any) =>
     //   game.gameName.toLowerCase().includes(query.trim().toLowerCase())

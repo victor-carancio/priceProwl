@@ -1,8 +1,7 @@
-import {Router} from "express"
-import { getAllGamesMatchesWithName, getOneGame } from "../controllers/game.controller"
-const router = Router()
+import { Router } from "express";
+import { getGamesPrices } from "../controllers/game.controller";
 
-router.get("/game", getOneGame)
-router.get("/games", getAllGamesMatchesWithName)
+const router = Router();
+router.get("/game", getGamesPrices);
 
 export default router;

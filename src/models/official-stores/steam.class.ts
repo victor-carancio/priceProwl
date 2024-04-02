@@ -1,6 +1,7 @@
-import { BrowserContext } from "playwright";
-import { parseUrl } from "../../utils/game";
+import { Page } from "playwright";
+import { parseUrl, replaceSteam } from "../../utils/game";
 import { Store } from "../store.class";
+import { GamePriceInfo, StoreInfo } from "../../types";
 
 export class SteamStore extends Store {
   constructor() {
@@ -13,55 +14,57 @@ export class SteamStore extends Store {
     return this.getUrl();
   }
 
-  async scrapeGames(context: BrowserContext, query: string): Promise<any> {
-    const page = await context.newPage();
+  async scrapeGames(page: Page, query: string): Promise<StoreInfo | []> {
     await page.goto(this.modifyUrl(query));
     await page.waitForSelector("div.search_results");
 
-    const content = await page.evaluate(() => {
-      let results: any = [];
-      const notFound = document.querySelector("div#search_resultsRows");
-      if (!notFound) {
-        return "Not found in store";
+    const notFound = await page.evaluate(() =>
+      document.querySelector("div#search_resultsRows")
+    );
+    if (!notFound) {
+      return [];
+    }
+
+    const content: GamePriceInfo[] = await page.$$eval(
+      "div#search_resultsRows a.search_result_row",
+      (elements: HTMLAnchorElement[]) => {
+        return elements.map((element) => {
+          const gameName: HTMLSpanElement | null = element.querySelector(
+            "div.search_name span.title"
+          );
+          const gameDiscount: HTMLDivElement | null =
+            element.querySelector("div.discount_pct");
+          const gameFinalPrice: HTMLDivElement | null = element.querySelector(
+            "div.discount_final_price"
+          );
+          const originalPriceSelector = gameDiscount
+            ? "discount_original_price"
+            : "discount_final_price";
+          const gameOriginalPrice: HTMLDivElement | null =
+            element.querySelector(`div.${originalPriceSelector}`);
+          return {
+            gameName: gameName?.innerText,
+            url: element.href,
+            discount_percent: gameDiscount ? gameDiscount.innerText : "-",
+            initial_price: gameOriginalPrice?.innerText,
+            final_price: gameFinalPrice?.innerText,
+          };
+        });
       }
-      const urls: NodeListOf<HTMLAnchorElement> = document.querySelectorAll(
-        "div#search_resultsRows a.search_result_row"
+    );
+
+    // return content;
+
+    const games: GamePriceInfo[] = content
+      .map((el) => {
+        return { ...el, gameName: replaceSteam(el.gameName) };
+      })
+      .filter((game: GamePriceInfo) =>
+        game.gameName?.toLowerCase().includes(query.trim().toLowerCase())
       );
 
-      for (let item of urls) {
-        const gameName: HTMLSpanElement | null = item.querySelector(
-          "div.search_name span.title"
-        );
-        const gameDiscount: HTMLDivElement | null =
-          item.querySelector("div.discount_pct");
-        const gameFinalPrice: HTMLDivElement | null = item.querySelector(
-          "div.discount_final_price"
-        );
-        const originalPriceSelector = gameDiscount
-          ? "discount_original_price"
-          : "discount_final_price";
-        const gameOriginalPrice: HTMLDivElement | null = item.querySelector(
-          `div.${originalPriceSelector}`
-        );
-
-        const game: any = {
-          gameName: gameName?.innerText,
-          url: item.href,
-          discount_percent: gameDiscount ? gameDiscount.innerText : "-",
-          inital_price: gameOriginalPrice?.innerText,
-          final_price: gameFinalPrice?.innerText,
-        };
-
-        results.push(game);
-      }
-
-      return results;
-    });
-    return content;
-
-    const games = content.filter((game: any) =>
-      game.gameName.toLowerCase().includes(query.trim().toLowerCase())
-    );
-    return { [this.name]: games };
+    return {
+      [this.name]: games,
+    };
   }
 }

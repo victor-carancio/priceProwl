@@ -1,6 +1,7 @@
-import { BrowserContext } from "playwright";
+import { Page } from "playwright";
 import { parseUrl } from "../../utils/game";
 import { Store } from "../store.class";
+import { GamePriceInfo, StoreInfo } from "../../types";
 
 export class GreenManGaming extends Store {
   constructor() {
@@ -16,70 +17,63 @@ export class GreenManGaming extends Store {
     return this.getUrl();
   }
 
-  async scrapeGames(context: BrowserContext, query: string): Promise<any> {
-    const page = await context.newPage();
+  async scrapeGames(page: Page, query: string): Promise<StoreInfo | []> {
     await page.goto(this.modifyUrl(query));
     await page.waitForSelector(
       "section.search-list-section div.algolia-search-list div.tab-content"
     );
-    // await page.waitForTimeout(5000);
-    // await page.screenshot({ path: "jio.png" });
 
-    const content = await page.evaluate(() => {
-      let results: any = [];
-      const notFound: HTMLSpanElement | null = document.querySelector(
+    const notFound = await page.evaluate(() => {
+      const gamesFound: HTMLSpanElement | null = document.querySelector(
         "ul#algolia-tab div#non-dlc-stats span.ais-Stats-text"
       );
-      if (notFound && notFound.innerText === "0") {
-        return "Not found in store";
-      }
-      //only games
-      const urls: NodeListOf<HTMLLIElement> = document.querySelectorAll(
-        "div[bind-compile-html=hits] div.ais-Hits li.ais-Hits-item"
-      );
-      //games & dlcs
-      //   const urls: NodeListOf<HTMLAnchorElement> = document.querySelectorAll("div.ais-Hits li.ais-Hits-item")
-
-      for (let item of urls) {
-        const gameName: HTMLParagraphElement | null = item.querySelector(
-          "div.top-section p.prod-name"
-        );
-
-        const url: HTMLAnchorElement | null = item.querySelector(
-          "div.module-content div.module a"
-        );
-        const gameDiscount: HTMLParagraphElement | null = item.querySelector(
-          "div.prices-section div.discount p"
-        );
-        const gameFinalPrice: HTMLSpanElement | null = item.querySelector(
-          "div.prices-section div.prices span.current-price"
-        );
-        const originalPriceSelector = gameDiscount
-          ? "prev-price"
-          : "current-price";
-        const gameOriginalPrice: HTMLSpanElement | null = item.querySelector(
-          `div.prices span.${originalPriceSelector}`
-        );
-
-        const game: any = {
-          gameName: gameName?.innerText,
-          url: url?.href,
-          discount_percent: gameDiscount ? gameDiscount.innerText : "-",
-          inital_price: gameOriginalPrice?.innerText,
-          final_price: gameFinalPrice?.innerText,
-        };
-
-        results.push(game);
-      }
-
-      return results;
+      return gamesFound?.innerText;
     });
 
-    return content;
+    if (notFound === "0") {
+      return [];
+    }
+
+    const content: GamePriceInfo[] = await page.$$eval(
+      "div[bind-compile-html=hits] div.ais-Hits li.ais-Hits-item",
+      (elements) => {
+        return elements.map((el) => {
+          const gameName: HTMLParagraphElement | null = el.querySelector(
+            "div.top-section p.prod-name"
+          );
+
+          const url: HTMLAnchorElement | null = el.querySelector(
+            "div.module-content div.module a"
+          );
+          const gameDiscount: HTMLParagraphElement | null = el.querySelector(
+            "div.prices-section div.discount p"
+          );
+          const gameFinalPrice: HTMLSpanElement | null = el.querySelector(
+            "div.prices-section div.prices span.current-price"
+          );
+          const originalPriceSelector = gameDiscount
+            ? "prev-price"
+            : "current-price";
+          const gameOriginalPrice: HTMLSpanElement | null = el.querySelector(
+            `div.prices span.${originalPriceSelector}`
+          );
+
+          return {
+            gameName: gameName?.innerText,
+            url: url?.href,
+            discount_percent: gameDiscount ? gameDiscount.innerText : "-",
+            initial_price: gameOriginalPrice?.innerText,
+            final_price: gameFinalPrice?.innerText,
+          };
+        });
+      }
+    );
+
+    // return content;
 
     //todo : algunos juegos contienen caracteres ej: s.t.a.l.k.e.r , en la query stalker, al momento de comparar, no devolvera bien los juegos
-    const games = content.filter((game: any) =>
-      game.gameName.toLowerCase().includes(query.trim().toLowerCase())
+    const games: GamePriceInfo[] = content.filter((game: GamePriceInfo) =>
+      game.gameName?.toLowerCase().includes(query.trim().toLowerCase())
     );
     return { [this.name]: games };
   }

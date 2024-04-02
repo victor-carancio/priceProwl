@@ -1,4 +1,5 @@
-import { BrowserContext } from "playwright";
+import { Page } from "playwright";
+import { StoreInfo } from "../types";
 
 export abstract class Store {
   readonly name: string;
@@ -18,5 +19,5 @@ export abstract class Store {
   }
 
   abstract modifyUrl(url: string): string;
-  abstract scrapeGames(context: BrowserContext, query: string): Promise<any>;
+  abstract scrapeGames(page: Page, query: string): Promise<StoreInfo | []>;
 }
