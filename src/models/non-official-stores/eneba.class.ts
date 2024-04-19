@@ -1,5 +1,5 @@
 import { Page } from "playwright";
-import { parseUrl } from "../../utils/game";
+import { parseUrl } from "../../utils/game.utils";
 import { Store } from "../store.class";
 import { GamePriceInfo, StoreInfo } from "../../types";
 
@@ -17,7 +17,7 @@ export class EnebaStore extends Store {
     return this.getUrl();
   }
 
-  async scrapeGames(page: Page, query: string): Promise<StoreInfo | []> {
+  async scrapeGames(page: Page, query: string): Promise<StoreInfo> {
     await page.goto(this.modifyUrl(query));
     // await page.waitForLoadState("networkidle");
 
@@ -28,7 +28,7 @@ export class EnebaStore extends Store {
     );
 
     if (notFound) {
-      return [];
+      return { [this.name]: [] };
     }
 
     // await page.locator("li.rc-pagination-item.rc-pagination-item-3").click();
@@ -58,13 +58,13 @@ export class EnebaStore extends Store {
         "div.pFaGHa",
         (elements) => {
           return elements.map((el) => {
-            const gameName: HTMLSpanElement | null = el.querySelector(
+            const gameName: HTMLSpanElement = el.querySelector(
               "div.tUUnLz span.YLosEL"
-            );
+            )!;
 
-            const url: HTMLAnchorElement | null = el.querySelector(
+            const url: HTMLAnchorElement = el.querySelector(
               "div.b3POZC a.oSVLlh"
-            );
+            )!;
 
             const gameFinalPrice: HTMLDivElement | null = el.querySelector(
               "div.b3POZC span.L5ErLT"

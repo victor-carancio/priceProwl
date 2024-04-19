@@ -19,5 +19,5 @@ export abstract class Store {
   }
 
   abstract modifyUrl(url: string): string;
-  abstract scrapeGames(page: Page, query: string): Promise<StoreInfo | []>;
+  abstract scrapeGames(page: Page, query: string): Promise<StoreInfo>;
 }

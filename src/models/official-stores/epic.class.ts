@@ -1,5 +1,5 @@
 import { Page } from "playwright";
-import { parseUrl } from "../../utils/game";
+import { parseUrl } from "../../utils/game.utils";
 import { Store } from "../store.class";
 import { GamePriceInfo, StoreInfo } from "../../types";
 
@@ -18,7 +18,7 @@ export class EpicStore extends Store {
     return this.getUrl();
   }
 
-  async scrapeGames(page: Page, query: string): Promise<StoreInfo | []> {
+  async scrapeGames(page: Page, query: string): Promise<StoreInfo> {
     await page.goto(this.modifyUrl(query));
 
     // await page.waitForTimeout(1000);
@@ -38,8 +38,7 @@ export class EpicStore extends Store {
         return elements.map((element) => {
           const gameName: HTMLDivElement | null =
             element.querySelector("div.css-lgj0h8 div");
-          const url: HTMLAnchorElement | null =
-            element.querySelector("a.css-g3jcms");
+          const url: HTMLAnchorElement = element.querySelector("a.css-g3jcms")!;
           const gameType: HTMLSpanElement | null = element.querySelector(
             "span.css-1825rs2 span"
           );
@@ -52,9 +51,9 @@ export class EpicStore extends Store {
             element.querySelector("span.css-d3i3lr div.css-4jky3p");
 
           return {
-            gameName: gameName?.innerText,
+            gameName: gameName!.innerText,
             typeS: gameType?.innerText,
-            url: url?.href,
+            url: url.href,
             discount_percent: gameDiscount ? gameDiscount.innerText : "-",
             initial_price: gameDiscount
               ? gameOriginalPrice?.innerText
@@ -68,7 +67,7 @@ export class EpicStore extends Store {
     // return content;
 
     const games: GamePriceInfo[] = content.filter((game: GamePriceInfo) =>
-      game.gameName?.toLowerCase().includes(query.trim().toLowerCase())
+      game.gameName.toLowerCase().includes(query.trim().toLowerCase())
     );
     return { [this.name]: games };
   }

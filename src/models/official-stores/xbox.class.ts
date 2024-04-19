@@ -1,5 +1,5 @@
 import { Page } from "playwright";
-import { parseUrl, replaceXbox } from "../../utils/game";
+import { parseUrl, replaceXbox } from "../../utils/game.utils";
 import { Store } from "../store.class";
 import { GamePriceInfo, StoreInfo } from "../../types";
 
@@ -14,7 +14,7 @@ export class XboxStore extends Store {
     return this.getUrl();
   }
 
-  async scrapeGames(page: Page, query: string): Promise<StoreInfo | []> {
+  async scrapeGames(page: Page, query: string): Promise<StoreInfo> {
     await page.goto(this.modifyUrl(query));
 
     await page.waitForSelector("div.SearchTabs-module__tabContainer___MR492");
@@ -24,19 +24,19 @@ export class XboxStore extends Store {
     );
 
     if (notFound) {
-      return [];
+      return { [this.name]: [] };
     }
 
     const content: GamePriceInfo[] = await page.$$eval(
       "div.ProductCard-module__cardWrapper___6Ls86",
       (elements) => {
         return elements.map((element) => {
-          const gameName: HTMLDivElement | null = element.querySelector(
+          const gameName: HTMLDivElement = element.querySelector(
             "div.ProductCard-module__infoBox___M5x18 span"
-          );
-          const url: HTMLAnchorElement | null = element.querySelector(
+          )!;
+          const url: HTMLAnchorElement = element.querySelector(
             "a.commonStyles-module__basicButton___go-bX"
-          );
+          )!;
           const gameDiscount: HTMLDivElement | null = element.querySelector(
             "div.ProductCard-module__discountTag___OjGFy"
           );
@@ -54,8 +54,8 @@ export class XboxStore extends Store {
             "svg.SubscriptionBadge-module__gamePassBadge___ukbVg title"
           );
           return {
-            gameName: gameName?.innerText,
-            url: url?.href,
+            gameName: gameName.innerText,
+            url: url.href,
             discount_percent: gameDiscount ? gameDiscount.innerText : "-",
             initial_price: gameOriginalPrice?.innerText,
             final_price: gameFinalPrice
@@ -71,7 +71,7 @@ export class XboxStore extends Store {
 
     const games: GamePriceInfo[] = content
       .filter((game: GamePriceInfo) =>
-        game.gameName?.toLowerCase().includes(query.trim().toLowerCase())
+        game.gameName.toLowerCase().includes(query.trim().toLowerCase())
       )
       .map((el) => {
         return { ...el, gameName: replaceXbox(el.gameName) };

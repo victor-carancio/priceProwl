@@ -1,5 +1,5 @@
 import { Page } from "playwright";
-import { parseUrl } from "../../utils/game";
+import { parseUrl } from "../../utils/game.utils";
 import { Store } from "../store.class";
 import { GamePriceInfo, StoreInfo } from "../../types";
 
@@ -17,7 +17,7 @@ export class GreenManGaming extends Store {
     return this.getUrl();
   }
 
-  async scrapeGames(page: Page, query: string): Promise<StoreInfo | []> {
+  async scrapeGames(page: Page, query: string): Promise<StoreInfo> {
     await page.goto(this.modifyUrl(query));
     await page.waitForSelector(
       "section.search-list-section div.algolia-search-list div.tab-content"
@@ -31,20 +31,20 @@ export class GreenManGaming extends Store {
     });
 
     if (notFound === "0") {
-      return [];
+      return { [this.name]: [] };
     }
 
     const content: GamePriceInfo[] = await page.$$eval(
       "div[bind-compile-html=hits] div.ais-Hits li.ais-Hits-item",
       (elements) => {
         return elements.map((el) => {
-          const gameName: HTMLParagraphElement | null = el.querySelector(
+          const gameName: HTMLParagraphElement = el.querySelector(
             "div.top-section p.prod-name"
-          );
+          )!;
 
-          const url: HTMLAnchorElement | null = el.querySelector(
+          const url: HTMLAnchorElement = el.querySelector(
             "div.module-content div.module a"
-          );
+          )!;
           const gameDiscount: HTMLParagraphElement | null = el.querySelector(
             "div.prices-section div.discount p"
           );
@@ -73,7 +73,7 @@ export class GreenManGaming extends Store {
 
     //todo : algunos juegos contienen caracteres ej: s.t.a.l.k.e.r , en la query stalker, al momento de comparar, no devolvera bien los juegos
     const games: GamePriceInfo[] = content.filter((game: GamePriceInfo) =>
-      game.gameName?.toLowerCase().includes(query.trim().toLowerCase())
+      game.gameName.toLowerCase().includes(query.trim().toLowerCase())
     );
     return { [this.name]: games };
   }
