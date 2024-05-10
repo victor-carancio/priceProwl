@@ -9,7 +9,7 @@ const iGDBQueries: IGDBQueries = {
     "involved_companies.developer,involved_companies.porting,involved_companies.publisher,involved_companies.supporting,involved_companies.company.name,involved_companies.company.start_date,involved_companies.company.country,involved_companies.company.logo.url,involved_companies.company.logo.width,involved_companies.company.logo.height,",
   coverQueries: "cover.url,cover.width,cover.height,",
   releaseDatesQueries:
-    "release_dates.date,release_dates.region,release_dates.category,release_dates.platform.name,",
+    "release_dates.date,release_dates.region,release_dates.category,release_dates.platform.name, release_dates.platform.abbreviation,release_dates.platform.alternative_name,release_dates.platform.platform_logo.url,release_dates.platform.platform_logo.width,release_dates.platform.platform_logo.height,",
   languageSupportsQueries:
     "language_supports.language.name,language_supports.language.locale,language_supports.language.native_name,",
   platformsQueries:

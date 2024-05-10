@@ -1,3 +1,9 @@
+export enum StoreTypes {
+  STEAM_STORE = "Steam",
+  XBOX_STORE = "Xbox",
+  EPIC_STORE = "Epic",
+}
+
 export interface gamesSearch {
   appid: string;
   name: string;
@@ -29,7 +35,7 @@ export interface IGDBQueries {
 export interface StorePriceInfo {
   store: string;
   info: {
-    url?: string;
+    url: string;
     edition: string;
     discount_percent?: string;
     initial_price?: string;
@@ -42,7 +48,7 @@ export interface GameStoresPrices {
   stores: StorePriceInfo[];
 }
 export interface GameInfoAndPrices extends GameStoresPrices {
-  infoGame: InfoGame;
+  infoGame: InfoGame[];
 }
 
 export interface InfoGame {
@@ -77,7 +83,7 @@ export interface InfoGame {
   name: string;
   platforms: {
     id: number;
-    abreviation: string;
+    abbreviation: string;
     alternative_name: string;
     name: string;
     platform_logo: Image;
@@ -87,7 +93,13 @@ export interface InfoGame {
     id: number;
     category: number;
     date: number;
-    platform: { id: number; name: string };
+    platform: {
+      id: number;
+      abbreviation: string;
+      alternative_name: string;
+      name: string;
+      platform_logo: Image;
+    };
     region: number;
   }[];
   screenshots: Image[];

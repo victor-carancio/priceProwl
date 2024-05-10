@@ -1,5 +1,5 @@
 import { BadRequestError } from "../responses/customApiError";
-import { GameStoresPrices, InfoGame } from "../types";
+import { GameInfoAndPrices, GameStoresPrices, InfoGame } from "../types";
 import {
   compareScrapedAndIgdbGameTitle,
   includesScrapedAndIgdbGameTitle,
@@ -7,10 +7,11 @@ import {
 import { isString } from "../utils/validation";
 import { getGameInfoFromIgdb } from "./gettingData.service";
 import { scraper } from "./scrapingData.service";
+import { storeGameData } from "./storeInDatabase.service";
 
 export const findGamesPricesByName = async (
   title: string
-): Promise<GameStoresPrices[]> => {
+): Promise<GameInfoAndPrices[]> => {
   if (!isString(title)) {
     throw new BadRequestError("invalid field");
   }
@@ -34,6 +35,10 @@ export const findGamesPricesByName = async (
     return { ...game, infoGame: correctGames };
   });
   const gameInfo = await Promise.all(resGameInfo);
+  // todo: filtrar los juegos que no tengan informacion detallada,
+  // const filterNoDataGames = gameInfo.filter((game) => game.infoGame.length > 0);
+
+  await storeGameData(gameInfo);
   return gameInfo;
 };
 

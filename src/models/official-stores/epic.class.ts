@@ -1,5 +1,5 @@
 import { Page } from "playwright";
-import { parseUrl } from "../../utils/game.utils";
+import { parseUrl, replaceSteam } from "../../utils/game.utils";
 import { Store } from "../store.class";
 import { GamePriceInfo, StoreInfo } from "../../types";
 
@@ -31,6 +31,20 @@ export class EpicStore extends Store {
     if (notFound) {
       return { [this.name]: [] };
     }
+
+    //   async function scrapingConReintento() {
+    //     while (intentos > 0) {
+    //         try {
+    //             // Tu código de scraping con Playwright aquí
+    //             intentos = 0; // Termina el bucle si el scraping tiene éxito
+    //         } catch (error) {
+    //             console.error("Se produjo un error:", error);
+    //             intentos--;
+    //             console.log(`Reintentando... Intentos restantes: ${intentos}`);
+    //             await new Promise(resolve => setTimeout(resolve, 5000)); // Espera 5 segundos antes de volver a intentar
+    //         }
+    //     }
+    // }
 
     const content: GamePriceInfo[] = await page.$$eval(
       "div.css-2mlzob",
@@ -66,9 +80,14 @@ export class EpicStore extends Store {
 
     // return content;
 
-    const games: GamePriceInfo[] = content.filter((game: GamePriceInfo) =>
-      game.gameName.toLowerCase().includes(query.trim().toLowerCase())
-    );
+    const games: GamePriceInfo[] = content
+      .map((el) => {
+        return { ...el, gameName: replaceSteam(el.gameName) };
+      })
+
+      .filter((game: GamePriceInfo) =>
+        game.gameName.toLowerCase().includes(query.trim().toLowerCase())
+      );
     return { [this.name]: games };
   }
 }
