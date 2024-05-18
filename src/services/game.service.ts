@@ -1,22 +1,63 @@
 import { BadRequestError } from "../responses/customApiError";
+import { GameInfoAndPrices } from "../types";
+import {
+  compareScrapedAndIgdbGameTitle,
+  includesScrapedAndIgdbGameTitle,
+} from "../utils/game.utils";
 import { isString } from "../utils/validation";
-import { scraper } from "./scrapingData.service";
+import {
+  storeGameData,
+  scrapeAllStores,
+  getGameInfoFromIgdb,
+} from "./gameServices/index.service";
 
-export const findGamesByName = async (title: string): Promise<any> => {
+export const findGamesPricesByName = async (
+  title: string
+): Promise<GameInfoAndPrices[]> => {
   if (!isString(title)) {
     throw new BadRequestError("invalid field");
   }
-  const games = await scraper(title);
-  return games;
+  const gamesPrices = await scrapeAllStores(title);
+
+  let fetchCounter = 0;
+
+  const resGameInfo = gamesPrices.map(async (game) => {
+    fetchCounter++;
+    if (fetchCounter >= 8) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      fetchCounter = 0;
+    }
+    const info = await getGameInfoFromIgdb(game.gameName);
+
+    const infoGame = info.filter((el) =>
+      includesScrapedAndIgdbGameTitle(el, game)
+    );
+
+    // can return more than 1 game info
+
+    if (infoGame.length <= 1) {
+      return { ...game, infoGame };
+    }
+    const correctGames = infoGame.filter((el) =>
+      compareScrapedAndIgdbGameTitle(el, game)
+    );
+
+    return { ...game, infoGame: correctGames };
+  });
+  const gameInfo = await Promise.all(resGameInfo);
+  await storeGameData(gameInfo);
+  // todo: filtrar los juegos que no tengan informacion detallada,
+  // const filterNoDataGames = gameInfo.filter((game) => game.infoGame.length > 0);
+
+  return gameInfo;
 };
 
-// export const findOneGameByName = async (title: string): Promise<steamPrice> => {
-//   if (!isString(title)) {
-//     throw new BadRequestError("invalid field");
-//   }
+export const findGameInfoByName = async (title: string): Promise<any> => {
+  if (!isString(title)) {
+    throw new BadRequestError("invalid field");
+  }
 
-//   const gameData = await getDataFromUrl(title);
-//   const { name, steam_appid, header_image, price_overview } = gameData[0].data;
+  const gameData = await getGameInfoFromIgdb(title);
 
-//   return { name, steam_appid, header_image, price_overview };
-// };
+  return gameData;
+};

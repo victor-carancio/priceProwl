@@ -1,0 +1,269 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Game {
+  id         Int      @id @default(autoincrement())
+  gameName String 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  stores StoreGame[]
+  infoGame InfoGame[]
+}
+
+model StoreGame {
+  id Int @id @default(autoincrement())
+  store String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  game Game  @relation( fields: [game_id], references: [id])
+  game_id Int 
+  info StorePrice[]
+}
+
+model StorePrice {
+  id Int @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  url String
+  discount_percent  String @default("-")
+  initial_price  String @default("-")
+  final_price  String @default("-")
+  edition String
+  storeGame StoreGame @relation(fields:[store_game_id],references: [id])
+  store_game_id Int 
+}
+
+model InfoGame {
+  id Int @id
+  name String
+  first_release_date BigInt
+  storyline String?
+  summary String @db.VarChar(1500)
+  version_title String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  cover Cover?
+  age_ratings AgeRatings[]
+  alternative_names AlternativeName[]
+  artworks Artwork[]
+  game_engines GameEngineOnInfoGame[]
+  genres GenreOnInfoGame[]
+  involved_companies InvolvedCompany[]
+  keywords KeywordOnInfoGame[]
+  platforms PlatformOnInfoGame[]
+  player_perspectives PlayerPerspectiveOnInfoGame[]
+  screenshots Screenshot[]
+  videos Video[]
+  language_supports LanguageSupport[]
+  game Game @relation(fields: [game_id],references: [id])
+  game_id Int
+}
+
+model Cover {
+  id Int @id
+  height Int
+  url String
+  width Int
+  info_game InfoGame @relation(fields: [info_game_id], references: [id])
+  info_game_id Int @unique
+}
+
+model AgeRatings {
+  id Int @id
+  category Int
+  rating Int
+  synopsis String? @db.VarChar(2000)
+  info_game InfoGame @relation(fields: [info_game_id],references: [id])
+  info_game_id Int 
+}
+
+model AlternativeName {
+  id Int @id
+  comment String? 
+  name String
+  info_game InfoGame @relation(fields: [info_game_id],references: [id])
+  info_game_id Int 
+}
+
+model Artwork {
+  id Int @id
+  height Int
+  url String
+  width Int
+  info_game InfoGame @relation(fields: [info_game_id], references: [id])
+  info_game_id Int 
+}
+
+model GameEngine {
+  id Int @id
+  name String
+  info_games GameEngineOnInfoGame[]
+  
+}
+
+model GameEngineOnInfoGame{
+  game_engine GameEngine @relation(fields: [game_engine_id], references: [id])
+  game_engine_id Int
+  info_game InfoGame @relation(fields: [info_game_id], references: [id])
+  info_game_id Int
+  @@id([game_engine_id,info_game_id])
+}
+
+model Genre {
+  id Int @id
+  name String
+  info_games GenreOnInfoGame[]
+}
+
+model GenreOnInfoGame{
+  genre Genre @relation(fields: [genre_id],references: [id])
+  genre_id Int
+  info_game InfoGame @relation(fields: [info_game_id], references: [id])
+  info_game_id Int
+  @@id([genre_id,info_game_id])
+}
+
+model InvolvedCompany{
+  id Int @id
+  developer Boolean 
+  porting Boolean
+  publisher Boolean
+  supporting Boolean
+  company Company @relation(fields: [company_id],references: [id])
+  company_id Int
+  info_game InfoGame @relation(fields: [info_game_id], references: [id])
+  info_game_id Int
+
+}
+
+model Company{
+  id Int @id
+  country Int?
+  name String
+  start_date BigInt?
+  involved_company InvolvedCompany[]
+  logo CompanyLogo?
+}
+
+model CompanyLogo{
+  id Int @id
+  height Int
+  url String
+  width Int
+  company Company @relation(fields: [company_id], references: [id])
+  company_id Int @unique
+}
+
+model Keyword{
+  id Int @id
+  name String 
+  info_games KeywordOnInfoGame[]
+ 
+}
+
+model KeywordOnInfoGame{
+  keyword Keyword @relation(fields: [keyword_id], references: [id])
+  keyword_id Int
+  info_game InfoGame @relation(fields: [info_game_id],references: [id])
+  info_game_id Int
+  @@id([keyword_id, info_game_id])
+}
+
+model Platform{
+  id Int @id
+  abbreviation String?
+  alternative_name String?
+  name String
+  platform_logo PlatformLogo?
+  info_games PlatformOnInfoGame[]
+  release_date ReleaseDate[]
+  
+}
+
+model PlatformLogo{
+  id Int @id
+  height Int
+  url String
+  width Int
+  platform Platform @relation(fields: [platform_id],references: [id])
+  platform_id Int @unique
+}
+
+model PlatformOnInfoGame{
+  platform Platform @relation(fields: [platform_id],references: [id])
+  platform_id Int
+  info_game InfoGame @relation(fields: [info_game_id],references: [id])
+  info_game_id Int
+  @@id([platform_id,info_game_id])
+}
+
+model PlayerPerspective{
+  id Int @id
+  name String
+  info_games PlayerPerspectiveOnInfoGame[]
+ 
+}
+
+model PlayerPerspectiveOnInfoGame{
+  player_perspective PlayerPerspective @relation(fields: [player_perspective_id],references: [id])
+  player_perspective_id Int
+  info_game InfoGame @relation(fields: [info_game_id],references: [id]) 
+  info_game_id Int
+  @@id([player_perspective_id,info_game_id])
+}
+
+model ReleaseDate{
+  id Int @id
+  category Int
+  date Int
+  region Int
+  platform Platform @relation(fields: [platform_id], references: [id])
+  platform_id Int
+}
+
+model Screenshot{
+  id Int @id
+  height Int
+  url String
+  width Int
+  info_game InfoGame @relation(fields: [info_game_id],references: [id])
+  info_game_id Int
+}
+
+model Video {
+  id Int @id
+  name String
+  video_id String
+  info_game InfoGame @relation(fields: [info_game_id], references: [id])
+  info_game_id Int
+}
+
+model LanguageSupport {
+  id Int @id
+  language Language @relation(fields: [language_id],references: [id])
+  language_id Int 
+  info_game InfoGame @relation(fields: [info_game_id], references: [id])
+  info_game_id Int
+}
+
+model Language{
+  id Int @id
+  name String
+  native_name String
+  locale String
+  language_support LanguageSupport[]
+ 
+}
+

@@ -1,5 +1,5 @@
 import express from "express";
-import "express-async-errors"
+import "express-async-errors";
 import gamesRoutes from "./routes/game.route";
 import dotenv from "dotenv";
 import errorHandlerMiddleware from "./middlewares/errorHandler";
@@ -12,7 +12,6 @@ const app = express();
 app.use(express.json());
 
 app.use("/api/v1", gamesRoutes);
-
 
 app.use(errorHandlerMiddleware);
 app.use(notFound);

@@ -1,5 +1,5 @@
 import { Page } from "playwright";
-import { parseUrl, replaceSteam } from "../../utils/game";
+import { parseUrl, replaceSteam } from "../../utils/game.utils";
 import { Store } from "../store.class";
 import { GamePriceInfo, StoreInfo } from "../../types";
 
@@ -14,7 +14,7 @@ export class SteamStore extends Store {
     return this.getUrl();
   }
 
-  async scrapeGames(page: Page, query: string): Promise<StoreInfo | []> {
+  async scrapeGames(page: Page, query: string): Promise<StoreInfo> {
     await page.goto(this.modifyUrl(query));
     await page.waitForSelector("div.search_results");
 
@@ -22,16 +22,16 @@ export class SteamStore extends Store {
       document.querySelector("div#search_resultsRows")
     );
     if (!notFound) {
-      return [];
+      return { [this.name]: [] };
     }
 
     const content: GamePriceInfo[] = await page.$$eval(
       "div#search_resultsRows a.search_result_row",
       (elements: HTMLAnchorElement[]) => {
         return elements.map((element) => {
-          const gameName: HTMLSpanElement | null = element.querySelector(
+          const gameName: HTMLSpanElement = element.querySelector(
             "div.search_name span.title"
-          );
+          )!;
           const gameDiscount: HTMLDivElement | null =
             element.querySelector("div.discount_pct");
           const gameFinalPrice: HTMLDivElement | null = element.querySelector(
@@ -43,7 +43,7 @@ export class SteamStore extends Store {
           const gameOriginalPrice: HTMLDivElement | null =
             element.querySelector(`div.${originalPriceSelector}`);
           return {
-            gameName: gameName?.innerText,
+            gameName: gameName.innerText,
             url: element.href,
             discount_percent: gameDiscount ? gameDiscount.innerText : "-",
             initial_price: gameOriginalPrice?.innerText,
@@ -59,9 +59,10 @@ export class SteamStore extends Store {
       .map((el) => {
         return { ...el, gameName: replaceSteam(el.gameName) };
       })
-      .filter((game: GamePriceInfo) =>
-        game.gameName?.toLowerCase().includes(query.trim().toLowerCase())
-      );
+      .filter((game) =>
+        game.gameName.toLowerCase().includes(query.trim().toLowerCase())
+      )
+      .filter((game) => !game.gameName.toLowerCase().includes("demo"));
 
     return {
       [this.name]: games,

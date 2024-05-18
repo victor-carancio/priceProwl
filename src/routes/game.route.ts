@@ -1,7 +1,8 @@
 import { Router } from "express";
-import { getGamesPrices } from "../controllers/game.controller";
+import { getGameInfo, getGamesPrices } from "../controllers/game.controller";
 
 const router = Router();
 router.get("/game", getGamesPrices);
+router.get("/test", getGameInfo);
 
 export default router;
