@@ -20,7 +20,6 @@ export const getGameInfoFromIgdb = async (
   });
 
   const data: InfoGame[] = await res.json();
-  console.log(data);
 
   const filterVersions: InfoGame[] = await data.filter((game: InfoGame) => {
     return (
