@@ -4,13 +4,6 @@ export enum StoreTypes {
   EPIC_STORE = "Epic",
 }
 
-export interface gamesSearch {
-  appid: string;
-  name: string;
-  icon: string;
-  logo: string;
-}
-
 export interface GamePriceInfo {
   gameName: string;
   url: string;
@@ -18,10 +11,6 @@ export interface GamePriceInfo {
   initial_price?: string;
   final_price?: string;
   gamepass?: boolean;
-}
-
-export interface GameNotFound {
-  [storeName: string]: string;
 }
 
 export interface StoreInfo {

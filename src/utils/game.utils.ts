@@ -1,10 +1,4 @@
-import {
-  GameStoresPrices,
-  GamePriceInfo,
-  StoreInfo,
-  InfoGame,
-  AlternativeName,
-} from "../types";
+import { GameStoresPrices, InfoGame, AlternativeName } from "../types";
 
 //regex
 
@@ -114,65 +108,4 @@ export const compareScrapedAndIgdbGameTitle = (
     })
   );
 };
-
-export const getGameByStorePrices = (gamesForStore: StoreInfo[]) => {
-  let gameByStorePrices: GameStoresPrices[] = [];
-
-  gamesForStore.forEach((el: StoreInfo) => {
-    for (const [store, games] of Object.entries(el)) {
-      games.forEach((currGame: GamePriceInfo) => {
-        const {
-          gameName,
-          url,
-          discount_percent,
-          initial_price,
-          final_price,
-          gamepass,
-        } = currGame;
-        const position = gameByStorePrices.findIndex(
-          (element: GameStoresPrices) => {
-            return (
-              element.gameName?.toLowerCase() === gameName?.toLowerCase() ||
-              element.gameName?.toLowerCase() ===
-                replaceSpecialEdition(gameName).toLowerCase()
-            );
-          }
-        );
-
-        const edition = getSpecialEdition(gameName);
-
-        if (position === -1) {
-          gameByStorePrices.push({
-            gameName,
-            stores: [
-              {
-                store,
-                info: {
-                  url,
-                  discount_percent,
-                  initial_price,
-                  final_price,
-                  gamepass,
-                  edition: edition ? edition : "Standard",
-                },
-              },
-            ],
-          });
-        } else {
-          gameByStorePrices[position].stores.push({
-            store,
-            info: {
-              url,
-              discount_percent,
-              initial_price,
-              final_price,
-              gamepass,
-              edition: edition ? edition : "Standard",
-            },
-          });
-        }
-      });
-    }
-  });
-  return gameByStorePrices;
-};
+//borrar
