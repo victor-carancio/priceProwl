@@ -25,6 +25,9 @@ model Game {
 model StoreGame {
   id Int @id @default(autoincrement())
   store String
+  url String
+  edition String
+  gamepass Boolean? 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   game Game  @relation( fields: [game_id], references: [id])
@@ -36,11 +39,9 @@ model StorePrice {
   id Int @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  url String
   discount_percent  String @default("-")
   initial_price  String @default("-")
   final_price  String @default("-")
-  edition String
   storeGame StoreGame @relation(fields:[store_game_id],references: [id])
   store_game_id Int 
 }
