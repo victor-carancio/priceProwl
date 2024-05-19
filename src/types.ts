@@ -23,13 +23,13 @@ export interface IGDBQueries {
 
 export interface StorePriceInfo {
   store: string;
+  url: string;
+  edition: string;
+  gamepass?: boolean;
   info: {
-    url: string;
-    edition: string;
     discount_percent?: string;
     initial_price?: string;
     final_price?: string;
-    gamepass?: boolean;
   };
 }
 export interface GameStoresPrices {

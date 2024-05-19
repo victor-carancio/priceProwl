@@ -3,6 +3,7 @@ import {
   findGameInfoByName,
   findGamesPricesByName,
 } from "../services/game.service";
+import { scrapeGameUrl } from "../services/gameServices/scrapeGameData.service";
 
 export const getGamesPrices = async (req: Request, res: Response) => {
   const { title } = req.body;
@@ -15,4 +16,9 @@ export const getGameInfo = async (req: Request, res: Response) => {
   const data = await findGameInfoByName(title);
 
   return res.status(200).json({ nbHts: data.length, data });
+};
+
+export const testUpdateGamePrice = async (_req: Request, res: Response) => {
+  await scrapeGameUrl();
+  return res.status(200).json({ jio: "test update game" });
 };

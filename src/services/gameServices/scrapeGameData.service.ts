@@ -8,6 +8,9 @@ import {
   getSpecialEdition,
   replaceSpecialEdition,
 } from "../../utils/game.utils";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 chromium.use(StealthPlugin());
 
@@ -60,13 +63,13 @@ export const scrapeAllStores = async (
             stores: [
               {
                 store,
+                url,
+                gamepass,
+                edition: edition ? edition : "Standard",
                 info: {
-                  url,
                   discount_percent,
                   initial_price,
                   final_price,
-                  gamepass,
-                  edition: edition ? edition : "Standard",
                 },
               },
             ],
@@ -74,13 +77,13 @@ export const scrapeAllStores = async (
         } else {
           gameByStorePrices[position].stores.push({
             store,
+            url,
+            gamepass,
+            edition: edition ? edition : "Standard",
             info: {
-              url,
               discount_percent,
               initial_price,
               final_price,
-              gamepass,
-              edition: edition ? edition : "Standard",
             },
           });
         }
@@ -89,4 +92,35 @@ export const scrapeAllStores = async (
   });
 
   return gameByStorePrices;
+};
+
+export const scrapeGameUrl = async () => {
+  // const stores = [new SteamStore(), new XboxStore(), new EpicStore()];
+
+  // for (const store of stores) {
+  //   // const gameByStore = await prisma.storeGame.findMany({
+  //   //   where: {
+  //   //     store: store.name,
+  //   //     // id: 1,
+  //   //   },
+  //   //   include: {
+  //   //     game: true,
+  //   //     info: true,
+  //   //   },
+  //   // });
+
+  //   console.log(gameByStore.length);
+  // }
+  const gameByStore = await prisma.storeGame.findFirst({
+    where: {
+      store: "Steam",
+      // id: 1,
+    },
+    include: {
+      game: true,
+      info: true,
+    },
+  });
+
+  console.log(gameByStore?.info);
 };

@@ -24,14 +24,15 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
         existingStore = await prisma.storeGame.create({
           data: {
             store: store.store,
+            url: store.url,
+            edition: store.edition,
+            gamepass: store.store === "Xbox" ? store.gamepass : null,
             game: { connect: { id: existingGame.id } },
             info: {
               create: {
-                url: store.info.url,
                 initial_price: store.info.initial_price || "-",
                 discount_percent: store.info.discount_percent || "-",
                 final_price: store.info.final_price || "-",
-                edition: store.info.edition,
               },
             },
           },
@@ -44,18 +45,15 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
           initial_price: store.info.initial_price,
           discount_percent: store.info.discount_percent,
           final_price: store.info.final_price,
-          edition: store.info.edition,
         },
       });
 
       if (!existingPrice) {
         await prisma.storePrice.create({
           data: {
-            url: store.info.url,
             initial_price: store.info.initial_price || "-",
             discount_percent: store.info.discount_percent || "-",
             final_price: store.info.final_price || "-",
-            edition: store.info.edition,
             storeGame: { connect: { id: existingStore.id } },
           },
         });

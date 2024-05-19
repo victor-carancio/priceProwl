@@ -10,6 +10,7 @@ import {
   scrapeAllStores,
   getGameInfoFromIgdb,
 } from "./gameServices/index.service";
+// import { scrapeGameUrl } from "./gameServices/scrapeGameData.service";
 
 export const findGamesPricesByName = async (
   title: string
@@ -61,3 +62,7 @@ export const findGameInfoByName = async (title: string): Promise<any> => {
 
   return gameData;
 };
+
+// export const updateGamePrice = async()=>{
+//   await scrapeGameUrl()
+// }
