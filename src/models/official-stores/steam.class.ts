@@ -53,8 +53,6 @@ export class SteamStore extends Store {
       }
     );
 
-    // return content;
-
     const games: GamePriceInfo[] = content
       .map((el) => {
         return { ...el, gameName: replaceSteam(el.gameName) };
@@ -67,5 +65,43 @@ export class SteamStore extends Store {
     return {
       [this.name]: games,
     };
+  }
+
+  async scrapePriceGameFromUrl(page: Page, url: string) {
+    await page.goto(url);
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(500);
+
+    const birthdaySelector = await page.evaluate(() =>
+      document.querySelector("div.agegate_birthday_selector")
+    );
+    if (birthdaySelector) {
+      await page.locator("select#ageYear").selectOption("1994");
+      await page.locator("a#view_product_page_btn span").click();
+      await page.waitForSelector("div.game_purchase_action_bg");
+    }
+
+    const currPrice = await page.$eval(
+      "div.game_purchase_action_bg",
+      (element: HTMLDivElement) => {
+        const gameDiscount: HTMLDivElement | null =
+          element.querySelector("div.discount_pct");
+
+        const initialGamePrice: HTMLDivElement = gameDiscount
+          ? element.querySelector("div.discount_original_price")!
+          : element.querySelector("div.game_purchase_price")!;
+
+        const finalGamePrice: HTMLDivElement = gameDiscount
+          ? element.querySelector("div.discount_final_price")!
+          : element.querySelector("div.game_purchase_price")!;
+
+        return {
+          discount_percent: gameDiscount ? gameDiscount.innerText : "-",
+          initial_price: initialGamePrice?.innerText.replace("$ ", "$"),
+          final_price: finalGamePrice?.innerText.replace("$ ", "$"),
+        };
+      }
+    );
+    return currPrice;
   }
 }

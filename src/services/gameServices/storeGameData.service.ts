@@ -1,5 +1,5 @@
 import { GameInfoAndPrices } from "../../types";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, StoreGame } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -17,7 +17,11 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
 
     for (const store of game.stores) {
       let existingStore = await prisma.storeGame.findFirst({
-        where: { store: store.store, game_id: existingGame.id },
+        where: {
+          store: store.store,
+          game_id: existingGame.id,
+          edition: store.edition,
+        },
       });
 
       if (!existingStore) {
@@ -41,7 +45,11 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
 
       const existingPrice = await prisma.storePrice.findFirst({
         where: {
-          store_game_id: existingStore.id,
+          storeGame: {
+            id: existingStore.id,
+            store: existingStore.store,
+            edition: existingStore.edition,
+          },
           initial_price: store.info.initial_price,
           discount_percent: store.info.discount_percent,
           final_price: store.info.final_price,
@@ -435,5 +443,50 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
         }
       }
     }
+  }
+};
+
+export const updateStoreGamePrice = async (
+  gameByStore: StoreGame,
+  currPrice: {
+    discount_percent: string;
+    initial_price: string;
+    final_price: string;
+  }
+) => {
+  const storePrice = await prisma.storePrice.findFirst({
+    where: {
+      storeGame: {
+        id: gameByStore.id,
+        edition: gameByStore.edition,
+        url: gameByStore.url,
+      },
+      initial_price: currPrice.initial_price,
+      final_price: currPrice.final_price,
+      discount_percent: currPrice.discount_percent,
+    },
+  });
+
+  if (!storePrice) {
+    await prisma.storePrice.create({
+      data: {
+        initial_price: currPrice.initial_price,
+        final_price: currPrice.final_price,
+        discount_percent: currPrice.discount_percent,
+        storeGame: { connect: { id: gameByStore.id } },
+      },
+    });
+  } else {
+    await prisma.storePrice.update({
+      where: {
+        id: storePrice?.id,
+      },
+      data: {
+        initial_price: currPrice.initial_price,
+        final_price: currPrice.final_price,
+        discount_percent: currPrice.discount_percent,
+        storeGame: { connect: { id: gameByStore.id } },
+      },
+    });
   }
 };
