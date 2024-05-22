@@ -9,6 +9,8 @@ import {
   replaceSpecialEdition,
 } from "../../utils/game.utils";
 import { PrismaClient } from "@prisma/client";
+import { BadRequestError } from "../../responses/customApiError";
+import { updateStoreGamePrice } from "./storeGameData.service";
 
 const prisma = new PrismaClient();
 
@@ -96,22 +98,9 @@ export const scrapeAllStores = async (
 
 export const scrapeGameUrl = async () => {
   // const stores = [new SteamStore(), new XboxStore(), new EpicStore()];
+  const steam = new SteamStore();
 
-  // for (const store of stores) {
-  //   // const gameByStore = await prisma.storeGame.findMany({
-  //   //   where: {
-  //   //     store: store.name,
-  //   //     // id: 1,
-  //   //   },
-  //   //   include: {
-  //   //     game: true,
-  //   //     info: true,
-  //   //   },
-  //   // });
-
-  //   console.log(gameByStore.length);
-  // }
-  const gameByStore = await prisma.storeGame.findFirst({
+  const gamesByStore = await prisma.storeGame.findMany({
     where: {
       store: "Steam",
       // id: 1,
@@ -122,5 +111,31 @@ export const scrapeGameUrl = async () => {
     },
   });
 
-  console.log(gameByStore?.info);
+  // console.log(gamesByStore);
+
+  const agent = random_useragent.getRandom();
+  const browser = await chromium.launch({ headless: false });
+  const context = await browser.newContext({
+    userAgent: agent,
+  });
+  const page = await context.newPage();
+
+  if (!gamesByStore || gamesByStore.length <= 0) {
+    throw new BadRequestError("Games not found");
+  }
+
+  let steamCounter = 0;
+
+  for (const gameByStore of gamesByStore) {
+    steamCounter++;
+    if (steamCounter >= 8) {
+      await page.waitForTimeout(1500);
+      steamCounter = 0;
+    }
+    const currPrice = await steam.scrapePriceGameFromUrl(page, gameByStore.url);
+    await updateStoreGamePrice(gameByStore, currPrice);
+    console.log(`${gameByStore.game.gameName} ${gameByStore.edition} updated`);
+  }
+
+  await browser.close();
 };
