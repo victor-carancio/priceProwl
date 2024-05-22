@@ -49,7 +49,7 @@ model StorePrice {
 model InfoGame {
   id Int @id
   name String
-  first_release_date BigInt
+  first_release_date BigInt?
   storyline String?
   summary String @db.VarChar(1500)
   version_title String?

@@ -6,12 +6,12 @@ const prisma = new PrismaClient();
 export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
   for (const game of gamesData) {
     let existingGame = await prisma.game.findFirst({
-      where: { gameName: game.gameName },
+      where: { gameName: game.gameName.toUpperCase() },
     });
 
     if (!existingGame) {
       existingGame = await prisma.game.create({
-        data: { gameName: game.gameName },
+        data: { gameName: game.gameName.toUpperCase() },
       });
     }
 
