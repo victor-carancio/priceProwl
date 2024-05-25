@@ -109,3 +109,13 @@ export const compareScrapedAndIgdbGameTitle = (
   );
 };
 //borrar
+export const calculateDiscountPercent = (
+  initial_price: string,
+  final_price: string
+) => {
+  const initial = Number(initial_price?.replace("+", ""));
+  const final = Number(final_price?.replace("+", ""));
+
+  const discount: number = (initial / final) * 100 - 100;
+  return discount.toFixed(0);
+};

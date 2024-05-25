@@ -452,6 +452,7 @@ export const updateStoreGamePrice = async (
     discount_percent: string;
     initial_price: string;
     final_price: string;
+    gamepass?: boolean;
   }
 ) => {
   const storePrice = await prisma.storePrice.findFirst({
@@ -476,6 +477,7 @@ export const updateStoreGamePrice = async (
         storeGame: { connect: { id: gameByStore.id } },
       },
     });
+    console.log("created");
   } else {
     await prisma.storePrice.update({
       where: {
@@ -485,8 +487,14 @@ export const updateStoreGamePrice = async (
         initial_price: currPrice.initial_price,
         final_price: currPrice.final_price,
         discount_percent: currPrice.discount_percent,
-        storeGame: { connect: { id: gameByStore.id } },
+        storeGame: {
+          connect: { id: gameByStore.id },
+          update: {
+            gamepass: gameByStore.store === "Xbox" ? currPrice.gamepass : null,
+          },
+        },
       },
     });
+    console.log("updated");
   }
 };

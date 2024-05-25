@@ -98,11 +98,11 @@ export const scrapeAllStores = async (
 
 export const scrapeGameUrl = async () => {
   // const stores = [new SteamStore(), new XboxStore(), new EpicStore()];
-  const steam = new SteamStore();
+  const xbox = new XboxStore();
 
   const gamesByStore = await prisma.storeGame.findMany({
     where: {
-      store: "Steam",
+      store: "Xbox",
       // id: 1,
     },
     include: {
@@ -120,21 +120,37 @@ export const scrapeGameUrl = async () => {
   });
   const page = await context.newPage();
 
+  // if (!gamesByStore || gamesByStore.length <= 0) {
+  //   throw new BadRequestError("Games not found");
+  // }
+
+  // let steamCounter = 0;
+
+  // for (const gameByStore of gamesByStore) {
+  //   steamCounter++;
+  //   if (steamCounter >= 8) {
+  //     await page.waitForTimeout(1500);
+  //     steamCounter = 0;
+  //   }
+  //   const currPrice = await steam.scrapePriceGameFromUrl(page, gameByStore.url);
+  //   await updateStoreGamePrice(gameByStore, currPrice);
+  //   console.log(`${gameByStore.game.gameName} ${gameByStore.edition} updated`);
+  // }
+
   if (!gamesByStore || gamesByStore.length <= 0) {
     throw new BadRequestError("Games not found");
   }
 
-  let steamCounter = 0;
+  let xboxCounter = 0;
 
   for (const gameByStore of gamesByStore) {
-    steamCounter++;
-    if (steamCounter >= 8) {
+    xboxCounter++;
+    if (xboxCounter >= 8) {
       await page.waitForTimeout(1500);
-      steamCounter = 0;
+      xboxCounter = 0;
     }
-    const currPrice = await steam.scrapePriceGameFromUrl(page, gameByStore.url);
+    const currPrice = await xbox.scrapePriceGameFromUrl(page, gameByStore.url);
     await updateStoreGamePrice(gameByStore, currPrice);
-    console.log(`${gameByStore.game.gameName} ${gameByStore.edition} updated`);
   }
 
   await browser.close();
