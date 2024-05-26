@@ -1,5 +1,5 @@
 import { Page } from "playwright";
-import { parseUrl, replaceXbox } from "../../utils/game.utils";
+import { parseUrl, replaceSteam, replaceXbox } from "../../utils/game.utils";
 import { Store } from "../store.class";
 import { GamePriceInfo, StoreInfo } from "../../types";
 
@@ -70,12 +70,13 @@ export class XboxStore extends Store {
     // return content;
 
     const games: GamePriceInfo[] = content
+      .map((el) => {
+        return { ...el, gameName: replaceSteam(replaceXbox(el.gameName)) };
+      })
       .filter((game: GamePriceInfo) =>
         game.gameName.toLowerCase().includes(query.trim().toLowerCase())
-      )
-      .map((el) => {
-        return { ...el, gameName: replaceXbox(el.gameName) };
-      });
+      );
+
     return { [this.name]: games };
   }
 

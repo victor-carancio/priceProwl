@@ -19,7 +19,7 @@ model Game {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   stores StoreGame[]
-  infoGame InfoGame[]
+  infoGame GameOnInfoGame[]
 }
 
 model StoreGame {
@@ -46,6 +46,14 @@ model StorePrice {
   store_game_id Int 
 }
 
+model GameOnInfoGame{
+  game Game @relation(fields: [game_id], references: [id])
+  game_id Int
+  info_game InfoGame @relation(fields: [info_game_id], references: [id])
+  info_game_id Int
+  @@id([game_id,info_game_id])
+}
+
 model InfoGame {
   id Int @id
   name String
@@ -68,8 +76,8 @@ model InfoGame {
   screenshots Screenshot[]
   videos Video[]
   language_supports LanguageSupport[]
-  game Game @relation(fields: [game_id],references: [id])
-  game_id Int
+  game GameOnInfoGame[]
+  
 }
 
 model Cover {
