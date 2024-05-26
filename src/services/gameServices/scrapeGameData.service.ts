@@ -10,7 +10,7 @@ import {
 } from "../../utils/game.utils";
 import { PrismaClient } from "@prisma/client";
 import { BadRequestError } from "../../responses/customApiError";
-import { updateStoreGamePrice } from "./storeGameData.service";
+// import { updateStoreGamePrice } from "./storeGameData.service";
 
 const prisma = new PrismaClient();
 
@@ -98,12 +98,11 @@ export const scrapeAllStores = async (
 
 export const scrapeGameUrl = async () => {
   // const stores = [new SteamStore(), new XboxStore(), new EpicStore()];
-  const xbox = new XboxStore();
+  const epic = new EpicStore();
 
   const gamesByStore = await prisma.storeGame.findMany({
     where: {
-      store: "Xbox",
-      // id: 1,
+      store: "Epic",
     },
     include: {
       game: true,
@@ -119,6 +118,18 @@ export const scrapeGameUrl = async () => {
     userAgent: agent,
   });
   const page = await context.newPage();
+  console.log(gamesByStore);
+
+  if (!gamesByStore || gamesByStore.length <= 0) {
+    throw new BadRequestError("Games not found");
+  }
+  for (const gameByStore of gamesByStore) {
+    const currPrice = await epic.scrapePriceGameFromUrl(page, gameByStore.url);
+    console.log(`${gameByStore.game.gameName} ${gameByStore.edition}`);
+    console.log(currPrice);
+  }
+
+  // -----------------steam--------------------------
 
   // if (!gamesByStore || gamesByStore.length <= 0) {
   //   throw new BadRequestError("Games not found");
@@ -137,21 +148,23 @@ export const scrapeGameUrl = async () => {
   //   console.log(`${gameByStore.game.gameName} ${gameByStore.edition} updated`);
   // }
 
-  if (!gamesByStore || gamesByStore.length <= 0) {
-    throw new BadRequestError("Games not found");
-  }
+  // if (!gamesByStore || gamesByStore.length <= 0) {
+  //   throw new BadRequestError("Games not found");
+  // }
 
-  let xboxCounter = 0;
+  // -----------------epic--------------------------
 
-  for (const gameByStore of gamesByStore) {
-    xboxCounter++;
-    if (xboxCounter >= 8) {
-      await page.waitForTimeout(1500);
-      xboxCounter = 0;
-    }
-    const currPrice = await xbox.scrapePriceGameFromUrl(page, gameByStore.url);
-    await updateStoreGamePrice(gameByStore, currPrice);
-  }
+  // let xboxCounter = 0;
+
+  // for (const gameByStore of gamesByStore) {
+  //   xboxCounter++;
+  //   if (xboxCounter >= 8) {
+  //     await page.waitForTimeout(1500);
+  //     xboxCounter = 0;
+  //   }
+  //   const currPrice = await xbox.scrapePriceGameFromUrl(page, gameByStore.url);
+  //   await updateStoreGamePrice(gameByStore, currPrice);
+  // }
 
   await browser.close();
 };
