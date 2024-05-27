@@ -135,8 +135,9 @@ export class EpicStore extends Store {
     const currPrice = await page.$eval(
       "div.css-169q7x3",
       (element: HTMLDivElement) => {
-        const gameDiscount: HTMLDivElement | null =
-          element.querySelector("div.css-1q7f74q");
+        const gameDiscount: HTMLDivElement | null = element.querySelector(
+          "div.css-169q7x3 span.css-1kn2h2p div"
+        );
 
         const initialGamePrice: HTMLDivElement = gameDiscount
           ? element.querySelector(
