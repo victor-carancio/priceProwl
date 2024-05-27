@@ -10,7 +10,7 @@ import {
 } from "../../utils/game.utils";
 import { PrismaClient } from "@prisma/client";
 import { BadRequestError } from "../../responses/customApiError";
-// import { updateStoreGamePrice } from "./storeGameData.service";
+import { updateStoreGamePrice } from "./storeGameData.service";
 
 const prisma = new PrismaClient();
 
@@ -123,10 +123,22 @@ export const scrapeGameUrl = async () => {
   if (!gamesByStore || gamesByStore.length <= 0) {
     throw new BadRequestError("Games not found");
   }
+  let epicCounter = 0;
   for (const gameByStore of gamesByStore) {
+    epicCounter++;
+    if (epicCounter >= 8) {
+      await page.waitForTimeout(1500);
+      epicCounter = 0;
+    }
     const currPrice = await epic.scrapePriceGameFromUrl(page, gameByStore.url);
     console.log(`${gameByStore.game.gameName} ${gameByStore.edition}`);
     console.log(currPrice);
+    const fakePrice = {
+      discount_percent: "-50 %",
+      initial_price: "60.000 CLP",
+      final_price: "30.000 CLP",
+    };
+    await updateStoreGamePrice(gameByStore, fakePrice);
   }
 
   // -----------------steam--------------------------
