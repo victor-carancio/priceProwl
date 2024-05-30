@@ -114,3 +114,10 @@ export interface AlternativeName {
   comment: string;
   name: string;
 }
+
+export interface PriceFromUrlScraped {
+  gamepass?: boolean;
+  discount_percent: string;
+  initial_price: string;
+  final_price: string;
+}
