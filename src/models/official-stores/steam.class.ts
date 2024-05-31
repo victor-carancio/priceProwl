@@ -60,7 +60,13 @@ export class SteamStore extends Store {
       .filter((game) =>
         game.gameName.toLowerCase().includes(query.trim().toLowerCase())
       )
-      .filter((game) => !game.gameName.toLowerCase().includes("demo"));
+      .filter(
+        (game) =>
+          !game.gameName.toLowerCase().includes("demo") ||
+          !game.gameName.toLowerCase().includes("bundle") ||
+          !game.gameName.toLowerCase().includes("teaser") ||
+          !game.gameName.toLowerCase().includes("pack")
+      );
 
     return {
       [this.name]: games,

@@ -1,5 +1,5 @@
 import { Page } from "playwright";
-import { parseUrl, replaceXbox } from "../../utils/game.utils";
+import { parseUrl, replaceSteam, replaceXbox } from "../../utils/game.utils";
 import { Store } from "../store.class";
 import { GamePriceInfo, StoreInfo } from "../../types";
 
@@ -70,12 +70,73 @@ export class XboxStore extends Store {
     // return content;
 
     const games: GamePriceInfo[] = content
+      .map((el) => {
+        return { ...el, gameName: replaceSteam(replaceXbox(el.gameName)) };
+      })
       .filter((game: GamePriceInfo) =>
         game.gameName.toLowerCase().includes(query.trim().toLowerCase())
-      )
-      .map((el) => {
-        return { ...el, gameName: replaceXbox(el.gameName) };
-      });
+      );
+
     return { [this.name]: games };
+  }
+
+  async scrapePriceGameFromUrl(page: Page, url: string) {
+    await page.goto(url);
+
+    await page.waitForSelector(
+      "div.ProductActionsPanel-module__desktopProductActionsPanel___J1Jn3"
+    );
+    await page.waitForTimeout(500);
+
+    const currPrice = await page.$eval(
+      "div.ProductActionsPanel-module__desktopProductActionsPanel___J1Jn3",
+      (element: HTMLDivElement) => {
+        const calculateDiscountPercent = (
+          initial_price: string,
+          final_price: string
+        ) => {
+          const initial = Number(initial_price?.replace(/[^0-9.]/g, "")) * 100;
+          const final = Number(final_price?.replace(/[^0-9.]/g, "")) * 100;
+
+          const discount: number = (final / initial) * 100 - 100;
+
+          return Math.round(discount).toFixed() + "%";
+        };
+
+        const gamepass: HTMLSpanElement | null = element.querySelector(
+          "span.glyph-prepend.glyph-prepend-xbox-game-pass-inline"
+        );
+
+        const originalPriceSelector: string = document.querySelector(
+          "span.Price-module__brandOriginalPrice___hNhzI"
+        )
+          ? "span.Price-module__brandOriginalPrice___hNhzI"
+          : "span.Price-module__boldText___vmNHu.Price-module__moreText___q5KoT";
+
+        const initialGamePrice: HTMLSpanElement | null = gamepass
+          ? element.querySelector(
+              "button.CommonButtonStyles-module__variableLineDesktopButton___cxDyV.CommonButtonStyles-module__highContrastAwareButton___DgX7Y span"
+            )
+          : element.querySelector(originalPriceSelector);
+
+        const finalGamePrice: HTMLDivElement | null = element.querySelector(
+          "span.Price-module__boldText___vmNHu.Price-module__moreText___q5KoT"
+        );
+        return {
+          gamepass: gamepass ? true : false,
+          discount_percent:
+            initialGamePrice!.innerText.replace(/[^0-9.]/g, "") ===
+            finalGamePrice!.innerText.replace(/[^0-9.]/g, "")
+              ? "-"
+              : calculateDiscountPercent(
+                  initialGamePrice!.innerText,
+                  finalGamePrice!.innerText
+                ),
+          initial_price: initialGamePrice!.innerText,
+          final_price: finalGamePrice!.innerText,
+        };
+      }
+    );
+    return currPrice;
   }
 }

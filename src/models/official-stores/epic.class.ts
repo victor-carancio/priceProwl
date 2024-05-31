@@ -90,4 +90,72 @@ export class EpicStore extends Store {
       );
     return { [this.name]: games };
   }
+
+  async scrapePriceGameFromUrl(page: Page, url: string) {
+    await page.goto(url);
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(500);
+
+    const birthdaySelector = await page.evaluate(() =>
+      document.querySelector("div[data-testid=AgeSelect]")
+    );
+    if (birthdaySelector) {
+      //day
+      await page.locator("button.css-19ah1ww#day_toggle").click();
+      await page.waitForSelector("ul#day_menu");
+      await page
+        .locator("ul#day_menu li.css-1vf7hpq span.css-23anny", {
+          hasText: "01",
+        })
+        .click();
+      await page.waitForTimeout(500);
+      //month
+      await page.locator("button.css-19ah1ww#month_toggle").click();
+      await page.waitForSelector("ul#month_menu");
+      await page
+        .locator("ul#month_menu li.css-1vf7hpq span.css-23anny", {
+          hasText: "01",
+        })
+        .click();
+      await page.waitForTimeout(500);
+      //year
+      await page.locator("button.css-19ah1ww#year_toggle").click();
+      await page.waitForSelector("ul#year_menu");
+      await page
+        .locator("ul#year_menu li.css-1vf7hpq span.css-23anny", {
+          hasText: "1994",
+        })
+        .click();
+      await page.waitForTimeout(500);
+      await page.locator("button#btn_age_continue").click();
+
+      await page.waitForLoadState("domcontentloaded");
+    }
+
+    const currPrice = await page.$eval(
+      "div.css-169q7x3",
+      (element: HTMLDivElement) => {
+        const gameDiscount: HTMLDivElement | null = element.querySelector(
+          "div.css-169q7x3 span.css-1kn2h2p div"
+        );
+
+        const initialGamePrice: HTMLDivElement = gameDiscount
+          ? element.querySelector(
+              "div.css-l24hbj span.css-d3i3lr div.css-4jky3p"
+            )!
+          : element.querySelector("div.css-l24hbj span.css-119zqif")!;
+
+        const finalGamePrice: HTMLDivElement = element.querySelector(
+          "div.css-l24hbj span.css-119zqif"
+        )!;
+
+        return {
+          discount_percent: gameDiscount ? gameDiscount.innerText : "-",
+          initial_price: initialGamePrice.innerText,
+          final_price: finalGamePrice.innerText,
+        };
+      }
+    );
+    return currPrice;
+  }
 }

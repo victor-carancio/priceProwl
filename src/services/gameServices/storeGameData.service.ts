@@ -68,28 +68,26 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
       }
     }
 
-    const existingInfo = await prisma.infoGame.findMany({
-      where: { game_id: existingGame.id },
+    const existingInfo = await prisma.infoGame.findFirst({
+      where: { game: { some: { game_id: existingGame.id } } },
     });
 
-    if (
-      !game.infoGame ||
-      game.infoGame.length <= 0 ||
-      existingInfo.length > 0
-    ) {
+    if (!game.infoGame || game.infoGame.length <= 0 || existingInfo) {
+      console.log(`continua ${existingGame.gameName}`);
       continue;
     }
 
     for (const info of game.infoGame) {
-      const newInfoGame = await prisma.infoGame.create({
-        data: {
+      const newInfoGame = await prisma.infoGame.upsert({
+        where: { id: info.id },
+        update: {},
+        create: {
           id: info.id,
           name: info.name,
           first_release_date: String(info.first_release_date),
           storyline: info.storyline,
           summary: info.summary,
           version_title: info.version_title || "-",
-          game: { connect: { id: existingGame.id } },
           cover: {
             create: {
               height: info.cover.height,
@@ -101,16 +99,27 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
         },
       });
 
-      for (const age_rating of info.age_ratings) {
-        await prisma.ageRatings.create({
-          data: {
-            id: age_rating.id,
-            category: age_rating.category,
-            rating: age_rating.rating,
-            synopsis: age_rating.synopsis || "-",
-            info_game: { connect: { id: newInfoGame.id } },
-          },
-        });
+      await prisma.gameOnInfoGame.create({
+        data: {
+          game: { connect: { id: existingGame.id } },
+          info_game: { connect: { id: info.id } },
+        },
+      });
+
+      if ("age_ratings" in info) {
+        for (const age_rating of info.age_ratings) {
+          await prisma.ageRatings.upsert({
+            where: { id: age_rating.id },
+            update: {},
+            create: {
+              id: age_rating.id,
+              category: age_rating.category,
+              rating: age_rating.rating,
+              synopsis: age_rating.synopsis || "-",
+              info_game: { connect: { id: newInfoGame.id } },
+            },
+          });
+        }
       }
 
       if ("alternative_names" in info) {
@@ -166,28 +175,30 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
         }
       }
 
-      for (const genre of info.genres) {
-        let existingGenre = await prisma.genre.findFirst({
-          where: {
-            id: genre.id,
-          },
-        });
-
-        if (!existingGenre) {
-          existingGenre = await prisma.genre.create({
-            data: {
+      if ("genres" in info) {
+        for (const genre of info.genres) {
+          let existingGenre = await prisma.genre.findFirst({
+            where: {
               id: genre.id,
-              name: genre.name,
+            },
+          });
+
+          if (!existingGenre) {
+            existingGenre = await prisma.genre.create({
+              data: {
+                id: genre.id,
+                name: genre.name,
+              },
+            });
+          }
+
+          await prisma.genreOnInfoGame.create({
+            data: {
+              genre: { connect: { id: existingGenre.id } },
+              info_game: { connect: { id: newInfoGame.id } },
             },
           });
         }
-
-        await prisma.genreOnInfoGame.create({
-          data: {
-            genre: { connect: { id: existingGenre.id } },
-            info_game: { connect: { id: newInfoGame.id } },
-          },
-        });
       }
 
       for (const involved_company of info.involved_companies) {
@@ -465,6 +476,7 @@ export const updateStoreGamePrice = async (
     discount_percent: string;
     initial_price: string;
     final_price: string;
+    gamepass?: boolean;
   },
 ) => {
   const storePrice = await prisma.storePrice.findFirst({
@@ -489,6 +501,7 @@ export const updateStoreGamePrice = async (
         storeGame: { connect: { id: gameByStore.id } },
       },
     });
+    console.log("created");
   } else {
     await prisma.storePrice.update({
       where: {
@@ -498,10 +511,76 @@ export const updateStoreGamePrice = async (
         initial_price: currPrice.initial_price,
         final_price: currPrice.final_price,
         discount_percent: currPrice.discount_percent,
-        storeGame: { connect: { id: gameByStore.id } },
+        storeGame: {
+          connect: { id: gameByStore.id },
+          update: {
+            gamepass: gameByStore.store === "Xbox" ? currPrice.gamepass : null,
+          },
+        },
       },
     });
+    console.log("updated");
   }
+};
+
+export const findGameByName = async (name: string) => {
+  const gamesFounded = await prisma.game.findMany({
+    where: {
+      gameName: {
+        contains: name.trim().toUpperCase(),
+      },
+    },
+    include: {
+      stores: {
+        include: {
+          info: true,
+        },
+      },
+      infoGame: {
+        include: {
+          cover: true,
+          age_ratings: true,
+          alternative_names: true,
+          artworks: true,
+          game_engines: true,
+          genres: {
+            include: {
+              genre: true,
+            },
+          },
+          involved_companies: {
+            include: {
+              company: true,
+            },
+          },
+          keywords: {
+            include: {
+              keyword: true,
+            },
+          },
+          platforms: {
+            include: {
+              platform: true,
+            },
+          },
+          player_perspectives: {
+            include: {
+              player_perspective: true,
+            },
+          },
+          screenshots: true,
+          videos: true,
+          language_supports: {
+            include: {
+              language: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return gamesFounded;
 };
 
 export const findGameByName = async (name: string) => {

@@ -2,8 +2,35 @@ import { GameStoresPrices, InfoGame, AlternativeName } from "../types";
 
 //regex
 
-const xboxStorePcReplace =
-  /\b(?:for\s)?Windows|\b(?:P(?:C|\(Windows\)|\(win\)|\(Xbox & PC\)))\b/gi;
+// const xboxStorePcReplace =
+//   /\b(?:for\s)?Windows|\b(?:P(?:C|\(Windows\)|\(win\)|\(Xbox & PC\)))\b/gi;
+
+function createDynamicRegex(terms: string[]) {
+  // Escapar caracteres especiales en los términos y reemplazar espacios con \s*
+  const escapedTerms = terms.map((term) =>
+    term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/ /g, "\\s*")
+  );
+  // Unir los términos en un solo patrón de regex, manejando los espacios opcionales y alternancias
+  const pattern = "\\b(?:" + escapedTerms.join("|") + ")\\b|\\s*\\([^)]*\\)";
+  return new RegExp(pattern, "gi");
+}
+
+// Lista de términos
+const termsDinamicXbox = [
+  "windows",
+  "(windows)",
+  "for windows",
+  "(PC)",
+  "PC",
+  "win",
+  "(win)",
+  "(xbox & pc)",
+  "for pc",
+  "(for pc)",
+];
+
+// Crear el regex dinámico
+const xboxStorePcReplace = createDynamicRegex(termsDinamicXbox);
 
 const steamReplace = /[^\x00-\x7F]/g;
 
@@ -109,3 +136,13 @@ export const compareScrapedAndIgdbGameTitle = (
   );
 };
 //borrar
+export const calculateDiscountPercent = (
+  initial_price: string,
+  final_price: string
+) => {
+  const initial = Number(initial_price?.replace("+", ""));
+  const final = Number(final_price?.replace("+", ""));
+
+  const discount: number = (initial / final) * 100 - 100;
+  return discount.toFixed(0);
+};
