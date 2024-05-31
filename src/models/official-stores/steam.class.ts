@@ -19,7 +19,7 @@ export class SteamStore extends Store {
     await page.waitForSelector("div.search_results");
 
     const notFound = await page.evaluate(() =>
-      document.querySelector("div#search_resultsRows")
+      document.querySelector("div#search_resultsRows"),
     );
     if (!notFound) {
       return { [this.name]: [] };
@@ -30,12 +30,12 @@ export class SteamStore extends Store {
       (elements: HTMLAnchorElement[]) => {
         return elements.map((element) => {
           const gameName: HTMLSpanElement = element.querySelector(
-            "div.search_name span.title"
+            "div.search_name span.title",
           )!;
           const gameDiscount: HTMLDivElement | null =
             element.querySelector("div.discount_pct");
           const gameFinalPrice: HTMLDivElement | null = element.querySelector(
-            "div.discount_final_price"
+            "div.discount_final_price",
           );
           const originalPriceSelector = gameDiscount
             ? "discount_original_price"
@@ -50,7 +50,7 @@ export class SteamStore extends Store {
             final_price: gameFinalPrice?.innerText,
           };
         });
-      }
+      },
     );
 
     const games: GamePriceInfo[] = content
@@ -58,14 +58,14 @@ export class SteamStore extends Store {
         return { ...el, gameName: replaceSteam(el.gameName) };
       })
       .filter((game) =>
-        game.gameName.toLowerCase().includes(query.trim().toLowerCase())
+        game.gameName.toLowerCase().includes(query.trim().toLowerCase()),
       )
       .filter(
         (game) =>
-          !game.gameName.toLowerCase().includes("demo") ||
-          !game.gameName.toLowerCase().includes("bundle") ||
-          !game.gameName.toLowerCase().includes("teaser") ||
-          !game.gameName.toLowerCase().includes("pack")
+          !game.gameName.toLowerCase().includes("demo") &&
+          !game.gameName.toLowerCase().includes("bundle") &&
+          !game.gameName.toLowerCase().includes("teaser") &&
+          !game.gameName.toLowerCase().includes("pack"),
       );
 
     return {
@@ -79,7 +79,7 @@ export class SteamStore extends Store {
     await page.waitForTimeout(500);
 
     const birthdaySelector = await page.evaluate(() =>
-      document.querySelector("div.agegate_birthday_selector")
+      document.querySelector("div.agegate_birthday_selector"),
     );
     if (birthdaySelector) {
       await page.locator("select#ageYear").selectOption("1994");
@@ -106,7 +106,7 @@ export class SteamStore extends Store {
           initial_price: initialGamePrice?.innerText.replace("$ ", "$"),
           final_price: finalGamePrice?.innerText.replace("$ ", "$"),
         };
-      }
+      },
     );
     return currPrice;
   }

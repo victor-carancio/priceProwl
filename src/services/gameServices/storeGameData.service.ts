@@ -6,12 +6,12 @@ const prisma = new PrismaClient();
 export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
   for (const game of gamesData) {
     let existingGame = await prisma.game.findFirst({
-      where: { gameName: game.gameName.toUpperCase() },
+      where: { gameName: game.gameName },
     });
 
     if (!existingGame) {
       existingGame = await prisma.game.create({
-        data: { gameName: game.gameName.toUpperCase() },
+        data: { gameName: game.gameName },
       });
     }
 
@@ -527,7 +527,7 @@ export const findGameByName = async (name: string) => {
   const gamesFounded = await prisma.game.findMany({
     where: {
       gameName: {
-        contains: name.trim().toUpperCase(),
+        contains: name.trim(),
       },
     },
     include: {
@@ -538,101 +538,45 @@ export const findGameByName = async (name: string) => {
       },
       infoGame: {
         include: {
-          cover: true,
-          age_ratings: true,
-          alternative_names: true,
-          artworks: true,
-          game_engines: true,
-          genres: {
+          info_game: {
             include: {
-              genre: true,
-            },
-          },
-          involved_companies: {
-            include: {
-              company: true,
-            },
-          },
-          keywords: {
-            include: {
-              keyword: true,
-            },
-          },
-          platforms: {
-            include: {
-              platform: true,
-            },
-          },
-          player_perspectives: {
-            include: {
-              player_perspective: true,
-            },
-          },
-          screenshots: true,
-          videos: true,
-          language_supports: {
-            include: {
-              language: true,
-            },
-          },
-        },
-      },
-    },
-  });
-
-  return gamesFounded;
-};
-
-export const findGameByName = async (name: string) => {
-  const gamesFounded = await prisma.game.findMany({
-    where: {
-      gameName: {
-        contains: name.trim().toUpperCase(),
-      },
-    },
-    include: {
-      stores: {
-        include: {
-          info: true,
-        },
-      },
-      infoGame: {
-        include: {
-          cover: true,
-          age_ratings: true,
-          alternative_names: true,
-          artworks: true,
-          game_engines: true,
-          genres: {
-            include: {
-              genre: true,
-            },
-          },
-          involved_companies: {
-            include: {
-              company: true,
-            },
-          },
-          keywords: {
-            include: {
-              keyword: true,
-            },
-          },
-          platforms: {
-            include: {
-              platform: true,
-            },
-          },
-          player_perspectives: {
-            include: {
-              player_perspective: true,
-            },
-          },
-          screenshots: true,
-          videos: true,
-          language_supports: {
-            include: {
-              language: true,
+              cover: true,
+              age_ratings: true,
+              alternative_names: true,
+              artworks: true,
+              game_engines: true,
+              genres: {
+                include: {
+                  genre: true,
+                },
+              },
+              involved_companies: {
+                include: {
+                  company: true,
+                },
+              },
+              keywords: {
+                include: {
+                  keyword: true,
+                },
+              },
+              platforms: {
+                include: {
+                  platform: true,
+                },
+              },
+              player_perspectives: {
+                include: {
+                  player_perspective: true,
+                },
+              },
+              screenshots: true,
+              videos: true,
+              language_supports: {
+                include: {
+                  language: true,
+                },
+              },
             },
           },
         },
@@ -642,3 +586,63 @@ export const findGameByName = async (name: string) => {
 
   return gamesFounded;
 };
+
+// export const findGameByName = async (name: string) => {
+//   const gamesFounded = await prisma.game.findMany({
+//     where: {
+//       gameName: {
+//         contains: name.trim(),
+//       },
+//     },
+//     include: {
+//       stores: {
+//         include: {
+//           info: true,
+//         },
+//       },
+//       infoGame: {
+//         include: {
+//           cover: true,
+//           age_ratings: true,
+//           alternative_names: true,
+//           artworks: true,
+//           game_engines: true,
+//           genres: {
+//             include: {
+//               genre: true,
+//             },
+//           },
+//           involved_companies: {
+//             include: {
+//               company: true,
+//             },
+//           },
+//           keywords: {
+//             include: {
+//               keyword: true,
+//             },
+//           },
+//           platforms: {
+//             include: {
+//               platform: true,
+//             },
+//           },
+//           player_perspectives: {
+//             include: {
+//               player_perspective: true,
+//             },
+//           },
+//           screenshots: true,
+//           videos: true,
+//           language_supports: {
+//             include: {
+//               language: true,
+//             },
+//           },
+//         },
+//       },
+//     },
+//   });
+
+//   return gamesFounded;
+// };
