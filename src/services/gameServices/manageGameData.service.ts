@@ -86,7 +86,7 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
           name: info.name,
           first_release_date: String(info.first_release_date),
           storyline: info.storyline,
-          summary: info.summary,
+          summary: info.summary || "-",
           version_title: info.version_title || "-",
           cover: {
             create: {
@@ -124,12 +124,28 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
 
       if ("alternative_names" in info) {
         for (const alternativeName of info.alternative_names) {
-          await prisma.alternativeName.create({
-            data: {
-              id: alternativeName.id,
-              comment: alternativeName.comment || "-",
-              name: alternativeName.name,
+          await prisma.alternativeNameOnInfoGame.upsert({
+            where: {
+              alternative_name_id_info_game_id: {
+                alternative_name_id: alternativeName.id,
+                info_game_id: info.id,
+              },
+            },
+            update: {},
+            create: {
               info_game: { connect: { id: newInfoGame.id } },
+              alternative_name: {
+                connectOrCreate: {
+                  where: {
+                    id: alternativeName.id,
+                  },
+                  create: {
+                    id: alternativeName.id,
+                    comment: alternativeName.comment || "-",
+                    name: alternativeName.name,
+                  },
+                },
+              },
             },
           });
         }
@@ -137,8 +153,10 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
 
       if ("artworks" in info) {
         for (const artwork of info.artworks) {
-          await prisma.artwork.create({
-            data: {
+          await prisma.artwork.upsert({
+            where: { id: artwork.id },
+            update: {},
+            create: {
               id: artwork.id,
               height: artwork.height,
               width: artwork.width,
@@ -151,25 +169,27 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
 
       if ("game_engines" in info) {
         for (const gameEngine of info.game_engines) {
-          let existingGameEngine = await prisma.gameEngine.findFirst({
-            where: { id: gameEngine.id },
-          });
-
-          if (!existingGameEngine) {
-            existingGameEngine = await prisma.gameEngine.create({
-              data: {
-                id: gameEngine.id,
-                name: gameEngine.name,
+          await prisma.gameEngineOnInfoGame.upsert({
+            where: {
+              game_engine_id_info_game_id: {
+                game_engine_id: gameEngine.id,
+                info_game_id: newInfoGame.id,
               },
-            });
-          }
-
-          await prisma.gameEngineOnInfoGame.create({
-            data: {
-              game_engine: {
-                connect: { id: existingGameEngine.id },
-              },
+            },
+            update: {},
+            create: {
               info_game: { connect: { id: newInfoGame.id } },
+              game_engine: {
+                connectOrCreate: {
+                  where: {
+                    id: gameEngine.id,
+                  },
+                  create: {
+                    id: gameEngine.id,
+                    name: gameEngine.name,
+                  },
+                },
+              },
             },
           });
         }
@@ -177,79 +197,91 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
 
       if ("genres" in info) {
         for (const genre of info.genres) {
-          let existingGenre = await prisma.genre.findFirst({
+          await prisma.genreOnInfoGame.upsert({
             where: {
-              id: genre.id,
-            },
-          });
-
-          if (!existingGenre) {
-            existingGenre = await prisma.genre.create({
-              data: {
-                id: genre.id,
-                name: genre.name,
+              genre_id_info_game_id: {
+                genre_id: genre.id,
+                info_game_id: newInfoGame.id,
               },
-            });
-          }
-
-          await prisma.genreOnInfoGame.create({
-            data: {
-              genre: { connect: { id: existingGenre.id } },
+            },
+            update: {},
+            create: {
               info_game: { connect: { id: newInfoGame.id } },
+              genre: {
+                connectOrCreate: {
+                  where: { id: genre.id },
+                  create: {
+                    id: genre.id,
+                    name: genre.name,
+                  },
+                },
+              },
             },
           });
         }
       }
 
-      for (const involved_company of info.involved_companies) {
-        const newCompany = await prisma.company.upsert({
-          where: { id: involved_company.company.id },
-          update: {
-            involved_company: {
-              create: {
-                id: involved_company.id,
-                developer: involved_company.developer,
-                porting: involved_company.porting,
-                publisher: involved_company.publisher,
-                supporting: involved_company.supporting,
-                info_game: { connect: { id: newInfoGame.id } },
-              },
-            },
-          },
-          create: {
-            id: involved_company.company.id,
-            name: involved_company.company.name,
-            country: involved_company.company.country,
-            start_date: String(involved_company.company.start_date),
-            involved_company: {
-              create: {
-                id: involved_company.id,
-                developer: involved_company.developer,
-                porting: involved_company.porting,
-                publisher: involved_company.publisher,
-                supporting: involved_company.supporting,
-                info_game: { connect: { id: newInfoGame.id } },
-              },
-            },
-          },
-        });
-
-        if ("logo" in involved_company.company) {
-          await prisma.companyLogo.upsert({
-            where: {
-              id: involved_company.company.logo.id,
-            },
+      if ("involved_companies" in info) {
+        for (const involved_company of info.involved_companies) {
+          const newCompany = await prisma.company.upsert({
+            where: { id: involved_company.company.id },
             update: {
-              company: { connect: { id: newCompany.id } },
+              involved_company: {
+                connectOrCreate: {
+                  where: {
+                    id: involved_company.id,
+                  },
+                  create: {
+                    id: involved_company.id,
+                    developer: involved_company.developer,
+                    porting: involved_company.porting,
+                    publisher: involved_company.publisher,
+                    supporting: involved_company.supporting,
+                    info_game: { connect: { id: newInfoGame.id } },
+                  },
+                },
+              },
             },
             create: {
-              id: involved_company.company.logo.id,
-              height: involved_company.company.logo.height,
-              width: involved_company.company.logo.width,
-              url: involved_company.company.logo.url,
-              company: { connect: { id: newCompany.id } },
+              id: involved_company.company.id,
+              name: involved_company.company.name,
+              country: involved_company.company.country,
+              start_date: String(involved_company.company.start_date),
+              involved_company: {
+                connectOrCreate: {
+                  where: {
+                    id: involved_company.id,
+                  },
+                  create: {
+                    id: involved_company.id,
+                    developer: involved_company.developer,
+                    porting: involved_company.porting,
+                    publisher: involved_company.publisher,
+                    supporting: involved_company.supporting,
+                    info_game: { connect: { id: newInfoGame.id } },
+                  },
+                },
+              },
             },
           });
+
+          if ("logo" in involved_company.company) {
+            await prisma.companyLogo.upsert({
+              where: {
+                id: involved_company.company.logo.id,
+              },
+              update: {
+                company: { connect: { id: newCompany.id } },
+              },
+              create: {
+                id: involved_company.company.logo.id,
+                height: involved_company.company.logo.height,
+                width: involved_company.company.logo.width,
+                url: involved_company.company.logo.url,
+                company: { connect: { id: newCompany.id } },
+              },
+            });
+          }
         }
       }
 
@@ -279,147 +311,163 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
         }
       }
 
-      for (const platform of info.platforms) {
-        await prisma.platformOnInfoGame.upsert({
-          where: {
-            platform_id_info_game_id: {
-              info_game_id: newInfoGame.id,
-              platform_id: platform.id,
+      if ("platforms" in info) {
+        for (const platform of info.platforms) {
+          await prisma.platformOnInfoGame.upsert({
+            where: {
+              platform_id_info_game_id: {
+                info_game_id: newInfoGame.id,
+                platform_id: platform.id,
+              },
             },
-          },
-          update: {},
-          create: {
-            info_game: { connect: { id: newInfoGame.id } },
-            platform: {
-              connectOrCreate: {
-                where: { id: platform.id },
-                create: {
-                  id: platform.id,
-                  abbreviation: platform.abbreviation,
-                  alternative_name: platform.alternative_name,
-                  name: platform.name,
+            update: {},
+            create: {
+              info_game: { connect: { id: newInfoGame.id } },
+              platform: {
+                connectOrCreate: {
+                  where: { id: platform.id },
+                  create: {
+                    id: platform.id,
+                    abbreviation: platform.abbreviation,
+                    alternative_name: platform.alternative_name,
+                    name: platform.name,
+                  },
                 },
               },
             },
-          },
-        });
-        if ("platform_logo" in platform) {
-          await prisma.platformLogo.upsert({
-            where: {
-              id: platform.platform_logo.id,
-            },
-            update: {
-              platform: { connect: { id: platform.id } },
-            },
-            create: {
-              id: platform.platform_logo.id,
-              height: platform.platform_logo.height,
-              width: platform.platform_logo.width,
-              url: platform.platform_logo.url,
-              platform: { connect: { id: platform.id } },
-            },
           });
+          if ("platform_logo" in platform) {
+            await prisma.platformLogo.upsert({
+              where: {
+                id: platform.platform_logo.id,
+              },
+              update: {
+                platform: { connect: { id: platform.id } },
+              },
+              create: {
+                id: platform.platform_logo.id,
+                height: platform.platform_logo.height,
+                width: platform.platform_logo.width,
+                url: platform.platform_logo.url,
+                platform: { connect: { id: platform.id } },
+              },
+            });
+          }
         }
       }
 
-      for (const playerPerspective of info.player_perspectives) {
-        await prisma.playerPerspectiveOnInfoGame.upsert({
-          where: {
-            player_perspective_id_info_game_id: {
-              info_game_id: newInfoGame.id,
-              player_perspective_id: playerPerspective.id,
-            },
-          },
-          update: {},
-          create: {
-            info_game: { connect: { id: newInfoGame.id } },
-            player_perspective: {
-              connectOrCreate: {
-                where: { id: playerPerspective.id },
-                create: {
-                  id: playerPerspective.id,
-                  name: playerPerspective.name,
-                },
-              },
-            },
-          },
-        });
-      }
-
-      for (const releaseDate of info.release_dates) {
-        await prisma.platform.upsert({
-          where: { id: releaseDate.platform.id },
-          update: {
-            release_date: {
-              connectOrCreate: {
-                where: { id: releaseDate.id },
-                create: {
-                  id: releaseDate.id,
-                  category: releaseDate.category,
-                  date: String(releaseDate.date),
-                  region: releaseDate.region,
-                },
-              },
-            },
-          },
-          create: {
-            id: releaseDate.platform.id,
-            abbreviation: releaseDate.platform.abbreviation,
-            alternative_name: releaseDate.platform.alternative_name,
-            name: releaseDate.platform.name,
-            release_date: {
-              connectOrCreate: {
-                where: { id: releaseDate.id },
-                create: {
-                  id: releaseDate.id,
-                  category: releaseDate.category,
-                  date: String(releaseDate.date),
-                  region: releaseDate.region,
-                },
-              },
-            },
-          },
-        });
-
-        if ("platform_logo" in releaseDate.platform) {
-          await prisma.platformLogo.upsert({
+      if ("player_perspectives" in info) {
+        for (const playerPerspective of info.player_perspectives) {
+          await prisma.playerPerspectiveOnInfoGame.upsert({
             where: {
-              id: releaseDate.platform.platform_logo.id,
-            },
-            update: {
-              platform: {
-                connect: { id: releaseDate.platform.id },
+              player_perspective_id_info_game_id: {
+                info_game_id: newInfoGame.id,
+                player_perspective_id: playerPerspective.id,
               },
             },
+            update: {},
             create: {
-              id: releaseDate.platform.platform_logo.id,
-              height: releaseDate.platform.platform_logo.height,
-              width: releaseDate.platform.platform_logo.width,
-              url: releaseDate.platform.platform_logo.url,
-              platform: {
-                connect: { id: releaseDate.platform.id },
+              info_game: { connect: { id: newInfoGame.id } },
+              player_perspective: {
+                connectOrCreate: {
+                  where: { id: playerPerspective.id },
+                  create: {
+                    id: playerPerspective.id,
+                    name: playerPerspective.name,
+                  },
+                },
               },
             },
           });
         }
       }
 
-      for (const screenshot of info.screenshots) {
-        await prisma.screenshot.create({
-          data: {
-            id: screenshot.id,
-            height: screenshot.height,
-            width: screenshot.width,
-            url: screenshot.url,
-            info_game: { connect: { id: newInfoGame.id } },
-          },
-        });
+      if ("release_dates" in info) {
+        for (const releaseDate of info.release_dates) {
+          await prisma.platform.upsert({
+            where: { id: releaseDate.platform.id },
+            update: {
+              release_date: {
+                connectOrCreate: {
+                  where: { id: releaseDate.id },
+                  create: {
+                    id: releaseDate.id,
+                    category: releaseDate.category,
+                    date: String(releaseDate.date),
+                    region: releaseDate.region,
+                  },
+                },
+              },
+            },
+            create: {
+              id: releaseDate.platform.id,
+              abbreviation: releaseDate.platform.abbreviation,
+              alternative_name: releaseDate.platform.alternative_name,
+              name: releaseDate.platform.name,
+              release_date: {
+                connectOrCreate: {
+                  where: { id: releaseDate.id },
+                  create: {
+                    id: releaseDate.id,
+                    category: releaseDate.category,
+                    date: String(releaseDate.date),
+                    region: releaseDate.region,
+                  },
+                },
+              },
+            },
+          });
+
+          if ("platform_logo" in releaseDate.platform) {
+            await prisma.platformLogo.upsert({
+              where: {
+                id: releaseDate.platform.platform_logo.id,
+              },
+              update: {
+                platform: {
+                  connect: { id: releaseDate.platform.id },
+                },
+              },
+              create: {
+                id: releaseDate.platform.platform_logo.id,
+                height: releaseDate.platform.platform_logo.height,
+                width: releaseDate.platform.platform_logo.width,
+                url: releaseDate.platform.platform_logo.url,
+                platform: {
+                  connect: { id: releaseDate.platform.id },
+                },
+              },
+            });
+          }
+        }
+      }
+
+      if ("screenshots" in info) {
+        for (const screenshot of info.screenshots) {
+          await prisma.screenshot.upsert({
+            where: {
+              id: screenshot.id,
+            },
+            update: {},
+            create: {
+              id: screenshot.id,
+              height: screenshot.height,
+              width: screenshot.width,
+              url: screenshot.url,
+              info_game: { connect: { id: newInfoGame.id } },
+            },
+          });
+        }
       }
 
       if ("videos" in info) {
         for (const video of info.videos) {
-          await prisma.video.create({
-            data: {
+          await prisma.video.upsert({
+            where: {
+              id: video.id,
+            },
+            update: {},
+            create: {
               id: video.id,
               name: video.name,
               video_id: video.video_id,
@@ -528,6 +576,7 @@ export const findGameByName = async (name: string) => {
     where: {
       gameName: {
         contains: name.trim(),
+        mode: "insensitive",
       },
     },
     include: {
@@ -586,63 +635,3 @@ export const findGameByName = async (name: string) => {
 
   return gamesFounded;
 };
-
-// export const findGameByName = async (name: string) => {
-//   const gamesFounded = await prisma.game.findMany({
-//     where: {
-//       gameName: {
-//         contains: name.trim(),
-//       },
-//     },
-//     include: {
-//       stores: {
-//         include: {
-//           info: true,
-//         },
-//       },
-//       infoGame: {
-//         include: {
-//           cover: true,
-//           age_ratings: true,
-//           alternative_names: true,
-//           artworks: true,
-//           game_engines: true,
-//           genres: {
-//             include: {
-//               genre: true,
-//             },
-//           },
-//           involved_companies: {
-//             include: {
-//               company: true,
-//             },
-//           },
-//           keywords: {
-//             include: {
-//               keyword: true,
-//             },
-//           },
-//           platforms: {
-//             include: {
-//               platform: true,
-//             },
-//           },
-//           player_perspectives: {
-//             include: {
-//               player_perspective: true,
-//             },
-//           },
-//           screenshots: true,
-//           videos: true,
-//           language_supports: {
-//             include: {
-//               language: true,
-//             },
-//           },
-//         },
-//       },
-//     },
-//   });
-
-//   return gamesFounded;
-// };

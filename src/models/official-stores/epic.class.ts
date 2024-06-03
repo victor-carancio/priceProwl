@@ -13,7 +13,7 @@ export class EpicStore extends Store {
     this.setUrl(
       this.getUrl() +
         queryUrl +
-        "&sortBy=relevancy&sortDir=DESC&category=Game&count=40&start=0"
+        "&sortBy=relevancy&sortDir=DESC&category=Game&count=40&start=0",
     ); // pc game
     return this.getUrl();
   }
@@ -25,7 +25,7 @@ export class EpicStore extends Store {
     await page.waitForSelector("section.css-1ufzxyu");
 
     const notFound = await page.evaluate(() =>
-      document.querySelector("div.css-17qmv99 div.css-1dbkmxi")
+      document.querySelector("div.css-17qmv99 div.css-1dbkmxi"),
     );
 
     if (notFound) {
@@ -54,12 +54,12 @@ export class EpicStore extends Store {
             element.querySelector("div.css-lgj0h8 div");
           const url: HTMLAnchorElement = element.querySelector("a.css-g3jcms")!;
           const gameType: HTMLSpanElement | null = element.querySelector(
-            "span.css-1825rs2 span"
+            "span.css-1825rs2 span",
           );
           const gameDiscount: HTMLDivElement | null =
             element.querySelector("div.css-1q7f74q");
           const gameFinalPrice: HTMLSpanElement | null = element.querySelector(
-            "div.css-l24hbj span.css-119zqif"
+            "div.css-l24hbj span.css-119zqif",
           );
           const gameOriginalPrice: HTMLDivElement | null =
             element.querySelector("span.css-d3i3lr div.css-4jky3p");
@@ -75,7 +75,7 @@ export class EpicStore extends Store {
             final_price: gameFinalPrice?.innerText,
           };
         });
-      }
+      },
     );
 
     // return content;
@@ -86,8 +86,9 @@ export class EpicStore extends Store {
       })
 
       .filter((game: GamePriceInfo) =>
-        game.gameName.toLowerCase().includes(query.trim().toLowerCase())
-      );
+        game.gameName.toLowerCase().includes(query.trim().toLowerCase()),
+      )
+      .filter((game) => game.initial_price && game.final_price);
     return { [this.name]: games };
   }
 
@@ -97,7 +98,7 @@ export class EpicStore extends Store {
     await page.waitForTimeout(500);
 
     const birthdaySelector = await page.evaluate(() =>
-      document.querySelector("div[data-testid=AgeSelect]")
+      document.querySelector("div[data-testid=AgeSelect]"),
     );
     if (birthdaySelector) {
       //day
@@ -136,17 +137,17 @@ export class EpicStore extends Store {
       "div.css-169q7x3",
       (element: HTMLDivElement) => {
         const gameDiscount: HTMLDivElement | null = element.querySelector(
-          "div.css-169q7x3 span.css-1kn2h2p div"
+          "div.css-169q7x3 span.css-1kn2h2p div",
         );
 
         const initialGamePrice: HTMLDivElement = gameDiscount
           ? element.querySelector(
-              "div.css-l24hbj span.css-d3i3lr div.css-4jky3p"
+              "div.css-l24hbj span.css-d3i3lr div.css-4jky3p",
             )!
           : element.querySelector("div.css-l24hbj span.css-119zqif")!;
 
         const finalGamePrice: HTMLDivElement = element.querySelector(
-          "div.css-l24hbj span.css-119zqif"
+          "div.css-l24hbj span.css-119zqif",
         )!;
 
         return {
@@ -154,7 +155,7 @@ export class EpicStore extends Store {
           initial_price: initialGamePrice.innerText,
           final_price: finalGamePrice.innerText,
         };
-      }
+      },
     );
     return currPrice;
   }

@@ -10,10 +10,12 @@ import {
   scrapeAllStores,
   getGameInfoFromIgdb,
 } from "./gameServices/index.service";
+import cron from "node-cron";
+import { scrapeAllGamesFromUrl } from "./gameServices/scrapeGameData.service";
 // import { scrapeGameUrl } from "./gameServices/scrapeGameData.service";
 
 export const findGamesPricesByName = async (
-  title: string
+  title: string,
 ): Promise<GameInfoAndPrices[]> => {
   if (!isString(title)) {
     throw new BadRequestError("invalid field");
@@ -31,7 +33,7 @@ export const findGamesPricesByName = async (
     const info = await getGameInfoFromIgdb(game.gameName);
 
     const infoGame = info.filter((el) =>
-      includesScrapedAndIgdbGameTitle(el, game)
+      includesScrapedAndIgdbGameTitle(el, game),
     );
 
     // can return more than 1 game info
@@ -40,7 +42,7 @@ export const findGamesPricesByName = async (
       return { ...game, infoGame };
     }
     const correctGames = infoGame.filter((el) =>
-      compareScrapedAndIgdbGameTitle(el, game)
+      compareScrapedAndIgdbGameTitle(el, game),
     );
 
     return { ...game, infoGame: correctGames };
@@ -63,6 +65,7 @@ export const findGameInfoByName = async (title: string): Promise<any> => {
   return gameData;
 };
 
-// export const updateGamePrice = async()=>{
-//   await scrapeGameUrl()
-// }
+cron.schedule("0 0 * * *", async () => {
+  await scrapeAllGamesFromUrl();
+  // console.log("jio");
+});

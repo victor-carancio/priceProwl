@@ -19,7 +19,7 @@ const iGDBQueries: IGDBQueries = {
   videosQueries: "videos.name,videos.video_id,",
   age_ratingsQueries:
     "age_ratings.rating,age_ratings.synopsis,age_ratings.rating_cover_url,age_ratings.category;",
-  filtersQueries: "where platforms = (6,163) & category = (0,8,9,10,11);",
+  filtersQueries: "where platforms = (6,163) & category = (0,3,8,9,10,11);",
 };
 
 export const gameIgdbQueries: string = Object.values(iGDBQueries).join("");

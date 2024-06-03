@@ -20,7 +20,7 @@ export class XboxStore extends Store {
     await page.waitForSelector("div.SearchTabs-module__tabContainer___MR492");
 
     const notFound = await page.evaluate(() =>
-      document.querySelector("h4.ErrorWithImage-module__errorHeading___xEheO")
+      document.querySelector("h4.ErrorWithImage-module__errorHeading___xEheO"),
     );
 
     if (notFound) {
@@ -32,26 +32,26 @@ export class XboxStore extends Store {
       (elements) => {
         return elements.map((element) => {
           const gameName: HTMLDivElement = element.querySelector(
-            "div.ProductCard-module__infoBox___M5x18 span"
+            "div.ProductCard-module__infoBox___M5x18 span",
           )!;
           const url: HTMLAnchorElement = element.querySelector(
-            "a.commonStyles-module__basicButton___go-bX"
+            "a.commonStyles-module__basicButton___go-bX",
           )!;
           const gameDiscount: HTMLDivElement | null = element.querySelector(
-            "div.ProductCard-module__discountTag___OjGFy"
+            "div.ProductCard-module__discountTag___OjGFy",
           );
           const gameFinalPrice: HTMLSpanElement | null = element.querySelector(
-            "span.Price-module__listedDiscountPrice___67yG1"
+            "span.Price-module__listedDiscountPrice___67yG1",
           );
           const originalPriceSelector = gameDiscount
             ? ""
             : ".Price-module__moreText___q5KoT";
           const gameOriginalPrice: HTMLSpanElement | null =
             element.querySelector(
-              `div.typography-module__xdsBody2___RNdGY span${originalPriceSelector}`
+              `div.typography-module__xdsBody2___RNdGY span${originalPriceSelector}`,
             );
           const gamePass: HTMLTitleElement | null = element.querySelector(
-            "svg.SubscriptionBadge-module__gamePassBadge___ukbVg title"
+            "svg.SubscriptionBadge-module__gamePassBadge___ukbVg title",
           );
           return {
             gameName: gameName.innerText,
@@ -64,7 +64,7 @@ export class XboxStore extends Store {
             gamepass: gamePass ? true : false,
           };
         });
-      }
+      },
     );
 
     // return content;
@@ -74,8 +74,9 @@ export class XboxStore extends Store {
         return { ...el, gameName: replaceSteam(replaceXbox(el.gameName)) };
       })
       .filter((game: GamePriceInfo) =>
-        game.gameName.toLowerCase().includes(query.trim().toLowerCase())
-      );
+        game.gameName.toLowerCase().includes(query.trim().toLowerCase()),
+      )
+      .filter((game) => game.initial_price && game.final_price);
 
     return { [this.name]: games };
   }
@@ -84,7 +85,7 @@ export class XboxStore extends Store {
     await page.goto(url);
 
     await page.waitForSelector(
-      "div.ProductActionsPanel-module__desktopProductActionsPanel___J1Jn3"
+      "div.ProductActionsPanel-module__desktopProductActionsPanel___J1Jn3",
     );
     await page.waitForTimeout(500);
 
@@ -93,7 +94,7 @@ export class XboxStore extends Store {
       (element: HTMLDivElement) => {
         const calculateDiscountPercent = (
           initial_price: string,
-          final_price: string
+          final_price: string,
         ) => {
           const initial = Number(initial_price?.replace(/[^0-9.]/g, "")) * 100;
           const final = Number(final_price?.replace(/[^0-9.]/g, "")) * 100;
@@ -104,23 +105,23 @@ export class XboxStore extends Store {
         };
 
         const gamepass: HTMLSpanElement | null = element.querySelector(
-          "span.glyph-prepend.glyph-prepend-xbox-game-pass-inline"
+          "span.glyph-prepend.glyph-prepend-xbox-game-pass-inline",
         );
 
         const originalPriceSelector: string = document.querySelector(
-          "span.Price-module__brandOriginalPrice___hNhzI"
+          "span.Price-module__brandOriginalPrice___hNhzI",
         )
           ? "span.Price-module__brandOriginalPrice___hNhzI"
           : "span.Price-module__boldText___vmNHu.Price-module__moreText___q5KoT";
 
         const initialGamePrice: HTMLSpanElement | null = gamepass
           ? element.querySelector(
-              "button.CommonButtonStyles-module__variableLineDesktopButton___cxDyV.CommonButtonStyles-module__highContrastAwareButton___DgX7Y span"
+              "button.CommonButtonStyles-module__variableLineDesktopButton___cxDyV.CommonButtonStyles-module__highContrastAwareButton___DgX7Y span",
             )
           : element.querySelector(originalPriceSelector);
 
         const finalGamePrice: HTMLDivElement | null = element.querySelector(
-          "span.Price-module__boldText___vmNHu.Price-module__moreText___q5KoT"
+          "span.Price-module__boldText___vmNHu.Price-module__moreText___q5KoT",
         );
         return {
           gamepass: gamepass ? true : false,
@@ -130,12 +131,12 @@ export class XboxStore extends Store {
               ? "-"
               : calculateDiscountPercent(
                   initialGamePrice!.innerText,
-                  finalGamePrice!.innerText
+                  finalGamePrice!.innerText,
                 ),
           initial_price: initialGamePrice!.innerText,
           final_price: finalGamePrice!.innerText,
         };
-      }
+      },
     );
     return currPrice;
   }

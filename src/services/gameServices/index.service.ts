@@ -1,4 +1,4 @@
-import { storeGameData } from "./storeGameData.service";
+import { storeGameData } from "./manageGameData.service";
 import { scrapeAllStores } from "./scrapeGameData.service";
 import { getGameInfoFromIgdb } from "./fetchGameData.service";
 

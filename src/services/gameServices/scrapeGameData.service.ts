@@ -8,9 +8,9 @@ import {
   getSpecialEdition,
   replaceSpecialEdition,
 } from "../../utils/game.utils";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, StoreGame } from "@prisma/client";
 import { BadRequestError } from "../../responses/customApiError";
-import { updateStoreGamePrice } from "./storeGameData.service";
+import { updateStoreGamePrice } from "./manageGameData.service";
 import { Store } from "../../models/store.class";
 
 const prisma = new PrismaClient();
@@ -18,12 +18,16 @@ const prisma = new PrismaClient();
 chromium.use(StealthPlugin());
 
 export const scrapeAllStores = async (
-  title: string
+  title: string,
 ): Promise<GameStoresPrices[]> => {
   const agent = random_useragent.getRandom();
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: false });
   const context = await browser.newContext({
     userAgent: agent,
+    // geolocation: { longitude: 12.492507, latitude: 41.889938 },
+    // locale: "en-GB",
+    // permissions: ["geolocation"],
+    // timezoneId: "Europe/Paris",
   });
   const gamesForStore: StoreInfo[] = [];
   try {
@@ -51,6 +55,7 @@ export const scrapeAllStores = async (
           final_price,
           gamepass,
         } = currGame;
+
         const position = gameByStorePrices.findIndex((element) => {
           return (
             element.gameName?.toLowerCase() === gameName?.toLowerCase() ||
@@ -98,14 +103,12 @@ export const scrapeAllStores = async (
   return gameByStorePrices;
 };
 
-export const scrapeGameUrl = async () => {
-  //todo: utilizar enum para normalizar stores
+export const scrapeAllGamesFromUrl = async () => {
   const stores: Record<StoreTypes, Store> = {
     [StoreTypes.STEAM_STORE]: new SteamStore(),
     [StoreTypes.XBOX_STORE]: new XboxStore(),
     [StoreTypes.EPIC_STORE]: new EpicStore(),
   };
-  // const epic = new EpicStore();
 
   const gamesByStore = await prisma.storeGame.findMany({
     where: {},
@@ -136,12 +139,53 @@ export const scrapeGameUrl = async () => {
       }
       const currPrice = await store.scrapePriceGameFromUrl(
         page,
-        gameByStore.url
+        gameByStore.url,
       );
       // console.log(`${gameByStore.store} ${gameByStore.game.gameName}`);
       await updateStoreGamePrice(gameByStore, currPrice);
     }
   } finally {
     await browser.close();
+  }
+};
+
+export const scrapeSearchedGamesFromUrl = async (
+  searchedGames: { stores: StoreGame[] }[],
+) => {
+  if (searchedGames && searchedGames.length > 0) {
+    const stores: Record<StoreTypes, Store> = {
+      [StoreTypes.STEAM_STORE]: new SteamStore(),
+      [StoreTypes.XBOX_STORE]: new XboxStore(),
+      [StoreTypes.EPIC_STORE]: new EpicStore(),
+    };
+
+    const agent = random_useragent.getRandom();
+    const browser = await chromium.launch({ headless: true });
+    const context = await browser.newContext({
+      userAgent: agent,
+    });
+    const page = await context.newPage();
+
+    try {
+      for (const gamesByStore of searchedGames) {
+        for (const gameByStore of gamesByStore.stores) {
+          const store = stores[gameByStore.store as StoreTypes];
+          store.addOneToCounter();
+
+          if (store.getStoreCounter() >= 8) {
+            await page.waitForTimeout(1500);
+            store.resetCounter();
+          }
+          const currPrice = await store.scrapePriceGameFromUrl(
+            page,
+            gameByStore.url,
+          );
+          // console.log(`${gameByStore.store} ${gameByStore.game.gameName}`);
+          await updateStoreGamePrice(gameByStore, currPrice);
+        }
+      }
+    } finally {
+      await browser.close();
+    }
   }
 };

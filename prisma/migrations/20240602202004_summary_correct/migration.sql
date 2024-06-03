@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "InfoGame" ALTER COLUMN "summary" SET DATA TYPE VARCHAR(3500);

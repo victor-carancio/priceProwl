@@ -66,7 +66,8 @@ export class SteamStore extends Store {
           !game.gameName.toLowerCase().includes("bundle") &&
           !game.gameName.toLowerCase().includes("teaser") &&
           !game.gameName.toLowerCase().includes("pack"),
-      );
+      )
+      .filter((game) => game.initial_price && game.final_price);
 
     return {
       [this.name]: games,

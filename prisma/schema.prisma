@@ -59,13 +59,13 @@ model InfoGame {
   name String
   first_release_date String?
   storyline String?
-  summary String @db.VarChar(1500)
+  summary String? @db.VarChar(3500)
   version_title String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   cover Cover?
   age_ratings AgeRatings[]
-  alternative_names AlternativeName[]
+  alternative_names AlternativeNameOnInfoGame[]
   artworks Artwork[]
   game_engines GameEngineOnInfoGame[]
   genres GenreOnInfoGame[]
@@ -93,7 +93,7 @@ model AgeRatings {
   id Int @id
   category Int
   rating Int
-  synopsis String? @db.VarChar(2000)
+  synopsis String? @db.VarChar(3500)
   info_game InfoGame @relation(fields: [info_game_id],references: [id])
   info_game_id Int 
 }
@@ -102,9 +102,17 @@ model AlternativeName {
   id Int @id
   comment String? 
   name String
-  info_game InfoGame @relation(fields: [info_game_id],references: [id])
-  info_game_id Int 
+  info_games AlternativeNameOnInfoGame[]
 }
+
+model AlternativeNameOnInfoGame{
+  alternative_name AlternativeName @relation(fields: [alternative_name_id], references: [id])
+  alternative_name_id Int
+  info_game InfoGame @relation(fields: [info_game_id], references: [id])
+  info_game_id Int
+  @@id([alternative_name_id ,info_game_id])
+}
+
 
 model Artwork {
   id Int @id
