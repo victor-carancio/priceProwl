@@ -65,7 +65,10 @@ export class SteamStore extends Store {
           !game.gameName.toLowerCase().includes("demo") &&
           !game.gameName.toLowerCase().includes("bundle") &&
           !game.gameName.toLowerCase().includes("teaser") &&
-          !game.gameName.toLowerCase().includes("pack"),
+          !game.gameName.toLowerCase().includes("pack") &&
+          !game.gameName.toLowerCase().includes("mod") &&
+          (!game.initial_price?.toLowerCase().includes("free to play") ||
+            !game.final_price?.toLocaleLowerCase().includes("gratuito")),
       )
       .filter((game) => game.initial_price && game.final_price);
 
