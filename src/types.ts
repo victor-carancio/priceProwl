@@ -1,3 +1,16 @@
+// import { Request } from "express";
+// import { User } from "@prisma/client";
+
+// export interface customRequest extends Request {
+//   user: User;
+// }
+// import express from "express";
+import { User } from "@prisma/client";
+declare module "express" {
+  interface Request {
+    user?: User;
+  }
+}
 export enum StoreTypes {
   STEAM_STORE = "Steam",
   XBOX_STORE = "Xbox",
@@ -120,4 +133,9 @@ export interface PriceFromUrlScraped {
   discount_percent: string;
   initial_price: string;
   final_price: string;
+}
+
+export interface JwtToken {
+  userId: Number;
+  email: String;
 }

@@ -13,6 +13,32 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id         Int      @id @default(autoincrement())
+  username String? @unique
+  email String @unique
+  password String
+  isActive Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  wishList UserGameWishList[]
+
+}
+
+model UserGameWishList{
+  id         Int      @id @default(autoincrement())
+  game Game @relation(fields: [game_id], references: [id])
+  game_id Int
+  user User @relation(fields: [user_id], references: [id])
+  user_id Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  notified Boolean @default(false)
+
+  @@unique([game_id,user_id])
+
+}
+
 model Game {
   id         Int      @id @default(autoincrement())
   gameName String 
@@ -20,6 +46,7 @@ model Game {
   updatedAt DateTime @updatedAt
   stores StoreGame[]
   infoGame GameOnInfoGame[]
+  user UserGameWishList[]
 }
 
 model StoreGame {
@@ -42,6 +69,7 @@ model StorePrice {
   discount_percent  String @default("-")
   initial_price  String @default("-")
   final_price  String @default("-")
+  offer_end_date DateTime?
   storeGame StoreGame @relation(fields:[store_game_id],references: [id])
   store_game_id Int 
 }
