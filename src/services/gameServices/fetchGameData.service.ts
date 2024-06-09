@@ -4,7 +4,7 @@ import { parseTitle } from "../../utils/game.utils";
 import { gameIgdbQueries } from "../../utils/igdbQueries";
 
 export const getGameInfoFromIgdb = async (
-  title: string
+  title: string,
 ): Promise<InfoGame[]> => {
   if (!title) {
     throw new BadRequestError("Title cannot be undefined");
@@ -12,9 +12,9 @@ export const getGameInfoFromIgdb = async (
   const res = await fetch("https://api.igdb.com/v4/games", {
     method: "POST",
     headers: {
-      Accept: "application/json",
+      "Accept": "application/json",
       "Client-ID": `${process.env.CLIENT_ID}`,
-      Authorization: `Bearer ${process.env.ACCESS_TOKEN}`,
+      "Authorization": `Bearer ${process.env.ACCESS_TOKEN}`,
     },
     body: `search "${parseTitle(title)}"+${gameIgdbQueries}`,
   });
@@ -26,7 +26,7 @@ export const getGameInfoFromIgdb = async (
       !game.version_title &&
       !game.keywords?.some(
         (keyword: any) =>
-          keyword.name.includes("fanmade") || keyword.name.includes("fangame")
+          keyword.name.includes("fanmade") || keyword.name.includes("fangame"),
       )
     );
   });

@@ -3,6 +3,7 @@ import "express-async-errors";
 import bodyParser from "body-parser";
 import gamesRoutes from "./routes/game.route";
 import authRoutes from "./routes/auth.route";
+import wishListRoutes from "./routes/wishList.route";
 import dotenv from "dotenv";
 import errorHandlerMiddleware from "./middlewares/errorHandler";
 import notFound from "./middlewares/notFound";
@@ -16,6 +17,7 @@ app.use(bodyParser.json());
 
 app.use("/api/v1", gamesRoutes);
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/wishlist", wishListRoutes);
 
 app.use(errorHandlerMiddleware);
 app.use(notFound);
