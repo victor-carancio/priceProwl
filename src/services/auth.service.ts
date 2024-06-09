@@ -2,6 +2,7 @@ import * as bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
 import { BadRequestError } from "../responses/customApiError";
 import jwt from "jsonwebtoken";
+import { UserTokenData } from "../types";
 
 const prisma = new PrismaClient();
 
@@ -69,4 +70,42 @@ export const loginUser = async (credentials: {
     : null;
 
   return { userId: user.id, username: user.username, email: user.email, token };
+};
+
+export const updateUser = async (
+  user: UserTokenData,
+  info: {
+    email?: string;
+    password?: string;
+    username?: string;
+  },
+) => {
+  const {
+    email: emailToUpdate,
+    password: passwordToUpdate,
+    username: usernameToUpdate,
+  } = info;
+
+  const { id } = user;
+
+  // const currUser = await prisma.user.findFirst({where:{id}})
+  let hash = passwordToUpdate
+    ? await bcrypt.hash(passwordToUpdate, 10)
+    : undefined;
+
+  const newUser = await prisma.user.update({
+    where: { id },
+    data: {
+      username: usernameToUpdate,
+      email: emailToUpdate,
+      password: hash,
+    },
+  });
+  return { id: newUser.id, email: newUser.email, username: newUser.username };
+};
+
+export const deleteUser = async (user: UserTokenData) => {
+  const { id } = user;
+
+  await prisma.user.update({ where: { id }, data: { isActive: false } });
 };

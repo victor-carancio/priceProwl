@@ -5,11 +5,17 @@
 //   user: User;
 // }
 // import express from "express";
-import { User } from "@prisma/client";
+
 declare module "express" {
   interface Request {
-    user?: User;
+    user?: UserTokenData;
   }
+}
+
+export interface UserTokenData {
+  id: number;
+  username: string | null;
+  email: string;
 }
 export enum StoreTypes {
   STEAM_STORE = "Steam",

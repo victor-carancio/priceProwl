@@ -18,8 +18,7 @@ export const authValidation = async (
   const authHeader = req.headers.authorization
     ? req.headers.authorization
     : null;
-  console.log(authHeader);
-  console.log(authHeader?.startsWith("Bearer "));
+
   if (!authHeader || !authHeader?.startsWith("Bearer ")) {
     throw new UnauthenticatedError("Authentication invalid");
   }
@@ -45,7 +44,15 @@ export const authValidation = async (
   if (!user) {
     throw new NotFoundError("Token user not found");
   }
-  req.user = user;
+
+  if (!user.isActive) {
+    throw new UnauthenticatedError("This user has been disabled.");
+  }
+  req.user = {
+    id: user.id,
+    email: user.email,
+    username: user.username,
+  };
 
   next();
 };
