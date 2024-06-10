@@ -8,13 +8,26 @@ import {
 } from "../services/auth.service";
 
 export const signup = async (req: Request, res: Response) => {
-  const user = await createUser(req.body);
-  return res.status(StatusCodes.CREATED).json({ user });
+  const { userId, email, username, token } = await createUser(req.body);
+  res.cookie("authcookie", token, {
+    maxAge: 15 * 24 * 60 * 60 * 1000,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+  });
+  return res
+    .status(StatusCodes.CREATED)
+    .json({ data: { userId, email, username } });
 };
 
 export const login = async (req: Request, res: Response) => {
-  const user = await loginUser(req.body);
-  return res.status(StatusCodes.OK).json({ user });
+  const { userId, email, username, token } = await loginUser(req.body);
+
+  res.cookie("authcookie", token, {
+    maxAge: 15 * 24 * 60 * 60 * 1000,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+  });
+  return res.status(StatusCodes.OK).json({ data: { userId, email, username } });
 };
 
 export const updateInfoProfile = async (req: Request, res: Response) => {

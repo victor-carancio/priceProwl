@@ -15,17 +15,16 @@ export const authValidation = async (
   _res: Response,
   next: NextFunction,
 ) => {
-  const authHeader = req.headers.authorization
-    ? req.headers.authorization
+  const authCookie: string | null = req.cookies.authcookie
+    ? req.cookies.authcookie
     : null;
 
-  if (!authHeader || !authHeader?.startsWith("Bearer ")) {
+  if (!authCookie) {
     throw new UnauthenticatedError("Authentication invalid");
   }
-  const token = authHeader.split(" ")[1];
 
   const decoded = jwt.verify(
-    token,
+    authCookie,
     process.env.JWT_SECRET ? process.env.JWT_SECRET : "",
     (err, decoded) => {
       if (err) {
