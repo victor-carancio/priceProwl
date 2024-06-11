@@ -6,7 +6,7 @@ import { SteamStore, XboxStore, EpicStore } from "../../models/index.model";
 import { GameStoresPrices, StoreInfo, StoreTypes } from "../../types";
 import {
   getSpecialEdition,
-  replaceSpecialEdition,
+  // replaceSpecialEdition,
 } from "../../utils/game.utils";
 import { PrismaClient, StoreGame } from "@prisma/client";
 import { BadRequestError } from "../../responses/customApiError";
@@ -58,9 +58,10 @@ export const scrapeAllStores = async (
 
         const position = gameByStorePrices.findIndex((element) => {
           return (
-            element.gameName?.toLowerCase() === gameName?.toLowerCase() ||
-            element.gameName?.toLowerCase() ===
-              replaceSpecialEdition(gameName).toLowerCase()
+            element.gameName?.toLowerCase() === gameName?.toLowerCase()
+            // ||
+            // element.gameName?.toLowerCase() ===
+            //   replaceSpecialEdition(gameName).toLowerCase()
           );
         });
 

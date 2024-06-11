@@ -5,7 +5,7 @@ import { GamePriceInfo, StoreInfo } from "../../types";
 
 export class XboxStore extends Store {
   constructor() {
-    super("Xbox", "https://www.xbox.com/es-CL/search/results/games?q=");
+    super("Xbox", "https://www.xbox.com/en-CL/search/results/games?q=");
   }
 
   modifyUrl(query: string): string {

@@ -8,7 +8,7 @@ import { GameStoresPrices, InfoGame, AlternativeName } from "../types";
 function createDynamicRegex(terms: string[]) {
   // Escapar caracteres especiales en los términos y reemplazar espacios con \s*
   const escapedTerms = terms.map((term) =>
-    term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/ /g, "\\s*")
+    term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/ /g, "\\s*"),
   );
   // Unir los términos en un solo patrón de regex, manejando los espacios opcionales y alternancias
   const pattern = "\\b(?:" + escapedTerms.join("|") + ")\\b|\\s*\\([^)]*\\)";
@@ -27,6 +27,7 @@ const termsDinamicXbox = [
   "(xbox & pc)",
   "for pc",
   "(for pc)",
+  " - pc",
 ];
 
 // Crear el regex dinámico
@@ -40,9 +41,11 @@ const specialWords = [
   "gold edition",
   "goty",
   "game of the year",
+  "game of the year edition",
   "game of the year enhanced",
   "goty edition",
   "complete edition",
+  "definitive edition",
   "deluxe edition",
   "ultimate edition",
   "Enhanced Edition",
@@ -86,8 +89,10 @@ export const replaceSpecialEdition = (currGame: string) => {
 };
 
 export const getSpecialEdition = (currGame: string) => {
-  const specialMatch = currGame.match(specialEditionRegexV2)?.toString();
-  return specialMatch;
+  const specialMatches = currGame.match(specialEditionRegexV2);
+
+  if (!specialMatches || specialMatches.length <= 0) return null;
+  return specialMatches.map((match) => match.trim()).join(" ");
 };
 
 //data procesing
@@ -101,7 +106,7 @@ export const getSpecialEdition = (currGame: string) => {
 
 export const includesScrapedAndIgdbGameTitle = (
   igdbGame: InfoGame,
-  scrapedGame: GameStoresPrices
+  scrapedGame: GameStoresPrices,
 ): boolean => {
   return (
     igdbGame.name
@@ -116,14 +121,14 @@ export const includesScrapedAndIgdbGameTitle = (
     igdbGame.alternative_names?.some((alternative_name: AlternativeName) =>
       scrapedGame.gameName
         .toLowerCase()
-        .includes(alternative_name.name?.toLowerCase())
+        .includes(alternative_name.name?.toLowerCase()),
     )
   );
 };
 
 export const compareScrapedAndIgdbGameTitle = (
   igdbGame: InfoGame,
-  scrapedGame: GameStoresPrices
+  scrapedGame: GameStoresPrices,
 ): boolean => {
   return (
     igdbGame.name?.toLowerCase() === scrapedGame.gameName.toLowerCase() ||
@@ -138,7 +143,7 @@ export const compareScrapedAndIgdbGameTitle = (
 //borrar
 export const calculateDiscountPercent = (
   initial_price: string,
-  final_price: string
+  final_price: string,
 ) => {
   const initial = Number(initial_price?.replace("+", ""));
   const final = Number(final_price?.replace("+", ""));

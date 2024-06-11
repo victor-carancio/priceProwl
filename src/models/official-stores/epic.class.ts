@@ -5,7 +5,7 @@ import { GamePriceInfo, StoreInfo } from "../../types";
 
 export class EpicStore extends Store {
   constructor() {
-    super("Epic", "https://store.epicgames.com/es-ES/browse?q=");
+    super("Epic", "https://store.epicgames.com/en-US/browse?q=");
   }
 
   modifyUrl(query: string): string {
