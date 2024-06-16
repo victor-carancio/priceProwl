@@ -157,6 +157,47 @@ export class EpicStore extends Store {
         };
       },
     );
-    return currPrice;
+    //css-j7qwjs
+    const offerEndDate: string | null = await page.$eval(
+      "div.css-j7qwjs",
+      (element) => {
+        const offerEndDate: HTMLSpanElement | null = element.querySelector(
+          "div.css-15fg505 span.css-iqno47",
+        );
+        return offerEndDate ? offerEndDate.innerText : null;
+      },
+    );
+
+    return { ...currPrice, offerEndDate: this.offerDateFormat(offerEndDate!) };
   }
+
+  offerDateFormat = (offer: string) => {
+    if (!offer) {
+      return;
+    }
+    const regex =
+      /Sale ends (\d{1,2})\/(\d{1,2})\/(\d{4}) at (\d{1,2}):(\d{2}) (AM|PM)/;
+    const match = offer.match(regex);
+
+    if (match) {
+      const month = parseInt(match[1]);
+      const day = parseInt(match[2]);
+      const year = parseInt(match[3]);
+      let hour = parseInt(match[4]);
+      const minute = parseInt(match[5]);
+      const period = match[6];
+
+      if (period === "PM" && hour < 12) {
+        hour += 12;
+      }
+      if (period === "AM" && hour === 12) {
+        hour = 0;
+      }
+
+      const endDate = new Date(year, month - 1, day, hour, minute);
+
+      return endDate.toISOString();
+    }
+    return;
+  };
 }
