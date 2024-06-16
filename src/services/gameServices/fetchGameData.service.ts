@@ -21,7 +21,7 @@ export const getGameInfoFromIgdb = async (
 
   const data: InfoGame[] = await res.json();
 
-  const filterVersions: InfoGame[] = await data.filter((game: InfoGame) => {
+  const filterVersions: InfoGame[] = data.filter((game: InfoGame) => {
     return (
       !game.version_title &&
       !game.keywords?.some(

@@ -95,6 +95,14 @@ export const getSpecialEdition = (currGame: string) => {
   return specialMatches.map((match) => match.trim()).join(" ");
 };
 
+export const unixTimeStampToIsoString = (unixTimeStamp: number) => {
+  const date = new Date(unixTimeStamp * 1000);
+
+  const isoString = date.toISOString();
+
+  return isoString;
+};
+
 //data procesing
 
 // export const isSpecialEdition = (element: any, gameName: string): boolean => {

@@ -1,4 +1,4 @@
-import { GameInfoAndPrices } from "../../types";
+import { GameInfoAndPrices, PriceFromUrlScraped } from "../../types";
 import { PrismaClient, StoreGame } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -520,12 +520,7 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
 
 export const updateStoreGamePrice = async (
   gameByStore: StoreGame,
-  currPrice: {
-    discount_percent: string;
-    initial_price: string;
-    final_price: string;
-    gamepass?: boolean;
-  },
+  currPrice: PriceFromUrlScraped,
 ) => {
   const storePrice = await prisma.storePrice.findFirst({
     where: {
@@ -546,6 +541,7 @@ export const updateStoreGamePrice = async (
         initial_price: currPrice.initial_price,
         final_price: currPrice.final_price,
         discount_percent: currPrice.discount_percent,
+        offer_end_date: currPrice.offerEndDate,
         storeGame: { connect: { id: gameByStore.id } },
       },
     });
@@ -559,6 +555,7 @@ export const updateStoreGamePrice = async (
         initial_price: currPrice.initial_price,
         final_price: currPrice.final_price,
         discount_percent: currPrice.discount_percent,
+        offer_end_date: currPrice.offerEndDate,
         storeGame: {
           connect: { id: gameByStore.id },
           update: {
