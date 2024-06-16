@@ -24,12 +24,17 @@ export const findGamesPricesByName = async (
 
   let fetchCounter = 0;
 
-  const resGameInfo = gamesPrices.map(async (game) => {
+  let resGameInfo: GameInfoAndPrices[] = [];
+
+  for (const game of gamesPrices) {
     fetchCounter++;
-    if (fetchCounter >= 8) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      fetchCounter = 0;
-    }
+
+    // if (fetchCounter >= 4) {
+    //   await new Promise((resolve) => setTimeout(resolve, 1000));
+    //   fetchCounter = 0;
+    // }
+    console.log(game.gameName);
+
     const info = await getGameInfoFromIgdb(game.gameName);
 
     const infoGame = info.filter((el) =>
@@ -39,14 +44,39 @@ export const findGamesPricesByName = async (
     // can return more than 1 game info
 
     if (infoGame.length <= 1) {
-      return { ...game, infoGame };
+      resGameInfo = [...resGameInfo, { ...game, infoGame }];
     }
     const correctGames = infoGame.filter((el) =>
       compareScrapedAndIgdbGameTitle(el, game),
     );
 
-    return { ...game, infoGame: correctGames };
-  });
+    resGameInfo = [...resGameInfo, { ...game, infoGame: correctGames }];
+  }
+
+  // const resGameInfo = gamesPrices.map(async (game) => {
+  //   fetchCounter++;
+
+  //   if (fetchCounter >= 4) {
+  //     await new Promise((resolve) => setTimeout(resolve, 1500));
+  //     fetchCounter = 0;
+  //   }
+  //   const info = await getGameInfoFromIgdb(game.gameName);
+
+  //   const infoGame = info.filter((el) =>
+  //     includesScrapedAndIgdbGameTitle(el, game),
+  //   );
+
+  //   // can return more than 1 game info
+
+  //   if (infoGame.length <= 1) {
+  //     return { ...game, infoGame };
+  //   }
+  //   const correctGames = infoGame.filter((el) =>
+  //     compareScrapedAndIgdbGameTitle(el, game),
+  //   );
+
+  //   return { ...game, infoGame: correctGames };
+  // });
   const gameInfo = await Promise.all(resGameInfo);
   await storeGameData(gameInfo);
   // todo: filtrar los juegos que no tengan informacion detallada,

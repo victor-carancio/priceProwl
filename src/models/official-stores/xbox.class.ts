@@ -76,7 +76,8 @@ export class XboxStore extends Store {
       .filter((game: GamePriceInfo) =>
         game.gameName.toLowerCase().includes(query.trim().toLowerCase()),
       )
-      .filter((game) => game.initial_price && game.final_price);
+      .filter((game) => game.initial_price && game.final_price)
+      .filter((game) => !game.gameName.toLowerCase().includes("xbox"));
 
     return { [this.name]: games };
   }
@@ -123,6 +124,7 @@ export class XboxStore extends Store {
         const finalGamePrice: HTMLDivElement | null = element.querySelector(
           "span.Price-module__boldText___vmNHu.Price-module__moreText___q5KoT",
         );
+
         return {
           gamepass: gamepass ? true : false,
           discount_percent:

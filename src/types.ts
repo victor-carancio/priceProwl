@@ -55,7 +55,9 @@ export interface GameStoresPrices {
   gameName: string;
   stores: StorePriceInfo[];
 }
-export interface GameInfoAndPrices extends GameStoresPrices {
+export interface GameInfoAndPrices {
+  gameName: string;
+  stores: StorePriceInfo[];
   infoGame: InfoGame[];
 }
 
@@ -139,6 +141,7 @@ export interface PriceFromUrlScraped {
   discount_percent: string;
   initial_price: string;
   final_price: string;
+  offerEndDate?: string;
 }
 
 export interface JwtToken {
