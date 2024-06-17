@@ -17,6 +17,7 @@ export class SteamStore extends Store {
   async scrapeGames(page: Page, query: string): Promise<StoreInfo> {
     await page.goto(this.modifyUrl(query));
     await page.waitForSelector("div.search_results");
+    await this.changeLanguage(page);
 
     const notFound = await page.evaluate(() =>
       document.querySelector("div#search_resultsRows"),
@@ -79,9 +80,13 @@ export class SteamStore extends Store {
 
   async scrapePriceGameFromUrl(page: Page, url: string) {
     await page.goto(url);
+
     await page.waitForLoadState("domcontentloaded");
     await page.waitForTimeout(500);
 
+    await this.changeLanguage(page);
+
+    // await page.waitForTimeout(60 * 1000);
     const birthdaySelector = await page.evaluate(() =>
       document.querySelector("div.agegate_birthday_selector"),
     );
@@ -112,6 +117,80 @@ export class SteamStore extends Store {
         };
       },
     );
-    return currPrice;
+
+    const offerEndDate = await page.$eval(
+      "div.game_area_purchase_game",
+      (element: HTMLDivElement) => {
+        const countDown = element.querySelector(
+          "p.game_purchase_discount_countdown",
+        );
+        return countDown ? element.innerText : null;
+      },
+    );
+    return { ...currPrice, offerEndDate: this.offerDateFormat(offerEndDate!) };
+  }
+
+  private offerDateFormat(offer: string) {
+    if (!offer) {
+      return;
+    }
+
+    const regex = /(?:Offer ends|Termina el)\s(\d{1,2})\s(\w+)/i;
+    const match = offer.match(regex);
+
+    if (match) {
+      const day = parseInt(match[1]);
+      const monthName = match[2].toLowerCase();
+      const monthNames = [
+        "january",
+        "february",
+        "march",
+        "april",
+        "may",
+        "june",
+        "july",
+        "august",
+        "september",
+        "october",
+        "november",
+        "december",
+      ];
+      const monthIndex = monthNames.indexOf(monthName);
+
+      if (monthIndex !== -1) {
+        const year = new Date().getFullYear();
+
+        const date = new Date(year, monthIndex, day);
+        return date.toISOString();
+      }
+    }
+    return;
+  }
+
+  private async changeLanguage(page: Page) {
+    const currContext = page.context();
+
+    const cookiesInContext = await currContext.cookies();
+
+    if (
+      !cookiesInContext.some(
+        (cookie) =>
+          cookie.domain === "store.steampowered.com" &&
+          cookie.name === "Steam_Language" &&
+          cookie.value === "english",
+      )
+    ) {
+      await currContext.addCookies([
+        {
+          domain: "store.steampowered.com",
+          name: "Steam_Language",
+          value: "english",
+          path: "/",
+        },
+      ]);
+      await page.reload();
+      await page.waitForLoadState("domcontentloaded");
+      await page.waitForTimeout(500);
+    }
   }
 }

@@ -101,6 +101,8 @@ export const scrapeAllStores = async (
     }
   });
 
+  console.log(gameByStorePrices);
+
   return gameByStorePrices;
 };
 
@@ -113,10 +115,10 @@ export const scrapeAllGamesFromUrl = async () => {
 
   const gamesByStore = await prisma.storeGame.findMany({
     where: {
-      store: "Epic",
+      store: "Steam",
       game: {
         gameName: {
-          contains: "Horizon Zero",
+          contains: "Urban Street Fighter",
           mode: "insensitive",
         },
       },
@@ -150,7 +152,7 @@ export const scrapeAllGamesFromUrl = async () => {
         page,
         gameByStore.url,
       );
-      console.log(currPrice);
+      // console.log(currPrice);
       // console.log(`${gameByStore.store} ${gameByStore.game.gameName}`);
       await updateStoreGamePrice(gameByStore, currPrice);
     }

@@ -45,6 +45,7 @@ export const findGamesPricesByName = async (
 
     if (infoGame.length <= 1) {
       resGameInfo = [...resGameInfo, { ...game, infoGame }];
+      continue;
     }
     const correctGames = infoGame.filter((el) =>
       compareScrapedAndIgdbGameTitle(el, game),

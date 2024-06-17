@@ -171,7 +171,7 @@ export class EpicStore extends Store {
     return { ...currPrice, offerEndDate: this.offerDateFormat(offerEndDate!) };
   }
 
-  offerDateFormat = (offer: string) => {
+  private offerDateFormat = (offer: string) => {
     if (!offer) {
       return;
     }
