@@ -85,9 +85,22 @@ export class XboxStore extends Store {
   async scrapePriceGameFromUrl(page: Page, url: string) {
     await page.goto(url);
 
-    await page.waitForSelector(
-      "div.ProductActionsPanel-module__desktopProductActionsPanel___J1Jn3",
+    // await page.waitForSelector(
+    //   "div.ProductActionsPanel-module__desktopProductActionsPanel___J1Jn3",
+    // );
+    await page.waitForLoadState("networkidle");
+
+    const notFound = await page.evaluate(() =>
+      document.querySelector("div.ErrorPage-module__errorContainer___DRsEx"),
     );
+
+    if (notFound) {
+      return null;
+    }
+
+    // await page.waitForSelector(
+    //   "div.ModuleRow-module__row___N1V3E.ProductDetailsHeader-module__tagsContainerDesktop___6K0K8.ProductDetailsHeader-module__hideOnMobileView___6l6Ro",
+    // );
     await page.waitForTimeout(500);
 
     const currPrice = await page.$eval(
@@ -140,6 +153,43 @@ export class XboxStore extends Store {
         };
       },
     );
-    return currPrice;
+
+    const offerEndDate = await page.$eval(
+      "div.ModuleRow-module__row___N1V3E.ProductDetailsHeader-module__tagsContainerDesktop___6K0K8.ProductDetailsHeader-module__hideOnMobileView___6l6Ro",
+      (element: HTMLDivElement) => {
+        const iconOffer: HTMLDivElement | null = element.querySelector(
+          "svg.TagIcon-module__icon___idvrW.TagIcon-module__primaryIcon___kF7Ys.ProductTags-module__salesTagIcon___YZ-rE.Icon-module__icon___6ICyA",
+        );
+
+        const offerDate: ChildNode | null = iconOffer
+          ? iconOffer.nextSibling
+          : null;
+
+        return offerDate ? offerDate.textContent : null;
+      },
+    );
+
+    return { ...currPrice, offerEndDate: this.offerDateFormat(offerEndDate!) };
   }
+
+  private offerDateFormat = (offer: string) => {
+    if (!offer) {
+      return;
+    }
+
+    const regex = /(?:finaliza en|ends in)\s(\d+)\s(?:días|days)/i;
+    const match = offer.match(regex);
+
+    if (match) {
+      const days = parseInt(match[1]);
+
+      const currentDate = new Date();
+
+      const endDate = new Date(currentDate);
+      endDate.setDate(currentDate.getDate() + days);
+
+      return endDate.toISOString();
+    }
+    return;
+  };
 }
