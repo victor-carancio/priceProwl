@@ -115,13 +115,16 @@ export const scrapeAllGamesFromUrl = async () => {
 
   const gamesByStore = await prisma.storeGame.findMany({
     where: {
-      store: "Xbox",
+      store: "Steam",
       game: {
         gameName: {
           mode: "insensitive",
-          contains: "fallout",
+          contains: "the evil within",
         },
       },
+    },
+    include: {
+      game: true,
     },
   });
 
@@ -144,9 +147,11 @@ export const scrapeAllGamesFromUrl = async () => {
         await page.waitForTimeout(1500);
         store.resetCounter();
       }
+
       const currPrice = await store.scrapePriceGameFromUrl(
         page,
         gameByStore.url,
+        gameByStore.game.gameName,
       );
 
       // console.log(`${gameByStore.store} ${gameByStore.game.gameName}`);
@@ -158,7 +163,11 @@ export const scrapeAllGamesFromUrl = async () => {
 };
 
 export const scrapeSearchedGamesFromUrl = async (
-  searchedGames: { stores: StoreGame[] }[],
+  searchedGames: {
+    gameName: string;
+    id: number;
+    stores: StoreGame[];
+  }[],
 ) => {
   if (searchedGames && searchedGames.length > 0) {
     const stores: Record<StoreTypes, Store> = {
@@ -187,7 +196,9 @@ export const scrapeSearchedGamesFromUrl = async (
           const currPrice = await store.scrapePriceGameFromUrl(
             page,
             gameByStore.url,
+            gamesByStore.gameName,
           );
+
           // console.log(`${gameByStore.store} ${gameByStore.game.gameName}`);
           if (currPrice) await updateStoreGamePrice(gameByStore, currPrice);
         }

@@ -78,7 +78,7 @@ export class SteamStore extends Store {
     };
   }
 
-  async scrapePriceGameFromUrl(page: Page, url: string) {
+  async scrapePriceGameFromUrl(page: Page, url: string, gameName: string) {
     await page.goto(url);
 
     await page.waitForLoadState("domcontentloaded");
@@ -96,26 +96,37 @@ export class SteamStore extends Store {
       await page.waitForSelector("div.game_purchase_action_bg");
     }
 
-    const currPrice = await page.$eval(
-      "div.game_purchase_action_bg",
-      (element: HTMLDivElement) => {
-        const gameDiscount: HTMLDivElement | null =
-          element.querySelector("div.discount_pct");
+    const currPrice = await page.$$eval(
+      "div.game_area_purchase_game",
+      (element: HTMLDivElement[]) => {
+        return element.map((el) => {
+          const gameDiscount: HTMLDivElement | null =
+            el.querySelector("div.discount_pct");
 
-        const initialGamePrice: HTMLDivElement = gameDiscount
-          ? element.querySelector("div.discount_original_price")!
-          : element.querySelector("div.game_purchase_price")!;
+          const initialGamePrice: HTMLDivElement = gameDiscount
+            ? el.querySelector("div.discount_original_price")!
+            : el.querySelector("div.game_purchase_price")!;
 
-        const finalGamePrice: HTMLDivElement = gameDiscount
-          ? element.querySelector("div.discount_final_price")!
-          : element.querySelector("div.game_purchase_price")!;
+          const finalGamePrice: HTMLDivElement = gameDiscount
+            ? el.querySelector("div.discount_final_price")!
+            : el.querySelector("div.game_purchase_price")!;
 
-        return {
-          discount_percent: gameDiscount ? gameDiscount.innerText : "-",
-          initial_price: initialGamePrice?.innerText.replace("$ ", "$"),
-          final_price: finalGamePrice?.innerText.replace("$ ", "$"),
-        };
+          const name: HTMLHeadingElement | null = el.querySelector("h1");
+
+          return {
+            name: name?.innerText,
+            currPrice: {
+              discount_percent: gameDiscount ? gameDiscount.innerText : "-",
+              initial_price: initialGamePrice?.innerText.replace("$ ", "$"),
+              final_price: finalGamePrice?.innerText.replace("$ ", "$"),
+            },
+          };
+        });
       },
+    );
+
+    const correctName = currPrice.find(
+      (element) => element.name === `Buy ${gameName}`,
     );
 
     const offerEndDate = await page.$eval(
@@ -127,7 +138,10 @@ export class SteamStore extends Store {
         return countDown ? element.innerText : null;
       },
     );
-    return { ...currPrice, offerEndDate: this.offerDateFormat(offerEndDate!) };
+    return {
+      ...correctName!.currPrice,
+      offerEndDate: this.offerDateFormat(offerEndDate!),
+    };
   }
 
   private offerDateFormat(offer: string) {

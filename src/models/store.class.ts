@@ -36,5 +36,6 @@ export abstract class Store {
   abstract scrapePriceGameFromUrl(
     page: Page,
     url: string,
+    gameName: string,
   ): Promise<PriceFromUrlScraped | null>;
 }
