@@ -101,8 +101,6 @@ export const scrapeAllStores = async (
     }
   });
 
-  console.log(gameByStorePrices);
-
   return gameByStorePrices;
 };
 
@@ -119,7 +117,7 @@ export const scrapeAllGamesFromUrl = async () => {
       game: {
         gameName: {
           mode: "insensitive",
-          contains: "the evil within",
+          contains: "resident evil 2",
         },
       },
     },

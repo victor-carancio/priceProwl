@@ -23,8 +23,7 @@ export const createUser = async (credentials: {
 
   user = await prisma.user.create({
     data: {
-      // email,
-      email: "jio@gmail.com",
+      email,
       username: username || null,
       password: hash,
     },

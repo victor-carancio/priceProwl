@@ -1,0 +1,138 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap");
+body {
+  padding: 0px;
+  margin: 0px;
+  color: rgb(238, 238, 238);
+  font-family: "Roboto", sans-serif;
+}
+.container {
+  width: 100%;
+  max-width: 700px;
+  padding: 50px 70px;
+  background-color: rgb(22, 22, 36);
+}
+.header {
+  margin-bottom: 40px;
+}
+.title {
+  font-weight: bold;
+  text-transform: capitalize;
+  font-size: 48px;
+}
+.title-name {
+  font-weight: bold;
+  text-transform: capitalize;
+  font-size: 48px;
+  color: rgb(2, 158, 2);
+}
+.subtitle {
+  width: 100%;
+  margin: 15px auto;
+  font-size: 20px;
+}
+.list-game {
+  width: 100%;
+  display: block;
+  border-top-left-radius: 2px;
+}
+.list-element {
+  margin: 0 auto;
+  margin-bottom: 50px;
+  max-width: 264px;
+  background-color: rgb(10, 9, 17);
+  border-radius: 2px;
+}
+
+.game-header {
+  height: auto;
+  overflow: hidden;
+  background-color: rgb(22, 22, 36);
+}
+
+.game-title {
+  font-size: 20px;
+  color: rgb(231, 231, 231);
+  font-weight: 500;
+  height: 25px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  background-color: rgb(22, 22, 36);
+}
+
+.game-img {
+  /* box-sizing: border-box;
+  padding: 0px;
+  margin: 0px; */
+  padding: 0px;
+  margin: 0px;
+  border-top-left-radius: 2px;
+  border-top-right-radius: 2px;
+  height: 352px;
+  width: 264px;
+  /* margin-top: -50px; */
+}
+.game-url {
+  padding: 0px;
+  margin: 0px;
+  height: 352px;
+  width: 264px;
+  /* background-color: rgb(10, 9, 17); */
+  /* margin-top: 10px; */
+}
+
+.game-info {
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  height: 27px;
+  /* padding-top: 5px; */
+  /* margin-bottom: 15px; */
+  background-color: rgb(10, 9, 17);
+  border-bottom-left-radius: 2px;
+  border-bottom-right-radius: 2px;
+}
+
+.prices {
+  padding: 0;
+  margin: 0;
+  /* height: 30px; */
+  /* margin-bottom: 10px; */
+  /* padding-top: 5px; */
+  /* background-color: rgb(10, 9, 17); */
+  /* margin-bottom: 15px; */
+  /* height: 30px; */
+  /* padding-top: 6px; */
+  border-bottom-left-radius: 2px;
+  border-bottom-right-radius: 2px;
+}
+.discount-price {
+  display: inline;
+  padding: 5px;
+  font-size: 16px;
+  margin-top: 5px;
+  background-color: rgb(170, 168, 29);
+  border-bottom-left-radius: 2px;
+}
+.initial-price {
+  padding-top: 5px;
+
+  display: inline;
+  color: rgb(145, 145, 145);
+  text-decoration: line-through aliceblue;
+  font-size: 14px;
+  margin-left: 15px;
+}
+.final-price {
+  padding-top: 5px;
+  display: inline;
+  color: rgb(2, 158, 2);
+  font-weight: bold;
+  font-size: 16px;
+  margin-left: 24px;
+}
+@media only screen and (max-width: 500px) {
+  .container {
+    max-width: 500px;
+  }
+}

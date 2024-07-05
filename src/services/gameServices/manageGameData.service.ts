@@ -65,6 +65,24 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
             storeGame: { connect: { id: existingStore.id } },
           },
         });
+      } else {
+        await prisma.storePrice.update({
+          where: {
+            id: existingPrice.id,
+          },
+          data: {
+            initial_price: store.info.initial_price,
+            final_price: store.info.final_price,
+            discount_percent: store.info.discount_percent,
+            storeGame: {
+              connect: { id: existingStore.id },
+              update: {
+                gamepass:
+                  existingStore.store === "Xbox" ? store.gamepass : null,
+              },
+            },
+          },
+        });
       }
     }
 
@@ -94,6 +112,7 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
               url: info.cover.url,
               width: info.cover.width,
               id: info.cover.id,
+              image_id: info.cover.image_id,
             },
           },
         },
@@ -161,6 +180,7 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
               height: artwork.height,
               width: artwork.width,
               url: artwork.url,
+              image_id: artwork.image_id,
               info_game: { connect: { id: newInfoGame.id } },
             },
           });
@@ -278,6 +298,7 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
                 height: involved_company.company.logo.height,
                 width: involved_company.company.logo.width,
                 url: involved_company.company.logo.url,
+                image_id: involved_company.company.logo.image_id,
                 company: { connect: { id: newCompany.id } },
               },
             });
@@ -349,6 +370,7 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
                 height: platform.platform_logo.height,
                 width: platform.platform_logo.width,
                 url: platform.platform_logo.url,
+                image_id: platform.platform_logo.image_id,
                 platform: { connect: { id: platform.id } },
               },
             });
@@ -433,6 +455,7 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
                 height: releaseDate.platform.platform_logo.height,
                 width: releaseDate.platform.platform_logo.width,
                 url: releaseDate.platform.platform_logo.url,
+                image_id: releaseDate.platform.platform_logo.image_id,
                 platform: {
                   connect: { id: releaseDate.platform.id },
                 },
@@ -454,6 +477,7 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
               height: screenshot.height,
               width: screenshot.width,
               url: screenshot.url,
+              image_id: screenshot.image_id,
               info_game: { connect: { id: newInfoGame.id } },
             },
           });
@@ -631,4 +655,216 @@ export const findGameByName = async (name: string) => {
   });
 
   return gamesFounded;
+};
+
+export const findAllWishList = async () => {
+  const wishList = await prisma.userGameWishList.findMany({
+    where: {
+      notified: false,
+    },
+  });
+
+  const gamesIds = wishList.map((item) => item.game_id);
+
+  const recentDiscountPrics = await prisma.storePrice.findMany({
+    where: {
+      storeGame: { game: { id: { in: gamesIds } } },
+    },
+    orderBy: {
+      updatedAt: "desc",
+    },
+
+    distinct: ["store_game_id"],
+    select: {
+      id: true,
+      store_game_id: true,
+      offer_end_date: true,
+      updatedAt: true,
+      initial_price: true,
+      final_price: true,
+      discount_percent: true,
+      storeGame: {
+        select: {
+          id: true,
+          store: true,
+          gamepass: true,
+          url: true,
+          game: {
+            select: {
+              gameName: true,
+              user: {
+                select: {
+                  notified: true,
+                  id: true,
+                  user: {
+                    select: {
+                      id: true,
+                      email: true,
+                      username: true,
+                      isActive: true,
+                    },
+                  },
+                },
+              },
+              infoGame: {
+                select: {
+                  info_game: {
+                    select: {
+                      cover: true,
+                      summary: true,
+                      artworks: true,
+                      screenshots: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const offersFilter = recentDiscountPrics.filter(
+    (price) => price.discount_percent !== "-",
+  );
+
+  return offersFilter.map((offer) => {
+    const { discount_percent, initial_price, final_price, offer_end_date } =
+      offer;
+    const { gameName, user } = offer.storeGame.game;
+    offer.storeGame.game.infoGame[0];
+    const { cover, summary, artworks, screenshots } =
+      offer.storeGame.game.infoGame[0]?.info_game;
+    return {
+      game: {
+        gameName,
+        store: offer.storeGame.store,
+        gamepass: offer.storeGame.gamepass,
+        url: offer.storeGame.url,
+        storeGame: offer.storeGame.id,
+        initial_price,
+        final_price,
+        offer_end_date,
+        discount_percent,
+        cover,
+        summary,
+        artworks,
+        screenshots,
+      },
+      users: user
+        .filter((element) => !element.notified && element.user.isActive)
+        .map((element) => ({
+          userId: element.user.id,
+          userName: element.user.username,
+          email: element.user.email,
+          wishListId: element.id,
+          notified: element.notified,
+        })),
+    };
+  });
+};
+
+export const wishListToNotified = async (
+  wishListIds: { notified: boolean; wishListId: number }[],
+) => {
+  if (wishListIds.length > 0) {
+    for (const wish of wishListIds) {
+      const findWishListId = await prisma.userGameWishList.findFirst({
+        where: {
+          id: wish.wishListId,
+          notified: false,
+        },
+      });
+
+      if (findWishListId) {
+        await prisma.userGameWishList.update({
+          where: {
+            notified: false,
+            id: wish.wishListId,
+          },
+          data: {
+            notified: true,
+          },
+        });
+      }
+    }
+  }
+};
+
+export const findEndOffer = async () => {
+  const wishList = await prisma.userGameWishList.findMany({
+    where: {
+      notified: true,
+    },
+  });
+
+  const gamesIds = wishList.map((item) => item.game_id);
+
+  const recentDiscountPrics = await prisma.storePrice.findMany({
+    where: {
+      storeGame: { game: { id: { in: gamesIds } } },
+    },
+    orderBy: {
+      updatedAt: "desc",
+    },
+
+    distinct: ["store_game_id"],
+    select: {
+      id: true,
+      discount_percent: true,
+      storeGame: {
+        select: {
+          game: {
+            select: {
+              gameName: true,
+              user: {
+                select: {
+                  notified: true,
+                  id: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const offersFilter = recentDiscountPrics.filter(
+    (price) => price.discount_percent === "-",
+  );
+
+  let offerEndIds: {
+    notified: boolean;
+    id: number;
+  }[] = [];
+  for (const offer of offersFilter) {
+    const { user } = offer.storeGame.game;
+    for (const userId of user) {
+      offerEndIds = [...offerEndIds, userId];
+    }
+  }
+  if (offerEndIds.length > 0) {
+    for (const offer of offerEndIds) {
+      const findWishListId = await prisma.userGameWishList.findFirst({
+        where: {
+          id: offer.id,
+          notified: true,
+        },
+      });
+
+      if (findWishListId) {
+        await prisma.userGameWishList.update({
+          where: {
+            notified: true,
+            id: offer.id,
+          },
+          data: {
+            notified: false,
+          },
+        });
+      }
+    }
+  }
 };

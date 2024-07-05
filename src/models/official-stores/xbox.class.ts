@@ -141,15 +141,18 @@ export class XboxStore extends Store {
         return {
           gamepass: gamepass ? true : false,
           discount_percent:
+            !finalGamePrice ||
             initialGamePrice!.innerText.replace(/[^0-9.]/g, "") ===
-            finalGamePrice!.innerText.replace(/[^0-9.]/g, "")
+              finalGamePrice.innerText.replace(/[^0-9.]/g, "")
               ? "-"
               : calculateDiscountPercent(
                   initialGamePrice!.innerText,
-                  finalGamePrice!.innerText,
+                  finalGamePrice.innerText,
                 ),
           initial_price: initialGamePrice!.innerText,
-          final_price: finalGamePrice!.innerText,
+          final_price: finalGamePrice
+            ? finalGamePrice.innerText
+            : initialGamePrice!.innerText,
         };
       },
     );

@@ -125,9 +125,13 @@ export class SteamStore extends Store {
       },
     );
 
-    const correctName = currPrice.find(
+    let correctName = currPrice.find(
       (element) => element.name === `Buy ${gameName}`,
     );
+
+    if (!correctName) {
+      correctName = { ...currPrice[0] };
+    }
 
     const offerEndDate = await page.$eval(
       "div.game_area_purchase_game",
@@ -138,6 +142,7 @@ export class SteamStore extends Store {
         return countDown ? element.innerText : null;
       },
     );
+
     return {
       ...correctName!.currPrice,
       offerEndDate: this.offerDateFormat(offerEndDate!),

@@ -113,6 +113,7 @@ model Cover {
   height Int
   url String
   width Int
+  image_id String
   info_game InfoGame @relation(fields: [info_game_id], references: [id])
   info_game_id Int @unique
 }
@@ -147,6 +148,7 @@ model Artwork {
   height Int
   url String
   width Int
+  image_id String
   info_game InfoGame @relation(fields: [info_game_id], references: [id])
   info_game_id Int 
 }
@@ -207,6 +209,7 @@ model CompanyLogo{
   height Int
   url String
   width Int
+  image_id String
   company Company @relation(fields: [company_id], references: [id])
   company_id Int @unique
 }
@@ -242,6 +245,7 @@ model PlatformLogo{
   height Int
   url String
   width Int
+  image_id String
   platform Platform @relation(fields: [platform_id],references: [id])
   platform_id Int @unique
 }
@@ -283,6 +287,7 @@ model Screenshot{
   height Int
   url String
   width Int
+  image_id String
   info_game InfoGame @relation(fields: [info_game_id],references: [id])
   info_game_id Int
 }

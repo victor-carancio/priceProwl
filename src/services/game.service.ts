@@ -1,5 +1,5 @@
 import { BadRequestError } from "../responses/customApiError";
-import { GameInfoAndPrices } from "../types";
+import { GameInfoAndPrices, WishList } from "../types";
 import {
   compareScrapedAndIgdbGameTitle,
   includesScrapedAndIgdbGameTitle,
@@ -12,6 +12,13 @@ import {
 } from "./gameServices/index.service";
 import cron from "node-cron";
 import { scrapeAllGamesFromUrl } from "./gameServices/scrapeGameData.service";
+import {
+  findAllWishList,
+  findEndOffer,
+  wishListToNotified,
+} from "./gameServices/manageGameData.service";
+import { sendEmails } from "./gameServices/email.service";
+
 // import { scrapeGameUrl } from "./gameServices/scrapeGameData.service";
 
 export const findGamesPricesByName = async (
@@ -33,7 +40,6 @@ export const findGamesPricesByName = async (
     //   await new Promise((resolve) => setTimeout(resolve, 1000));
     //   fetchCounter = 0;
     // }
-    console.log(game.gameName);
 
     const info = await getGameInfoFromIgdb(game.gameName);
 
@@ -54,30 +60,6 @@ export const findGamesPricesByName = async (
     resGameInfo = [...resGameInfo, { ...game, infoGame: correctGames }];
   }
 
-  // const resGameInfo = gamesPrices.map(async (game) => {
-  //   fetchCounter++;
-
-  //   if (fetchCounter >= 4) {
-  //     await new Promise((resolve) => setTimeout(resolve, 1500));
-  //     fetchCounter = 0;
-  //   }
-  //   const info = await getGameInfoFromIgdb(game.gameName);
-
-  //   const infoGame = info.filter((el) =>
-  //     includesScrapedAndIgdbGameTitle(el, game),
-  //   );
-
-  //   // can return more than 1 game info
-
-  //   if (infoGame.length <= 1) {
-  //     return { ...game, infoGame };
-  //   }
-  //   const correctGames = infoGame.filter((el) =>
-  //     compareScrapedAndIgdbGameTitle(el, game),
-  //   );
-
-  //   return { ...game, infoGame: correctGames };
-  // });
   const gameInfo = await Promise.all(resGameInfo);
   await storeGameData(gameInfo);
   // todo: filtrar los juegos que no tengan informacion detallada,
@@ -98,5 +80,60 @@ export const findGameInfoByName = async (title: string): Promise<any> => {
 
 cron.schedule("0 0 * * *", async () => {
   await scrapeAllGamesFromUrl();
+  await offerNotification();
+  await checkOfferEnd();
   // console.log("jio");
 });
+
+export const offerNotification = async () => {
+  const usersAndInfoToNotified = await findAllWishList();
+
+  let wishListIds: { notified: boolean; wishListId: number }[] = [];
+  let userGames: WishList[] = [];
+
+  for (const info of usersAndInfoToNotified) {
+    for (const user of info.users) {
+      const { email, notified, userId, userName, wishListId } = user;
+
+      wishListIds.push({ notified, wishListId });
+
+      const userIdIndex = userGames.findIndex(
+        (userInfo: any) => userInfo.user.userId === userId,
+      );
+
+      if (userIdIndex === -1) {
+        userGames.push({
+          user: {
+            userId,
+            email,
+            notified,
+            userName,
+          },
+          games: [info.game],
+        });
+      } else {
+        userGames[userIdIndex].games = [
+          ...userGames[userIdIndex].games,
+          info.game,
+        ];
+      }
+    }
+  }
+
+  // enviar correos a userGames
+
+  if (userGames.length > 0) {
+    for (const userGame of userGames) {
+      console.log("enviar correo a " + userGame.user.email);
+      await sendEmails(userGame);
+    }
+  }
+
+  await wishListToNotified(wishListIds);
+
+  return userGames;
+};
+
+export const checkOfferEnd = async () => {
+  return await findEndOffer();
+};

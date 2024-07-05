@@ -128,6 +128,7 @@ interface Image {
   height: number;
   url: string;
   width: number;
+  image_id: string;
 }
 
 export interface AlternativeName {
@@ -147,4 +148,26 @@ export interface PriceFromUrlScraped {
 export interface JwtToken {
   userId: Number;
   email: String;
+}
+
+export interface WishList {
+  user: {
+    userId: number;
+    email: string;
+    notified: boolean;
+    userName: string | null;
+  };
+  games: {
+    gameName: string;
+    store: string;
+    gamepass: boolean | null;
+    url: string;
+    storeGame: number;
+    initial_price: string;
+    final_price: string;
+    offer_end_date: Date | null;
+    discount_percent: string;
+    cover: Image | null;
+    summary: string | null;
+  }[];
 }

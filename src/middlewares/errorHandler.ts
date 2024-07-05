@@ -12,6 +12,7 @@ const errorHandlerMiddleware = (
     statusCode: err.statusCode || StatusCodes.INTERNAL_SERVER_ERROR,
     msg: err.message || "Something went wrong, try again later",
   };
+  console.log(err);
 
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     if (process.env.NODE_ENV !== "production") {
