@@ -29,12 +29,12 @@ export const findGamesPricesByName = async (
   }
   const gamesPrices = await scrapeAllStores(title);
 
-  let fetchCounter = 0;
+  // let fetchCounter = 0;
 
   let resGameInfo: GameInfoAndPrices[] = [];
 
   for (const game of gamesPrices) {
-    fetchCounter++;
+    // fetchCounter++;
 
     // if (fetchCounter >= 4) {
     //   await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -62,8 +62,6 @@ export const findGamesPricesByName = async (
 
   const gameInfo = await Promise.all(resGameInfo);
   await storeGameData(gameInfo);
-  // todo: filtrar los juegos que no tengan informacion detallada,
-  // const filterNoDataGames = gameInfo.filter((game) => game.infoGame.length > 0);
 
   return gameInfo;
 };
@@ -124,7 +122,6 @@ export const offerNotification = async () => {
 
   if (userGames.length > 0) {
     for (const userGame of userGames) {
-      console.log("enviar correo a " + userGame.user.email);
       await sendEmails(userGame);
     }
   }

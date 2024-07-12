@@ -1,7 +1,6 @@
 import { GameInfoAndPrices, PriceFromUrlScraped } from "../../types";
-import { PrismaClient, StoreGame } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { StoreGame } from "@prisma/client";
+import prisma from "../../db/client.db";
 
 export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
   for (const game of gamesData) {

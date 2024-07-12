@@ -1,6 +1,8 @@
 /coverage
 /node_modules
 /build
+/src/test
 .env
+.env.test
 jio.txt
 jio.png

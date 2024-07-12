@@ -1,10 +1,9 @@
 import { Request, Response } from "express";
 import {
-  // checkOfferEnd,
+  checkOfferEnd,
   findGameInfoByName,
   findGamesPricesByName,
   offerNotification,
-  // offerNotification,
 } from "../services/game.service";
 import { scrapeSearchedGamesFromUrl } from "../services/gameServices/scrapeGameData.service";
 import { findGameByName } from "../services/gameServices/manageGameData.service";
@@ -24,10 +23,9 @@ export const getGameInfo = async (req: Request, res: Response) => {
 };
 
 export const testUpdateGamePrice = async (_req: Request, res: Response) => {
-  // const jio = await scrapeAllGamesFromUrl();
-  const jio = await offerNotification();
-  // const jio = await checkOfferEnd();
-  return res.status(200).json({ msg: jio });
+  await offerNotification();
+  await checkOfferEnd();
+  return res.status(200).json({ msg: "notification sended" });
 };
 
 export const getGamesByNameFromDBAndUpdatePrice = async (

@@ -9,7 +9,6 @@ import errorHandlerMiddleware from "./middlewares/errorHandler";
 import notFound from "./middlewares/notFound";
 import cookieParser from "cookie-parser";
 dotenv.config();
-
 const app = express();
 
 // app.set("trust proxy",1);

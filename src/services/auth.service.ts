@@ -1,10 +1,9 @@
 import * as bcrypt from "bcryptjs";
-import { PrismaClient } from "@prisma/client";
+// import { PrismaClient } from "@prisma/client";
 import { BadRequestError } from "../responses/customApiError";
 import jwt from "jsonwebtoken";
 import { UserTokenData } from "../types";
-
-const prisma = new PrismaClient();
+import prisma from "../db/client.db";
 
 export const createUser = async (credentials: {
   email: string;

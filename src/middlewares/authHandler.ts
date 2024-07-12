@@ -6,9 +6,7 @@ import {
   UnauthenticatedError,
 } from "../responses/customApiError";
 import jwt from "jsonwebtoken";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "../db/client.db";
 
 export const authValidation = async (
   req: Request,

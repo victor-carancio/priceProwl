@@ -8,12 +8,11 @@ import {
   getSpecialEdition,
   // replaceSpecialEdition,
 } from "../../utils/game.utils";
-import { PrismaClient, StoreGame } from "@prisma/client";
+import { StoreGame } from "@prisma/client";
 import { BadRequestError } from "../../responses/customApiError";
 import { updateStoreGamePrice } from "./manageGameData.service";
 import { Store } from "../../models/store.class";
-
-const prisma = new PrismaClient();
+import prisma from "../../db/client.db";
 
 chromium.use(StealthPlugin());
 
@@ -21,17 +20,14 @@ export const scrapeAllStores = async (
   title: string,
 ): Promise<GameStoresPrices[]> => {
   const agent = random_useragent.getRandom();
-  const browser = await chromium.launch({ headless: false });
+  const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
     userAgent: agent,
-    // geolocation: { longitude: 12.492507, latitude: 41.889938 },
-    // locale: "en-GB",
-    // permissions: ["geolocation"],
-    // timezoneId: "Europe/Paris",
   });
   const gamesForStore: StoreInfo[] = [];
   try {
     const page = await context.newPage();
+    await page.route(/(png|jpeg|jpg|svg)$/, (route) => route.abort());
     const stores = [new SteamStore(), new XboxStore(), new EpicStore()];
 
     for (const store of stores) {
@@ -112,15 +108,7 @@ export const scrapeAllGamesFromUrl = async () => {
   };
 
   const gamesByStore = await prisma.storeGame.findMany({
-    where: {
-      store: "Steam",
-      game: {
-        gameName: {
-          mode: "insensitive",
-          contains: "resident evil 2",
-        },
-      },
-    },
+    where: {},
     include: {
       game: true,
     },
@@ -131,7 +119,7 @@ export const scrapeAllGamesFromUrl = async () => {
   }
 
   const agent = random_useragent.getRandom();
-  const browser = await chromium.launch({ headless: false });
+  const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
     userAgent: agent,
   });

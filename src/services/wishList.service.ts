@@ -1,8 +1,9 @@
-import { PrismaClient } from "@prisma/client";
+// import { PrismaClient } from "@prisma/client";
 import { UserTokenData } from "../types";
 import { BadRequestError, NotFoundError } from "../responses/customApiError";
+import prisma from "../db/client.db";
 
-const prisma = new PrismaClient();
+// const prisma = process.env.NODE_ENV === "test" ? prismaTest : prismaClient;
 
 export const findWishListOfUser = async (user: UserTokenData) => {
   const { id } = user;
