@@ -10,9 +10,11 @@ import {
 } from "../../utils/game.utils";
 import { StoreGame } from "@prisma/client";
 import { BadRequestError } from "../../responses/customApiError";
-import { updateStoreGamePrice } from "./manageGameData.service";
+import {
+  getAllStoreGames,
+  updateStoreGamePrice,
+} from "./manageGameData.service";
 import { Store } from "../../models/store.class";
-import prisma from "../../db/client.db";
 
 chromium.use(StealthPlugin());
 
@@ -107,12 +109,7 @@ export const scrapeAllGamesFromUrl = async () => {
     [StoreTypes.EPIC_STORE]: new EpicStore(),
   };
 
-  const gamesByStore = await prisma.storeGame.findMany({
-    where: {},
-    include: {
-      game: true,
-    },
-  });
+  const gamesByStore = await getAllStoreGames();
 
   if (!gamesByStore || gamesByStore.length <= 0) {
     throw new BadRequestError("Games not found");

@@ -29,18 +29,9 @@ export const findGamesPricesByName = async (
   }
   const gamesPrices = await scrapeAllStores(title);
 
-  // let fetchCounter = 0;
-
   let resGameInfo: GameInfoAndPrices[] = [];
 
   for (const game of gamesPrices) {
-    // fetchCounter++;
-
-    // if (fetchCounter >= 4) {
-    //   await new Promise((resolve) => setTimeout(resolve, 1000));
-    //   fetchCounter = 0;
-    // }
-
     const info = await getGameInfoFromIgdb(game.gameName);
 
     const infoGame = info.filter((el) =>

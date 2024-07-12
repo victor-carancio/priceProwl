@@ -867,3 +867,12 @@ export const findEndOffer = async () => {
     }
   }
 };
+
+export const getAllStoreGames = async () => {
+  return await prisma.storeGame.findMany({
+    where: {},
+    include: {
+      game: true,
+    },
+  });
+};
