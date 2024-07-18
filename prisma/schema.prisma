@@ -12,7 +12,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  // directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -95,7 +95,6 @@ model InfoGame {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   cover Cover?
-  age_ratings AgeRatings[]
   alternative_names AlternativeNameOnInfoGame[]
   artworks Artwork[]
   game_engines GameEngineOnInfoGame[]
@@ -103,10 +102,10 @@ model InfoGame {
   involved_companies InvolvedCompany[]
   keywords KeywordOnInfoGame[]
   platforms PlatformOnInfoGame[]
-  player_perspectives PlayerPerspectiveOnInfoGame[]
-  screenshots Screenshot[]
+ 
+ 
   videos Video[]
-  language_supports LanguageSupport[]
+  
   game GameOnInfoGame[]
   
 }
@@ -121,14 +120,7 @@ model Cover {
   info_game_id Int @unique
 }
 
-model AgeRatings {
-  id Int @id
-  category Int
-  rating Int
-  synopsis String? @db.VarChar(3500)
-  info_game InfoGame @relation(fields: [info_game_id],references: [id])
-  info_game_id Int 
-}
+
 
 model AlternativeName {
   id Int @id
@@ -261,20 +253,7 @@ model PlatformOnInfoGame{
   @@id([platform_id,info_game_id])
 }
 
-model PlayerPerspective{
-  id Int @id
-  name String
-  info_games PlayerPerspectiveOnInfoGame[]
- 
-}
 
-model PlayerPerspectiveOnInfoGame{
-  player_perspective PlayerPerspective @relation(fields: [player_perspective_id],references: [id])
-  player_perspective_id Int
-  info_game InfoGame @relation(fields: [info_game_id],references: [id]) 
-  info_game_id Int
-  @@id([player_perspective_id,info_game_id])
-}
 
 model ReleaseDate{
   id Int @id
@@ -285,15 +264,6 @@ model ReleaseDate{
   platform_id Int
 }
 
-model Screenshot{
-  id Int @id
-  height Int
-  url String
-  width Int
-  image_id String
-  info_game InfoGame @relation(fields: [info_game_id],references: [id])
-  info_game_id Int
-}
 
 model Video {
   id Int @id
@@ -303,20 +273,5 @@ model Video {
   info_game_id Int
 }
 
-model LanguageSupport {
-  id Int @id
-  language Language @relation(fields: [language_id],references: [id])
-  language_id Int 
-  info_game InfoGame @relation(fields: [info_game_id], references: [id])
-  info_game_id Int
-}
 
-model Language{
-  id Int @id
-  name String
-  native_name String
-  locale String
-  language_support LanguageSupport[]
- 
-}
 

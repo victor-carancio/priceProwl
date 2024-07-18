@@ -8,15 +8,21 @@ import dotenv from "dotenv";
 import errorHandlerMiddleware from "./middlewares/errorHandler";
 import notFound from "./middlewares/notFound";
 import cookieParser from "cookie-parser";
+import swaggerUi from "swagger-ui-express";
+import swaggerSetup from "./docs/swaggeer";
+import cors from "cors";
 dotenv.config();
 const app = express();
 
 // app.set("trust proxy",1);
+app.use(cors());
 app.use(cookieParser());
 app.use(express.json());
 app.use(bodyParser.json());
 
-app.use("/api/v1", gamesRoutes);
+app.use("/documentation", swaggerUi.serve, swaggerUi.setup(swaggerSetup));
+
+app.use("/api/v1/game", gamesRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/wishlist", wishListRoutes);
 

@@ -41,7 +41,7 @@ export class XboxStore extends Store {
             "div.ProductCard-module__discountTag___OjGFy",
           );
           const gameFinalPrice: HTMLSpanElement | null = element.querySelector(
-            "span.Price-module__listedDiscountPrice___67yG1",
+            "span.Price-module__boldText___1i2Li.Price-module__moreText___sNMVr.ProductCard-module__price___cs1xr",
           );
           const originalPriceSelector = gameDiscount
             ? ""
@@ -121,21 +121,24 @@ export class XboxStore extends Store {
         const gamepass: HTMLSpanElement | null = element.querySelector(
           "span.glyph-prepend.glyph-prepend-xbox-game-pass-inline",
         );
-
+        //  ? "span.Price-module__brandOriginalPrice___hNhzI"
         const originalPriceSelector: string = document.querySelector(
-          "span.Price-module__brandOriginalPrice___hNhzI",
+          "span.Price-module__brandOriginalPrice___ayJAn",
         )
-          ? "span.Price-module__brandOriginalPrice___hNhzI"
+          ? "span.Price-module__brandOriginalPrice___ayJAn"
           : "span.Price-module__boldText___vmNHu.Price-module__moreText___q5KoT";
 
-        const initialGamePrice: HTMLSpanElement | null = gamepass
-          ? element.querySelector(
-              "button.CommonButtonStyles-module__variableLineDesktopButton___cxDyV.CommonButtonStyles-module__highContrastAwareButton___DgX7Y span",
-            )
-          : element.querySelector(originalPriceSelector);
+        const initialGamePrice: HTMLSpanElement | null =
+          element.querySelector(
+            "button.CommonButtonStyles-module__variableLineDesktopButton___cxDyV.CommonButtonStyles-module__highContrastAwareButton___DgX7Y span",
+          ) || gamepass
+            ? element.querySelector(
+                "button.CommonButtonStyles-module__variableLineDesktopButton___cxDyV.CommonButtonStyles-module__highContrastAwareButton___DgX7Y span",
+              )
+            : element.querySelector(originalPriceSelector);
 
         const finalGamePrice: HTMLDivElement | null = element.querySelector(
-          "span.Price-module__boldText___vmNHu.Price-module__moreText___q5KoT",
+          "span.Price-module__boldText___1i2Li.Price-module__moreText___sNMVr.AcquisitionButtons-module__listedPrice___PS6Zm",
         );
 
         return {
@@ -152,7 +155,7 @@ export class XboxStore extends Store {
           initial_price: initialGamePrice!.innerText,
           final_price: finalGamePrice
             ? finalGamePrice.innerText
-            : initialGamePrice!.innerText,
+            : initialGamePrice?.innerText || "-",
         };
       },
     );

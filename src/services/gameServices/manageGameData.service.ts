@@ -124,22 +124,6 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
         },
       });
 
-      if ("age_ratings" in info) {
-        for (const age_rating of info.age_ratings) {
-          await prisma.ageRatings.upsert({
-            where: { id: age_rating.id },
-            update: {},
-            create: {
-              id: age_rating.id,
-              category: age_rating.category,
-              rating: age_rating.rating,
-              synopsis: age_rating.synopsis || "-",
-              info_game: { connect: { id: newInfoGame.id } },
-            },
-          });
-        }
-      }
-
       if ("alternative_names" in info) {
         for (const alternativeName of info.alternative_names) {
           await prisma.alternativeNameOnInfoGame.upsert({
@@ -377,32 +361,6 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
         }
       }
 
-      if ("player_perspectives" in info) {
-        for (const playerPerspective of info.player_perspectives) {
-          await prisma.playerPerspectiveOnInfoGame.upsert({
-            where: {
-              player_perspective_id_info_game_id: {
-                info_game_id: newInfoGame.id,
-                player_perspective_id: playerPerspective.id,
-              },
-            },
-            update: {},
-            create: {
-              info_game: { connect: { id: newInfoGame.id } },
-              player_perspective: {
-                connectOrCreate: {
-                  where: { id: playerPerspective.id },
-                  create: {
-                    id: playerPerspective.id,
-                    name: playerPerspective.name,
-                  },
-                },
-              },
-            },
-          });
-        }
-      }
-
       if ("release_dates" in info) {
         for (const releaseDate of info.release_dates) {
           await prisma.platform.upsert({
@@ -464,25 +422,6 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
         }
       }
 
-      if ("screenshots" in info) {
-        for (const screenshot of info.screenshots) {
-          await prisma.screenshot.upsert({
-            where: {
-              id: screenshot.id,
-            },
-            update: {},
-            create: {
-              id: screenshot.id,
-              height: screenshot.height,
-              width: screenshot.width,
-              url: screenshot.url,
-              image_id: screenshot.image_id,
-              info_game: { connect: { id: newInfoGame.id } },
-            },
-          });
-        }
-      }
-
       if ("videos" in info) {
         for (const video of info.videos) {
           await prisma.video.upsert({
@@ -495,44 +434,6 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
               name: video.name,
               video_id: video.video_id,
               info_game: { connect: { id: newInfoGame.id } },
-            },
-          });
-        }
-      }
-
-      if ("language_supports" in info) {
-        for (const languageSupport of info.language_supports) {
-          await prisma.language.upsert({
-            where: { id: languageSupport.language.id },
-            update: {
-              language_support: {
-                connectOrCreate: {
-                  where: { id: languageSupport.id },
-                  create: {
-                    id: languageSupport.id,
-                    info_game: {
-                      connect: { id: newInfoGame.id },
-                    },
-                  },
-                },
-              },
-            },
-            create: {
-              id: languageSupport.language.id,
-              name: languageSupport.language.name,
-              native_name: languageSupport.language.native_name,
-              locale: languageSupport.language.locale,
-              language_support: {
-                connectOrCreate: {
-                  where: { id: languageSupport.id },
-                  create: {
-                    id: languageSupport.id,
-                    info_game: {
-                      connect: { id: newInfoGame.id },
-                    },
-                  },
-                },
-              },
             },
           });
         }
@@ -610,7 +511,7 @@ export const findGameByName = async (name: string) => {
           info_game: {
             include: {
               cover: true,
-              age_ratings: true,
+
               alternative_names: true,
               artworks: true,
               game_engines: true,
@@ -634,18 +535,7 @@ export const findGameByName = async (name: string) => {
                   platform: true,
                 },
               },
-              player_perspectives: {
-                include: {
-                  player_perspective: true,
-                },
-              },
-              screenshots: true,
               videos: true,
-              language_supports: {
-                include: {
-                  language: true,
-                },
-              },
             },
           },
         },
@@ -712,7 +602,6 @@ export const findAllWishList = async () => {
                       cover: true,
                       summary: true,
                       artworks: true,
-                      screenshots: true,
                     },
                   },
                 },
@@ -733,7 +622,7 @@ export const findAllWishList = async () => {
       offer;
     const { gameName, user } = offer.storeGame.game;
     offer.storeGame.game.infoGame[0];
-    const { cover, summary, artworks, screenshots } =
+    const { cover, summary, artworks } =
       offer.storeGame.game.infoGame[0]?.info_game;
     return {
       game: {
@@ -749,7 +638,6 @@ export const findAllWishList = async () => {
         cover,
         summary,
         artworks,
-        screenshots,
       },
       users: user
         .filter((element) => !element.notified && element.user.isActive)

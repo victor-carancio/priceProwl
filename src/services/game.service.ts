@@ -19,6 +19,9 @@ import {
 } from "./gameServices/manageGameData.service";
 import { sendEmails } from "./gameServices/email.service";
 
+import { chromium } from "playwright-extra";
+import StealthPlugin from "puppeteer-extra-plugin-stealth";
+
 // import { scrapeGameUrl } from "./gameServices/scrapeGameData.service";
 
 export const findGamesPricesByName = async (
@@ -55,16 +58,6 @@ export const findGamesPricesByName = async (
   await storeGameData(gameInfo);
 
   return gameInfo;
-};
-
-export const findGameInfoByName = async (title: string): Promise<any> => {
-  if (!isString(title)) {
-    throw new BadRequestError("invalid field");
-  }
-
-  const gameData = await getGameInfoFromIgdb(title);
-
-  return gameData;
 };
 
 cron.schedule("0 0 * * *", async () => {
@@ -125,3 +118,5 @@ export const offerNotification = async () => {
 export const checkOfferEnd = async () => {
   return await findEndOffer();
 };
+
+chromium.use(StealthPlugin());

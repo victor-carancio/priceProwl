@@ -31,7 +31,6 @@ export const findWishListOfUser = async (user: UserTokenData) => {
                       platform: true,
                     },
                   },
-                  screenshots: true,
                 },
               },
             },

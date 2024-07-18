@@ -1,6 +1,9 @@
 import * as bcrypt from "bcryptjs";
 // import { PrismaClient } from "@prisma/client";
-import { BadRequestError } from "../responses/customApiError";
+import {
+  BadRequestError,
+  ForbiddenRequestError,
+} from "../responses/customApiError";
 import jwt from "jsonwebtoken";
 import { UserTokenData } from "../types";
 import prisma from "../db/client.db";
@@ -12,7 +15,15 @@ export const createUser = async (credentials: {
 }) => {
   const { email, password, username } = credentials;
 
-  let user = await prisma.user.findFirst({ where: { email } });
+  let user = await prisma.user.findFirst({ where: { isActive: false } });
+
+  if (user) {
+    throw new ForbiddenRequestError(
+      "User account was delete, to reactive, contact support team.",
+    );
+  }
+
+  user = await prisma.user.findFirst({ where: { email } });
 
   if (user) {
     throw new BadRequestError("User already exist!");
@@ -55,6 +66,12 @@ export const loginUser = async (credentials: {
 
   if (!user) {
     throw new BadRequestError("User doesn´t exist!");
+  }
+
+  if (!user.isActive) {
+    throw new ForbiddenRequestError(
+      "User account was delete, to reactive, contact support team.",
+    );
   }
 
   const isValid = await bcrypt.compare(password, user.password);

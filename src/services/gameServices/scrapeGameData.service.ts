@@ -26,6 +26,7 @@ export const scrapeAllStores = async (
   const context = await browser.newContext({
     userAgent: agent,
   });
+
   const gamesForStore: StoreInfo[] = [];
   try {
     const page = await context.newPage();

@@ -63,12 +63,6 @@ export interface GameInfoAndPrices {
 
 export interface InfoGame {
   id: number;
-  age_ratings: {
-    id: number;
-    category: number;
-    rating: number;
-    synopsis: string;
-  }[];
   alternative_names: AlternativeName[];
   artworks: Image[];
   cover: Image;
@@ -98,7 +92,6 @@ export interface InfoGame {
     name: string;
     platform_logo: Image;
   }[];
-  player_perspectives: { id: number; name: string }[];
   release_dates: {
     id: number;
     category: number;
@@ -112,15 +105,10 @@ export interface InfoGame {
     };
     region: number;
   }[];
-  screenshots: Image[];
   storyline: string;
   summary: string;
   version_title?: string;
   videos: { id: number; name: string; video_id: string }[];
-  language_supports: {
-    id: number;
-    language: { id: number; name: string; native_name: string; locale: string };
-  }[];
 }
 
 interface Image {
