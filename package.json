@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development  ts-node-dev --respawn src/index.ts",
     "generate": "prisma generate --schema ./prisma/schema.prisma && prisma db push --schema ./prisma/schema.prisma",
-    "copy-templates": "copyfiles -u 1 src/views/**/*.hbs build/",
+    "copy-templates": "copyfiles -u 1 src/views/**/*.hbs build/ && copyfiles -u 1 public/css/*.css build/",
     "tsc": "tsc && npm run copy-templates",
     "install_chromium": "npx playwright install chromium",
     "migrate": "npx prisma migrate deploy",
