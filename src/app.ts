@@ -38,6 +38,7 @@ app.use(
   swaggerUi.serve,
   swaggerUi.setup(swaggerSetup),
 );
+console.log(process.env.NODE_ENV);
 
 app.get("/", (_req, res) => {
   res.redirect("/documentation");
