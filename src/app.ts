@@ -31,19 +31,11 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(bodyParser.json());
 
-app.use(
-  process.env.NODE_ENV === "development"
-    ? "/documentation"
-    : "/priceprowler/documentation",
-  swaggerUi.serve,
-  swaggerUi.setup(swaggerSetup),
-);
+app.use("/documentation", swaggerUi.serve, swaggerUi.setup(swaggerSetup));
 console.log(process.env.NODE_ENV);
 
 app.get("/", (_req, res) => {
-  process.env.NODE_ENV === "development"
-    ? res.redirect("/documentation")
-    : res.redirect("/priceprowler/documentation");
+  res.redirect("/documentation");
 });
 app.use("/api/v1/game", gamesRoutes);
 app.use("/api/v1/auth", authRoutes);
