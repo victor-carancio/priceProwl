@@ -31,16 +31,16 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(bodyParser.json());
 
-app.use("/api/v1/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSetup));
+app.use("/documentation", swaggerUi.serve, swaggerUi.setup(swaggerSetup));
 console.log(process.env.NODE_ENV);
 
-app.get("/", (_req, res) => {
-  res.redirect("/api/v1/api-docs");
-});
+// app.get("/", (_req, res) => {
+//   res.redirect("/api/v1/api-docs");
+// });
 
-app.get("/api", (_req, res) => {
-  res.redirect("/api/v1/api-docs");
-});
+// app.get("/api", (_req, res) => {
+//   res.redirect("/api/v1/api-docs");
+// });
 
 app.use("/api/v1/game", gamesRoutes);
 app.use("/api/v1/auth", authRoutes);
