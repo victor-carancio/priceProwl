@@ -31,11 +31,11 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(bodyParser.json());
 
-app.use("/documentation", swaggerUi.serve, swaggerUi.setup(swaggerSetup));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSetup));
 console.log(process.env.NODE_ENV);
 
 app.get("/", (_req, res) => {
-  res.redirect("http://www.vcaranciodev.online/priceprowler/documentation");
+  res.redirect("api-docs");
 });
 
 app.use("/api/v1/game", gamesRoutes);
