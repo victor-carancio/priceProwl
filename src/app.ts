@@ -31,7 +31,13 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(bodyParser.json());
 
-app.use("/documentation", swaggerUi.serve, swaggerUi.setup(swaggerSetup));
+app.use(
+  process.env.NODE_ENV === "production"
+    ? "/priceprowler/documentation"
+    : "/documentation",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSetup),
+);
 
 app.get("/", (_req, res) => {
   res.redirect("/documentation");
