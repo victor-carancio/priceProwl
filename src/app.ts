@@ -35,14 +35,9 @@ app.use("/documentation", swaggerUi.serve, swaggerUi.setup(swaggerSetup));
 console.log(process.env.NODE_ENV);
 
 app.get("/", (_req, res) => {
-  res.redirect("/documentation");
+  res.redirect("/priceprowler/documentation");
 });
-app.get("/jio", (_req, res) => {
-  res.send("jio");
-});
-app.get("/priceprowler/jio", (_req, res) => {
-  res.send("prowlerjio");
-});
+
 app.use("/api/v1/game", gamesRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/wishlist", wishListRoutes);
