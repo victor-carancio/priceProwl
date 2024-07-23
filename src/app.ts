@@ -41,7 +41,9 @@ app.use(
 console.log(process.env.NODE_ENV);
 
 app.get("/", (_req, res) => {
-  res.redirect("/documentation");
+  process.env.NODE_ENV === "development"
+    ? res.redirect("/documentation")
+    : res.redirect("/priceprowler/documentation");
 });
 app.use("/api/v1/game", gamesRoutes);
 app.use("/api/v1/auth", authRoutes);
