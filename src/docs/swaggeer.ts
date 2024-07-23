@@ -13,7 +13,7 @@ const swaggerDefinition: OAS3Definition = {
     },
     {
       description: "Production",
-      url: "http://ec2-18-224-46-85.us-east-2.compute.amazonaws.com/priceprowler/api/v1",
+      url: "http://vcaranciodev.online/priceprowler/api/v1",
     },
   ],
   components: {

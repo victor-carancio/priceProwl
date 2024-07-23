@@ -32,9 +32,9 @@ app.use(express.json());
 app.use(bodyParser.json());
 
 app.use(
-  process.env.NODE_ENV === "production"
-    ? "/priceprowler/documentation"
-    : "/documentation",
+  process.env.NODE_ENV === "development"
+    ? "/documentation"
+    : "/priceprowler/documentation",
   swaggerUi.serve,
   swaggerUi.setup(swaggerSetup),
 );
