@@ -34,9 +34,9 @@ app.use(bodyParser.json());
 app.use("/documentation", swaggerUi.serve, swaggerUi.setup(swaggerSetup));
 console.log(process.env.NODE_ENV);
 
-// app.get("/", (_req, res) => {
-//   res.redirect("/api/v1/api-docs");
-// });
+app.get("/", (_req, res) => {
+  res.redirect("documentation");
+});
 
 // app.get("/api", (_req, res) => {
 //   res.redirect("/api/v1/api-docs");
