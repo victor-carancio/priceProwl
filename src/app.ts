@@ -18,7 +18,14 @@ const app = express();
 
 app.set("trust proxy", 1);
 app.use(cors());
-app.use(helmet());
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      connectSrc: ["'self'", "https://priceprowler.vcaranciodev.online"],
+    },
+  }),
+);
 app.use(
   rateLimit({
     windowMs: 15 * 60 * 1000, // 100 requests cada 15 min por cliente
