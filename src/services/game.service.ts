@@ -19,9 +19,6 @@ import {
 } from "./gameServices/manageGameData.service";
 import { sendEmails } from "./gameServices/email.service";
 
-import { chromium } from "playwright-extra";
-import StealthPlugin from "puppeteer-extra-plugin-stealth";
-
 // import { scrapeGameUrl } from "./gameServices/scrapeGameData.service";
 
 export const findGamesPricesByName = async (
@@ -60,11 +57,10 @@ export const findGamesPricesByName = async (
   return gameInfo;
 };
 
-cron.schedule("0 0 * * *", async () => {
+cron.schedule("0 */12 * * *", async () => {
   await scrapeAllGamesFromUrl();
   await offerNotification();
   await checkOfferEnd();
-  // console.log("jio");
 });
 
 export const offerNotification = async () => {
@@ -118,5 +114,3 @@ export const offerNotification = async () => {
 export const checkOfferEnd = async () => {
   return await findEndOffer();
 };
-
-chromium.use(StealthPlugin());

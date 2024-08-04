@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { findGamesPricesByName } from "../services/game.service";
 import { findGameByName } from "../services/gameServices/manageGameData.service";
 import { parseString } from "../utils/validation";
-import { scrapeAllGamesFromUrl } from "../services/gameServices/scrapeGameData.service";
+// import { scrapeAllGamesFromUrl } from "../services/gameServices/scrapeGameData.service";
 
 export const getGamesPrices = async (req: Request, res: Response) => {
   const title = parseString(req.query.title, "Game title");
@@ -40,10 +40,10 @@ export const getGamesByNameFromDB = async (req: Request, res: Response) => {
 
 /* ------------------------------ test de funciones --------------------------*/
 
-export const testUpdateGamePrice = async (_req: Request, res: Response) => {
-  // await offerNotification();
-  // await checkOfferEnd();
-  // await jio();
-  await scrapeAllGamesFromUrl();
-  return res.status(200).json({ msg: "jio" });
-};
+// export const testUpdateGamePrice = async (_req: Request, res: Response) => {
+//   // await offerNotification();
+//   // await checkOfferEnd();
+
+//   await scrapeAllGamesFromUrl();
+//   return res.status(200).json({ msg: "jio" });
+// };

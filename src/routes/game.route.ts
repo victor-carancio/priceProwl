@@ -2,7 +2,7 @@ import { Router } from "express";
 import {
   getGamesPrices,
   getGamesByNameFromDB,
-  testUpdateGamePrice,
+  // testUpdateGamePrice,
 } from "../controllers/game.controller";
 
 const router = Router();
@@ -102,6 +102,6 @@ router.get("/search", getGamesByNameFromDB);
  *  */
 
 // router.get("/update/search", getGamesByNameFromDBAndUpdatePrice);
-router.get("/test", testUpdateGamePrice);
+// router.get("/test", testUpdateGamePrice);
 
 export default router;
