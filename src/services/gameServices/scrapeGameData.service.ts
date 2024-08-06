@@ -106,7 +106,7 @@ export const scrapeAllStores = async (
 export const scrapeAllGamesFromUrl = async () => {
   const stores: Record<StoreTypes, Store> = {
     [StoreTypes.STEAM_STORE]: new SteamStore(),
-    [StoreTypes.XBOX_STORE]: new XboxStore(),
+    // [StoreTypes.XBOX_STORE]: new XboxStore(),
     [StoreTypes.EPIC_STORE]: new EpicStore(),
   };
 
@@ -156,7 +156,7 @@ export const scrapeSearchedGamesFromUrl = async (
   if (searchedGames && searchedGames.length > 0) {
     const stores: Record<StoreTypes, Store> = {
       [StoreTypes.STEAM_STORE]: new SteamStore(),
-      [StoreTypes.XBOX_STORE]: new XboxStore(),
+      // [StoreTypes.XBOX_STORE]: new XboxStore(),
       [StoreTypes.EPIC_STORE]: new EpicStore(),
     };
 

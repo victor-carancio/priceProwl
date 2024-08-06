@@ -19,7 +19,7 @@ export interface UserTokenData {
 }
 export enum StoreTypes {
   STEAM_STORE = "Steam",
-  XBOX_STORE = "Xbox",
+  // XBOX_STORE = "Xbox",
   EPIC_STORE = "Epic",
 }
 
