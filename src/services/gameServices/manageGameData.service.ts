@@ -503,7 +503,12 @@ export const findGameByName = async (name: string) => {
     include: {
       stores: {
         include: {
-          info: true,
+          info: {
+            orderBy: {
+              updatedAt: "desc",
+            },
+            take: 1,
+          },
         },
       },
       infoGame: {
@@ -511,7 +516,6 @@ export const findGameByName = async (name: string) => {
           info_game: {
             include: {
               cover: true,
-
               alternative_names: true,
               artworks: true,
               game_engines: true,
