@@ -1,6 +1,14 @@
 import { GameInfoAndPrices, PriceFromUrlScraped } from "../../types";
 import { StoreGame } from "@prisma/client";
 import prisma from "../../db/client.db";
+import { NotFoundError } from "../../responses/customApiError";
+import {
+  completeInfo,
+  formatCompleteInfo,
+  formatShortInfo,
+  shortInfo,
+} from "../../utils/manageGameData.utils";
+import { CompleteInfoFormat, ShortInfoFormat } from "../../utils/types";
 
 export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
   for (const game of gamesData) {
@@ -493,11 +501,135 @@ export const updateStoreGamePrice = async (
 };
 
 export const findGameByName = async (name: string) => {
+  //todo: que busque por nombre alternativo
   const gamesFounded = await prisma.game.findMany({
     where: {
-      gameName: {
-        contains: name.trim(),
-        mode: "insensitive",
+      OR: [
+        {
+          gameName: {
+            contains: name.trim(),
+            mode: "insensitive",
+          },
+        },
+        {
+          infoGame: {
+            some: {
+              info_game: {
+                alternative_names: {
+                  some: {
+                    alternative_name: {
+                      name: {
+                        contains: name.trim(),
+                        mode: "insensitive",
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      ],
+    },
+    include: {
+      stores: {
+        include: {
+          info: {
+            orderBy: {
+              updatedAt: "desc",
+            },
+            take: 1,
+          },
+        },
+      },
+      infoGame: {
+        include: {
+          info_game: {
+            select: shortInfo,
+          },
+        },
+      },
+    },
+  });
+
+  return formatShortInfo(gamesFounded as ShortInfoFormat[]);
+};
+
+export const findGameById = async (id: string) => {
+  const gamesFounded = await prisma.game.findFirst({
+    where: {
+      id: parseInt(id),
+    },
+    include: {
+      stores: {
+        include: {
+          info: {
+            orderBy: {
+              updatedAt: "desc",
+            },
+            take: 1,
+          },
+        },
+      },
+      infoGame: {
+        include: {
+          info_game: {
+            select: completeInfo,
+          },
+        },
+      },
+    },
+  });
+
+  if (!gamesFounded) {
+    throw new NotFoundError(`There is not game with id ${id} in the database.`);
+  }
+
+  return formatCompleteInfo(gamesFounded as CompleteInfoFormat);
+};
+
+export const findAllGames = async () => {
+  const allGames = await prisma.game.findMany({
+    where: {},
+    include: {
+      stores: {
+        include: {
+          info: {
+            orderBy: {
+              updatedAt: "desc",
+            },
+            take: 1,
+          },
+        },
+      },
+      infoGame: {
+        include: {
+          info_game: {
+            select: shortInfo,
+          },
+        },
+      },
+    },
+  });
+
+  return formatShortInfo(allGames as ShortInfoFormat[]);
+};
+
+export const findCurrOfferGames = async () => {
+  const offerGames = await prisma.game.findMany({
+    where: {
+      stores: {
+        every: {
+          info: {
+            some: {
+              AND: [
+                {
+                  discount_percent: { not: "-" },
+                },
+              ],
+            },
+          },
+        },
       },
     },
     include: {
@@ -517,8 +649,6 @@ export const findGameByName = async (name: string) => {
             include: {
               cover: true,
               alternative_names: true,
-              artworks: true,
-              game_engines: true,
               genres: {
                 include: {
                   genre: true,
@@ -539,15 +669,13 @@ export const findGameByName = async (name: string) => {
                   platform: true,
                 },
               },
-              videos: true,
             },
           },
         },
       },
     },
   });
-
-  return gamesFounded;
+  return offerGames;
 };
 
 export const findAllWishList = async () => {

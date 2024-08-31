@@ -3,6 +3,10 @@ import {
   getGamesPrices,
   getGamesByNameFromDB,
   // testUpdateGamePrice,
+  getGameById,
+  getCurrentOffers,
+  getAllGames,
+  // testUpdateGamePrice,
 } from "../controllers/game.controller";
 
 const router = Router();
@@ -29,7 +33,7 @@ const router = Router();
  *          content:
  *            application/json:
  *              schema:
- *                $ref: "#/components/schemas/gamesFromScraper"
+ *                $ref: "#/components/schemas/gameResponse"
  *       '400':
  *           description: "Invalid data"
  *       '500':
@@ -61,7 +65,7 @@ router.get("/", getGamesPrices);
  *          content:
  *            application/json:
  *              schema:
- *                $ref: "#/components/schemas/gamesFromDB"
+ *                $ref: "#/components/schemas/gameResponseDB"
  *       '400':
  *           description: "Invalid data"
  *       '500':
@@ -102,6 +106,106 @@ router.get("/search", getGamesByNameFromDB);
  *  */
 
 // router.get("/update/search", getGamesByNameFromDBAndUpdatePrice);
-// router.get("/test", testUpdateGamePrice);
+
+/**
+ * Get track
+ * @openapi
+ * /game/all:
+ *   get:
+ *     tags:
+ *      - game
+ *     summary: Get all games prices and info from database.
+ *     description: >
+ *        Obtain games info and prices directly from database.
+ *          if the game wasn't store or search by scraper previusly, it will return empty array.
+ *     parameters:
+ *       - in: query
+ *         name: title
+ *         required: true
+ *         description: Name of game to search in database.
+ *         schema:
+ *            type: string
+ *     responses:
+ *       '200':
+ *          description: Request to database succesfully, return data.
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: "#/components/schemas/gameResponseDB"
+ *       '400':
+ *           description: "Invalid data"
+ *       '500':
+ *           description: "Internal server error."
+ *  */
+
+router.get("/all", getAllGames);
+
+/**
+ * Get track
+ * @openapi
+ * /game/offers:
+ *   get:
+ *     tags:
+ *      - game
+ *     summary: Get games with offers and info from database.
+ *     description: >
+ *        Obtain games offers, info and prices directly from database.
+ *          if the game wasn't store or search by scraper previusly, it will return empty array.
+ *     parameters:
+ *       - in: query
+ *         name: title
+ *         required: true
+ *         description: Name of game to search in database.
+ *         schema:
+ *            type: string
+ *     responses:
+ *       '200':
+ *          description: Request to database succesfully, return data.
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: "#/components/schemas/gameResponseDB"
+ *       '400':
+ *           description: "Invalid data"
+ *       '500':
+ *           description: "Internal server error."
+ *  */
+router.get("/offers", getCurrentOffers);
+
+/**
+ * Get track
+ * @openapi
+ * /game/:id:
+ *   get:
+ *     tags:
+ *      - game
+ *     summary: Get game prices and all info from database.
+ *     description: >
+ *        Obtain all game info and prices directly from database.
+ *          if the game wasn't store or search by scraper previusly, it will return empty array.
+ *     parameters:
+ *       - in: query
+ *         name: title
+ *         required: true
+ *         description: Name of game to search in database.
+ *         schema:
+ *            type: string
+ *     responses:
+ *       '200':
+ *          description: Request to database succesfully, return data.
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: "#/components/schemas/gameFromDB"
+ *       '400':
+ *           description: "Invalid data"
+ *       '404':
+ *           description: "Game not found"
+ *       '500':
+ *           description: "Internal server error."
+ *  */
+router.get("/:id", getGameById);
+
+// router.get("/test/:id", testUpdateGamePrice);
 
 export default router;

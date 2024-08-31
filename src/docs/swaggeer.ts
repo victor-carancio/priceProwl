@@ -235,6 +235,39 @@ const swaggerDefinition: OAS3Definition = {
           },
         },
       },
+      gameFromDB: {
+        type: "object",
+        properties: {
+          gameName: {
+            type: "string",
+            example: "Resident Evil 2",
+          },
+          platform: {
+            type: "string",
+            example: "pc",
+          },
+          createdAt: {
+            type: "string",
+            example: "2024-07-17T21:35:10.807Z",
+          },
+          updatedAt: {
+            type: "string",
+            example: "2024-07-17T21:35:10.807Z",
+          },
+          stores: {
+            type: "array",
+            items: {
+              $ref: "#/components/schemas/storesDB",
+            },
+          },
+          infoGame: {
+            type: "array",
+            items: {
+              $ref: "#/components/schemas/allInfoList",
+            },
+          },
+        },
+      },
       storesScraper: {
         type: "object",
         properties: {
@@ -376,6 +409,55 @@ const swaggerDefinition: OAS3Definition = {
             type: "integer",
             example: "56078",
           },
+
+          cover: {
+            $ref: "#/components/schemas/image",
+          },
+          first_release_date: {
+            $ref: "#/components/schemas/unixTimeStampDate",
+          },
+
+          genres: {
+            type: "array",
+            items: {
+              $ref: "#/components/schemas/propertiesNameAndId",
+            },
+          },
+
+          keywords: {
+            type: "array",
+            items: {
+              $ref: "#/components/schemas/propertiesNameAndId",
+            },
+          },
+          name: {
+            type: "string",
+            example: "Resident Evil 2",
+          },
+          platforms: {
+            type: "array",
+            items: {
+              $ref: "#/components/schemas/platforms",
+            },
+          },
+
+          storyline: {
+            type: "string",
+            example: "Players join rookie police officer Leon Kennedy...",
+          },
+          summary: {
+            type: "string",
+            example: "Resident Evil 2 is a remake of 1998's Resident Evil 2",
+          },
+        },
+      },
+      allInfoGame: {
+        type: "object",
+        properties: {
+          id: {
+            type: "integer",
+            example: "56078",
+          },
           alternative_names: {
             type: "array",
             items: {
@@ -462,91 +544,27 @@ const swaggerDefinition: OAS3Definition = {
             example: "19686",
           },
           info_game: {
-            $ref: "#/components/schemas/infoGameISO",
+            $ref: "#/components/schemas/infoGame",
           },
         },
       },
-      infoGameISO: {
+      allInfoList: {
         type: "object",
         properties: {
-          id: {
+          game_id: {
             type: "integer",
-            example: "56078",
+            example: "2",
           },
-          alternative_names: {
-            type: "array",
-            items: {
-              $ref: "#/components/schemas/alternative_names",
-            },
+          info_game_id: {
+            type: "integer",
+            example: "19686",
           },
-          artworks: {
-            type: "array",
-            items: {
-              $ref: "#/components/schemas/image",
-            },
-          },
-          cover: {
-            $ref: "#/components/schemas/image",
-          },
-          first_release_date: {
-            $ref: "#/components/schemas/isoDateFormat",
-          },
-          game_engines: {
-            type: "array",
-            items: {
-              $ref: "#/components/schemas/propertiesNameAndId",
-            },
-          },
-          genres: {
-            type: "array",
-            items: {
-              $ref: "#/components/schemas/propertiesNameAndId",
-            },
-          },
-          involved_companies: {
-            type: "array",
-            items: {
-              $ref: "#/components/schemas/involved_companiesISO",
-            },
-          },
-          keywords: {
-            type: "array",
-            items: {
-              $ref: "#/components/schemas/propertiesNameAndId",
-            },
-          },
-          name: {
-            type: "string",
-            example: "Resident Evil 2",
-          },
-          platforms: {
-            type: "array",
-            items: {
-              $ref: "#/components/schemas/platforms",
-            },
-          },
-          release_dates: {
-            type: "array",
-            items: {
-              $ref: "#/components/schemas/release_datesISO",
-            },
-          },
-          storyline: {
-            type: "string",
-            example: "Players join rookie police officer Leon Kennedy...",
-          },
-          summary: {
-            type: "string",
-            example: "Resident Evil 2 is a remake of 1998's Resident Evil 2",
-          },
-          videos: {
-            type: "array",
-            items: {
-              $ref: "#/components/schemas/videos",
-            },
+          info_game: {
+            $ref: "#/components/schemas/allInfoGame",
           },
         },
       },
+
       alternative_names: {
         type: "object",
         properties: {
@@ -629,34 +647,7 @@ const swaggerDefinition: OAS3Definition = {
           },
         },
       },
-      involved_companiesISO: {
-        type: "object",
-        properties: {
-          id: {
-            type: "integer",
-            example: "184693",
-          },
-          company: {
-            $ref: "#/components/schemas/companyISO",
-          },
-          developer: {
-            type: "boolean",
-            example: "false",
-          },
-          porting: {
-            type: "boolean",
-            example: "false",
-          },
-          publisher: {
-            type: "boolean",
-            example: "true",
-          },
-          supporting: {
-            type: "boolean",
-            example: "false",
-          },
-        },
-      },
+
       company: {
         type: "object",
         properties: {
@@ -680,29 +671,7 @@ const swaggerDefinition: OAS3Definition = {
           },
         },
       },
-      companyISO: {
-        type: "object",
-        properties: {
-          id: {
-            type: "integer",
-            example: "37",
-          },
-          country: {
-            type: "integer",
-            example: "392",
-          },
-          logo: {
-            $ref: "#/components/schemas/image",
-          },
-          name: {
-            type: "string",
-            example: "Capcom",
-          },
-          start_date: {
-            $ref: "#/components/schemas/isoDateFormat",
-          },
-        },
-      },
+
       platforms: {
         type: "object",
         properties: {
@@ -758,29 +727,6 @@ const swaggerDefinition: OAS3Definition = {
           },
           date: {
             $ref: "#/components/schema/unixTimeStampDate",
-          },
-          region: {
-            type: "integer",
-            example: "2",
-          },
-          platform: {
-            $ref: "#/components/schema/platforms",
-          },
-        },
-      },
-      release_datesISO: {
-        type: "object",
-        properties: {
-          id: {
-            type: "integer",
-            example: "12323",
-          },
-          category: {
-            type: "integer",
-            example: "0",
-          },
-          date: {
-            $ref: "#/components/schema/isoDateFormat",
           },
           region: {
             type: "integer",

@@ -15,6 +15,15 @@ datasource db {
   // directUrl = env("DIRECT_URL")
 }
 
+enum CurrencyTypes {
+  USD
+  CLP
+}
+
+enum PlatformsTypes {
+  PC
+}
+
 model User {
   id         Int      @id @default(autoincrement())
   username String? @unique
@@ -44,7 +53,7 @@ model UserGameWishList{
 model Game {
   id         Int      @id @default(autoincrement())
   gameName String 
-  platform String @default("Pc")
+  platform PlatformsTypes @default(PC)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   stores StoreGame[]
@@ -73,6 +82,7 @@ model StorePrice {
   initial_price  String @default("-")
   final_price  String @default("-")
   offer_end_date DateTime?
+  currency CurrencyTypes @default(USD)
   storeGame StoreGame @relation(fields:[store_game_id],references: [id])
   store_game_id Int 
 }
