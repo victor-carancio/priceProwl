@@ -555,10 +555,10 @@ export const findGameByName = async (name: string) => {
   return formatShortInfo(gamesFounded as ShortInfoFormat[]);
 };
 
-export const findGameById = async (id: string) => {
+export const findGameById = async (id: number) => {
   const gamesFounded = await prisma.game.findFirst({
     where: {
-      id: parseInt(id),
+      id: id,
     },
     include: {
       stores: {
@@ -616,57 +616,44 @@ export const findAllGames = async () => {
 };
 
 export const findCurrOfferGames = async () => {
-  const offerGames = await prisma.game.findMany({
-    where: {
-      stores: {
-        every: {
-          info: {
-            some: {
-              AND: [
-                {
-                  discount_percent: { not: "-" },
-                },
-              ],
-            },
-          },
-        },
-      },
+  const findOffers = await prisma.storePrice.findMany({
+    where: {},
+    orderBy: {
+      updatedAt: "desc",
     },
-    include: {
-      stores: {
-        include: {
-          info: {
-            orderBy: {
-              updatedAt: "desc",
-            },
-            take: 1,
-          },
-        },
-      },
-      infoGame: {
-        include: {
-          info_game: {
-            include: {
-              cover: true,
-              alternative_names: true,
-              genres: {
+    distinct: ["store_game_id"],
+    select: {
+      id: true,
+      createdAt: true,
+      updatedAt: true,
+      store_game_id: true,
+      offer_end_date: true,
+      currency: true,
+      initial_price: true,
+      final_price: true,
+      discount_percent: true,
+      storeGame: {
+        select: {
+          id: true,
+          store: true,
+          url: true,
+          edition: true,
+          gamepass: true,
+          createdAt: true,
+          updatedAt: true,
+          game_id: true,
+          game: {
+            select: {
+              id: true,
+              gameName: true,
+              platform: true,
+              createdAt: true,
+              updatedAt: true,
+              infoGame: {
                 include: {
-                  genre: true,
-                },
-              },
-              involved_companies: {
-                include: {
-                  company: true,
-                },
-              },
-              keywords: {
-                include: {
-                  keyword: true,
-                },
-              },
-              platforms: {
-                include: {
-                  platform: true,
+                  info_game: {
+                    select: shortInfo,
+                  },
                 },
               },
             },
@@ -675,7 +662,41 @@ export const findCurrOfferGames = async () => {
       },
     },
   });
-  return offerGames;
+
+  const offersOnly = findOffers.filter(
+    (price) => price.discount_percent !== "-",
+  );
+  //todo: offer, reemplazar selectores de epic/buscar api epic
+  return offersOnly;
+  // .map((offer) => {
+  //   const {
+  //     id,
+  //     createdAt,
+  //     currency,
+  //     discount_percent,
+  //     initial_price,
+  //     final_price,
+  //     offer_end_date,
+  //     store_game_id,
+  //     storeGame,
+  //   } = offer;
+
+  //   const {
+  //     id: storeId,
+  //     createdAt: storeCreated,
+  //     edition,
+  //     game_id,
+  //     gamepass,
+  //     store,
+  //     updatedAt: storeUpdated,
+  //     url,
+  //     game,
+  //   } = storeGame;
+
+  //   const{id:gameId,gameName,platform,createdAt:gameCreated,updatedAt:gameUpdated,infoGame}=game
+
+  //   return{id:gameId,gameName,platform,createdAt:gameCreated,updatedAt:gameUpdated,stores:}
+  // });
 };
 
 export const findAllWishList = async () => {

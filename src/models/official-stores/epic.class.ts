@@ -1,7 +1,10 @@
+import { formatToDecimals } from "./../utils.model";
 import { Page } from "playwright";
 import { parseUrl, replaceSteam } from "../../utils/game.utils";
 import { Store } from "../store.class";
 import { GamePriceInfo, StoreInfo } from "../../types";
+import { CustomApiError } from "../../responses/customApiError";
+import { EpicSearch } from "../types";
 
 export class EpicStore extends Store {
   constructor() {
@@ -16,6 +19,61 @@ export class EpicStore extends Store {
         "&sortBy=relevancy&sortDir=DESC&category=Game&count=40&start=0",
     ); // pc game
     return this.getUrl();
+  }
+
+  private searchUrl = (term: string, currency: string) => {
+    const queryTerm = parseUrl(term, "+");
+
+    return `https://store.epicgames.com/graphql?operationName=searchStoreQuery&variables=%7B%22allowCountries%22:%22CL%22,%22category%22:%22games%2Fedition%2Fbase%22,%22count%22:40,%22country%22:%22${currency}%22,%22keywords%22:%22${queryTerm}%22,%22locale%22:%22en-EN%22,%22sortBy%22:%22relevancy,viewableDate%22,%22sortDir%22:%22DESC,DESC%22,%22start%22:0,%22tag%22:%22%22,%22withPrice%22:true%7D&extensions=%7B%22persistedQuery%22:%7B%22version%22:1,%22sha256Hash%22:%227d58e12d9dd8cb14c84a3ff18d360bf9f0caa96bf218f2c5fda68ba88d68a437%22%7D%7D`;
+  };
+
+  async scrapeGamesFromSearch(term: string, currency: string) {
+    // const currency = "CL";
+    const res = await fetch(this.searchUrl(term, currency));
+    if (!res.ok) {
+      throw new CustomApiError("Something went wrong.");
+    }
+    const data = await res.json();
+
+    if (data.data.Catalog.searchStore.elements.length <= 0) {
+      return [];
+    }
+    const currData: EpicSearch[] = [...data.data.Catalog.searchStore.elements];
+    // return currData;
+
+    const formatedData = currData.map((element) => {
+      const { title, id, price, catalogNs } = element;
+      const {
+        originalPrice,
+        discountPrice,
+        currencyInfo,
+        discount,
+        currencyCode,
+      } = price.totalPrice;
+
+      const urlTitle = catalogNs.mappings[0].pageSlug;
+
+      return {
+        storeId: id,
+        gameName: title,
+        url: `https://store.epicgames.com/es-ES/p/${urlTitle}`,
+        discount_percent: discount,
+        currency: currencyCode,
+        initial_price: formatToDecimals(originalPrice, currencyInfo.decimals),
+        final_price: formatToDecimals(discountPrice, currencyInfo.decimals),
+      };
+    });
+    // return formatedData;
+    const games = formatedData
+      .map((el) => {
+        return { ...el, gameName: replaceSteam(el.gameName) };
+      })
+
+      // .filter((game) =>
+      //   game.gameName.toLowerCase().includes(term.trim().toLowerCase()),
+      // )
+      .filter((game) => game.initial_price && game.final_price);
+    return { [this.name]: games };
   }
 
   async scrapeGames(page: Page, query: string): Promise<StoreInfo> {
@@ -77,6 +135,8 @@ export class EpicStore extends Store {
         });
       },
     );
+
+    console.log(content);
 
     // return content;
 

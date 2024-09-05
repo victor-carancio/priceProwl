@@ -2,6 +2,8 @@ import { Page } from "playwright";
 import { parseUrl, replaceSteam, replaceXbox } from "../../utils/game.utils";
 import { Store } from "../store.class";
 import { GamePriceInfo, StoreInfo } from "../../types";
+import { xboxStoreConfig } from "../utils.model";
+import { XboxSearch } from "../types";
 
 export class XboxStore extends Store {
   constructor() {
@@ -12,6 +14,68 @@ export class XboxStore extends Store {
     const queryUrl = parseUrl(query, "+");
     this.setUrl(this.getUrl() + queryUrl + "&PlayWith=PC"); // pc game
     return this.getUrl();
+  }
+
+  private searchUrl(term: string) {
+    const queryParsed = parseUrl(term, "-");
+    return `SEARCH_GAMES_SEARCHQUERY=${queryParsed}_PLAYWITH=PC`;
+  }
+
+  async scrapeGamesFromSearch(query: string, currency: string) {
+    const data = {
+      Query: query.trim(),
+      Filters: xboxStoreConfig.Filters,
+      ReturnFilters: false,
+      ChannelKeyToBeUsedInResponse: this.searchUrl(query),
+    };
+
+    const res = await fetch(`${xboxStoreConfig.url}${currency}`, {
+      method: "POST",
+      headers: xboxStoreConfig.headers,
+      body: JSON.stringify(data),
+    });
+
+    const responseData = await res.json();
+    // console.log(responseData);
+
+    // return responseData;
+    if (responseData.productSummaries.length <= 0) {
+      return [];
+    }
+
+    const currData: XboxSearch[] = [...responseData.productSummaries];
+
+    const formatedData = currData
+      .filter((element) => element.specificPrices.purchaseable.length > 0)
+      .map((element) => {
+        const { productId, specificPrices, title } = element;
+        const { listPrice, msrp, discountPercentage, currencyCode } =
+          specificPrices.purchaseable[0];
+        const urlTitle = parseUrl(title.toLowerCase(), "-");
+        return {
+          storeId: productId,
+          gameName: title,
+          gamepass: "optimalSatisfyingPassId" in element ? true : false,
+          url: `https://www.xbox.com/es-CL/games/store/${urlTitle}/${productId}`,
+          discount_percent: discountPercentage,
+          currency: currencyCode,
+          initial_price: msrp.toFixed(),
+          final_price: listPrice.toFixed(),
+        };
+      });
+
+    const games = formatedData
+      .map((el) => {
+        return { ...el, gameName: replaceSteam(replaceXbox(el.gameName)) };
+      })
+      // .filter((game) =>
+      //   game.gameName.toLowerCase().includes(query.trim().toLowerCase()),
+      // )
+      .filter((game) => game.initial_price && game.final_price)
+      .filter((game) => !game.gameName.toLowerCase().includes("xbox"));
+
+    return { [this.name]: games };
+    // return formatedData;
   }
 
   async scrapeGames(page: Page, query: string): Promise<StoreInfo> {

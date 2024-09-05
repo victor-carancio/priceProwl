@@ -2,6 +2,11 @@ import { Page } from "playwright";
 import { parseUrl, replaceSteam } from "../../utils/game.utils";
 import { Store } from "../store.class";
 import { GamePriceInfo, StoreInfo } from "../../types";
+import { SteamAppsSearch, SteamSearch } from "../types";
+import { formatToDecimals } from "../utils.model";
+
+//https://github.com/Revadike/InternalSteamWebAPI/wiki/Get-App-Details
+//https://github.com/Revadike/InternalSteamWebAPI/wiki/Search-Apps
 
 export class SteamStore extends Store {
   constructor() {
@@ -12,6 +17,58 @@ export class SteamStore extends Store {
     const queryUrl = parseUrl(query, "+");
     this.setUrl(this.getUrl() + queryUrl + "&category1=998&ndl=1"); // pc game
     return this.getUrl();
+  }
+
+  private searchUrl(term: string) {
+    const queryParsed = parseUrl(term, "%20");
+    return `https://steamcommunity.com/actions/SearchApps/${queryParsed}`;
+  }
+
+  async scrapeGamesFromSearch(query: string, currency: string) {
+    const res = await fetch(this.searchUrl(query));
+    const gamesInfo: SteamAppsSearch[] = await res.json();
+
+    if (gamesInfo.length <= 0) {
+      return [];
+    }
+
+    const onlyIds = gamesInfo.map((game) => game.appid).join(",");
+
+    const detailRes = await fetch(
+      `https://store.steampowered.com/api/appdetails?appids=${onlyIds}&filters=price_overview&cc=${currency}`,
+    );
+    const detailData: SteamSearch = await detailRes.json();
+
+    const formatedData = gamesInfo.map((game) => {
+      const { appid, name } = game;
+      const gamePrices = { ...detailData[appid].data.price_overview };
+      const {
+        initial,
+        currency: currencyStore,
+        discount_percent,
+        final,
+      } = gamePrices;
+
+      const urlTitle = parseUrl(name, "_");
+      return {
+        storeId: appid,
+        gameName: name,
+        url: `https://store.steampowered.com/app/${appid}/${urlTitle}/`,
+        discount_percent: discount_percent,
+        currency: currencyStore,
+        initial_price:
+          currency === "CL" ? formatToDecimals(initial, 2) : initial,
+        final_price: currency === "CL" ? formatToDecimals(final, 2) : final,
+      };
+    });
+
+    const games = formatedData.map((el) => {
+      return { ...el, gameName: replaceSteam(el.gameName) };
+    });
+
+    return {
+      [this.name]: games,
+    };
   }
 
   async scrapeGames(page: Page, query: string): Promise<StoreInfo> {

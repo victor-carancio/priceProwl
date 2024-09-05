@@ -18,11 +18,31 @@ import { Store } from "../../models/store.class";
 
 chromium.use(StealthPlugin());
 
+export const newScrape = async (term: string) => {
+  // const epic = new EpicStore();
+  // const data = await epic.scrapeGamesFromSearch(term, "CL");
+  // return data;
+  // const xbox = new XboxStore();
+  // const data = await xbox.scrapeGamesFromSearch(term, "CL");
+  // const xbox = new SteamStore();
+  // const data = await xbox.scrapeGamesFromSearch(term, "CL");
+
+  const stores = [new SteamStore(), new XboxStore(), new EpicStore()];
+
+  const gamesForStore = [];
+
+  for (const store of stores) {
+    const data = await store.scrapeGamesFromSearch(term, "CL");
+    gamesForStore.push(data);
+  }
+  return gamesForStore;
+};
+
 export const scrapeAllStores = async (
   title: string,
 ): Promise<GameStoresPrices[]> => {
   const agent = random_useragent.getRandom();
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: false });
   const context = await browser.newContext({
     userAgent: agent,
   });
@@ -40,6 +60,8 @@ export const scrapeAllStores = async (
   } finally {
     await browser.close();
   }
+
+  console.log(gamesForStore);
 
   let gameByStorePrices: GameStoresPrices[] = [];
 
@@ -99,6 +121,11 @@ export const scrapeAllStores = async (
       });
     }
   });
+
+  // for (const game of gameByStorePrices) {
+  //   console.log(game.gameName);
+  //   console.log(game.stores);
+  // }
 
   return gameByStorePrices;
 };

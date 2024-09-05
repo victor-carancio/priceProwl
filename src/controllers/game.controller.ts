@@ -8,7 +8,9 @@ import {
   // findCurrOfferGames,
   findGameByName,
 } from "../services/gameServices/manageGameData.service";
-import { parseString } from "../utils/validation";
+import { parseInteger, parseString } from "../utils/validation";
+import { BadRequestError } from "../responses/customApiError";
+import { newScrape } from "../services/gameServices/scrapeGameData.service";
 // import { scrapeAllGamesFromUrl } from "../services/gameServices/scrapeGameData.service";
 
 export const getGamesPrices = async (req: Request, res: Response) => {
@@ -35,7 +37,10 @@ export const getAllGames = async (_req: Request, res: Response) => {
 };
 
 export const getGameById = async (req: Request, res: Response) => {
-  const id = parseString(req.params.id, "Game ID");
+  if (!req.params.id) {
+    throw new BadRequestError("Id must be provided");
+  }
+  const id = parseInteger(req.params.id, "Game ID");
 
   const data = await findGameById(id);
   return res.status(200).json(data);
@@ -65,11 +70,8 @@ export const getGameById = async (req: Request, res: Response) => {
 /* ------------------------------ test de funciones --------------------------*/
 
 export const testUpdateGamePrice = async (_req: Request, res: Response) => {
-  // await offerNotification();
-  // await checkOfferEnd();
+  const title = parseString(_req.query.title, "Game title");
 
-  // await scrapeAllGamesFromUrl();
-  const { id } = _req.params;
-  const data = await findGameById(id);
+  const data = await newScrape(title);
   return res.status(200).json({ data });
 };

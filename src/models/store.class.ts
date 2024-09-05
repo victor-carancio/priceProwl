@@ -3,12 +3,14 @@ import { PriceFromUrlScraped, StoreInfo } from "../types";
 
 export abstract class Store {
   readonly name: string;
+  readonly type: string;
   private url: string;
   private storeCounter: number = 0;
 
-  constructor(name: string, url: string) {
+  constructor(name: string, url: string, type?: string) {
     this.name = name;
     this.url = url;
+    this.type = type || "official";
   }
 
   getStoreCounter(): number {

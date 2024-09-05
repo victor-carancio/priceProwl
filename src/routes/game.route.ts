@@ -6,7 +6,7 @@ import {
   getGameById,
   getCurrentOffers,
   getAllGames,
-  // testUpdateGamePrice,
+  testUpdateGamePrice,
 } from "../controllers/game.controller";
 
 const router = Router();
@@ -118,13 +118,6 @@ router.get("/search", getGamesByNameFromDB);
  *     description: >
  *        Obtain games info and prices directly from database.
  *          if the game wasn't store or search by scraper previusly, it will return empty array.
- *     parameters:
- *       - in: query
- *         name: title
- *         required: true
- *         description: Name of game to search in database.
- *         schema:
- *            type: string
  *     responses:
  *       '200':
  *          description: Request to database succesfully, return data.
@@ -151,13 +144,6 @@ router.get("/all", getAllGames);
  *     description: >
  *        Obtain games offers, info and prices directly from database.
  *          if the game wasn't store or search by scraper previusly, it will return empty array.
- *     parameters:
- *       - in: query
- *         name: title
- *         required: true
- *         description: Name of game to search in database.
- *         schema:
- *            type: string
  *     responses:
  *       '200':
  *          description: Request to database succesfully, return data.
@@ -175,21 +161,21 @@ router.get("/offers", getCurrentOffers);
 /**
  * Get track
  * @openapi
- * /game/:id:
+ * /game/{gameId}:
  *   get:
  *     tags:
  *      - game
- *     summary: Get game prices and all info from database.
+ *     summary: Get game prices and all info from  by id.
  *     description: >
  *        Obtain all game info and prices directly from database.
  *          if the game wasn't store or search by scraper previusly, it will return empty array.
  *     parameters:
- *       - in: query
- *         name: title
- *         required: true
- *         description: Name of game to search in database.
- *         schema:
- *            type: string
+ *      - in: path
+ *        name: gameId
+ *        required: true
+ *        schema:
+ *          type: integer
+          
  *     responses:
  *       '200':
  *          description: Request to database succesfully, return data.
@@ -204,8 +190,8 @@ router.get("/offers", getCurrentOffers);
  *       '500':
  *           description: "Internal server error."
  *  */
-router.get("/:id", getGameById);
 
-// router.get("/test/:id", testUpdateGamePrice);
+router.get("/test", testUpdateGamePrice);
+router.get("/:id", getGameById);
 
 export default router;
