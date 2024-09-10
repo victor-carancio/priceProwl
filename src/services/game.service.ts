@@ -102,10 +102,13 @@ export const offerNotification = async () => {
 
   if (userGames.length > 0) {
     for (const userGame of userGames) {
+      console.log(userGame.games);
+      console.log(userGame.games[0].gameName);
       await sendEmails(userGame);
     }
   }
 
+  // cambiar notified a true
   await wishListToNotified(wishListIds);
 
   return userGames;
@@ -114,3 +117,5 @@ export const offerNotification = async () => {
 export const checkOfferEnd = async () => {
   return await findEndOffer();
 };
+
+//todo comprobar flujo de notificacion, comprobar flujo completo

@@ -1,5 +1,5 @@
 import { GameInfoAndPrices, PriceFromUrlScraped } from "../../types";
-import { StoreGame } from "@prisma/client";
+import { CurrencyTypes, StoreGame } from "@prisma/client";
 import prisma from "../../db/client.db";
 import { NotFoundError } from "../../responses/customApiError";
 import {
@@ -35,7 +35,10 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
         existingStore = await prisma.storeGame.create({
           data: {
             store: store.store,
+            storeIdGame: store.storeIdGame,
+            type: store.type,
             url: store.url,
+            imgStore: store.imgStore,
             edition: store.edition,
             gamepass: store.store === "Xbox" ? store.gamepass : null,
             game: { connect: { id: existingGame.id } },
@@ -44,6 +47,7 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
                 initial_price: store.info.initial_price || "-",
                 discount_percent: store.info.discount_percent || "-",
                 final_price: store.info.final_price || "-",
+                currency: store.info.currency as CurrencyTypes,
               },
             },
           },
@@ -432,18 +436,20 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
 
       if ("videos" in info) {
         for (const video of info.videos) {
-          await prisma.video.upsert({
-            where: {
-              id: video.id,
-            },
-            update: {},
-            create: {
-              id: video.id,
-              name: video.name,
-              video_id: video.video_id,
-              info_game: { connect: { id: newInfoGame.id } },
-            },
-          });
+          if ("name" in video) {
+            await prisma.video.upsert({
+              where: {
+                id: video.id,
+              },
+              update: {},
+              create: {
+                id: video.id,
+                name: video.name,
+                video_id: video.video_id,
+                info_game: { connect: { id: newInfoGame.id } },
+              },
+            });
+          }
         }
       }
     }
@@ -458,12 +464,14 @@ export const updateStoreGamePrice = async (
     where: {
       storeGame: {
         id: gameByStore.id,
-        edition: gameByStore.edition,
-        url: gameByStore.url,
+
+        // edition: gameByStore.edition,
+        // url: gameByStore.url,
       },
       initial_price: currPrice.initial_price,
       final_price: currPrice.final_price,
       discount_percent: currPrice.discount_percent,
+      currency: "CLP",
     },
   });
 
@@ -474,6 +482,7 @@ export const updateStoreGamePrice = async (
         final_price: currPrice.final_price,
         discount_percent: currPrice.discount_percent,
         offer_end_date: currPrice.offerEndDate,
+        currency: "CLP",
         storeGame: { connect: { id: gameByStore.id } },
       },
     });
@@ -635,7 +644,10 @@ export const findCurrOfferGames = async () => {
       storeGame: {
         select: {
           id: true,
+          type: true,
           store: true,
+          imgStore: true,
+          storeIdGame: true,
           url: true,
           edition: true,
           gamepass: true,
@@ -664,39 +676,79 @@ export const findCurrOfferGames = async () => {
   });
 
   const offersOnly = findOffers.filter(
-    (price) => price.discount_percent !== "-",
+    (price) => price.discount_percent !== "-" && price.discount_percent !== "0",
   );
-  //todo: offer, reemplazar selectores de epic/buscar api epic
-  return offersOnly;
-  // .map((offer) => {
-  //   const {
-  //     id,
-  //     createdAt,
-  //     currency,
-  //     discount_percent,
-  //     initial_price,
-  //     final_price,
-  //     offer_end_date,
-  //     store_game_id,
-  //     storeGame,
-  //   } = offer;
 
-  //   const {
-  //     id: storeId,
-  //     createdAt: storeCreated,
-  //     edition,
-  //     game_id,
-  //     gamepass,
-  //     store,
-  //     updatedAt: storeUpdated,
-  //     url,
-  //     game,
-  //   } = storeGame;
+  return offersOnly.map((offer) => {
+    const {
+      id,
+      createdAt,
+      updatedAt,
+      currency,
+      discount_percent,
+      initial_price,
+      final_price,
+      offer_end_date,
+      store_game_id,
+      storeGame,
+    } = offer;
 
-  //   const{id:gameId,gameName,platform,createdAt:gameCreated,updatedAt:gameUpdated,infoGame}=game
+    const {
+      id: storeId,
+      createdAt: storeCreated,
+      edition,
+      game_id,
+      gamepass,
+      store,
+      updatedAt: storeUpdated,
+      url,
+      imgStore,
+      storeIdGame,
+      type,
+      game,
+    } = storeGame;
 
-  //   return{id:gameId,gameName,platform,createdAt:gameCreated,updatedAt:gameUpdated,stores:}
-  // });
+    const {
+      id: gameId,
+      gameName,
+      platform,
+      createdAt: gameCreated,
+      updatedAt: gameUpdated,
+      // infoGame,
+    } = game;
+
+    return {
+      id: gameId,
+      gameName,
+      platform,
+      createdAt: gameCreated,
+      updatedAt: gameUpdated,
+      stores: {
+        id: storeId,
+        storeIdGame,
+        store,
+        type,
+        url,
+        imgStore,
+        edition,
+        gamepass,
+        createdAt: storeCreated,
+        updatedAt: storeUpdated,
+        game_id,
+        info: {
+          id,
+          createdAt,
+          updatedAt,
+          discount_percent,
+          currency,
+          initial_price,
+          final_price,
+          offer_end_date,
+          store_game_id,
+        },
+      },
+    };
+  });
 };
 
 export const findAllWishList = async () => {
@@ -731,6 +783,7 @@ export const findAllWishList = async () => {
           store: true,
           gamepass: true,
           url: true,
+          imgStore: true,
           game: {
             select: {
               gameName: true,
@@ -744,17 +797,6 @@ export const findAllWishList = async () => {
                       email: true,
                       username: true,
                       isActive: true,
-                    },
-                  },
-                },
-              },
-              infoGame: {
-                select: {
-                  info_game: {
-                    select: {
-                      cover: true,
-                      summary: true,
-                      artworks: true,
                     },
                   },
                 },
@@ -773,10 +815,9 @@ export const findAllWishList = async () => {
   return offersFilter.map((offer) => {
     const { discount_percent, initial_price, final_price, offer_end_date } =
       offer;
+    const { imgStore } = offer.storeGame;
     const { gameName, user } = offer.storeGame.game;
-    offer.storeGame.game.infoGame[0];
-    const { cover, summary, artworks } =
-      offer.storeGame.game.infoGame[0]?.info_game;
+
     return {
       game: {
         gameName,
@@ -788,9 +829,8 @@ export const findAllWishList = async () => {
         final_price,
         offer_end_date,
         discount_percent,
-        cover,
-        summary,
-        artworks,
+
+        imgStore,
       },
       users: user
         .filter((element) => !element.notified && element.user.isActive)

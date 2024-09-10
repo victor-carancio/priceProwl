@@ -1,19 +1,14 @@
-import { Page } from "playwright";
+import { xboxStoreConfig } from "./../utils.model";
+// import { Page } from "playwright";
 import { parseUrl, replaceSteam, replaceXbox } from "../../utils/game.utils";
 import { Store } from "../store.class";
-import { GamePriceInfo, StoreInfo } from "../../types";
-import { xboxStoreConfig } from "../utils.model";
-import { XboxSearch } from "../types";
+import { StoreInfo } from "../../types";
+
+import { XboxSearch, XboxSearchImage } from "../types";
 
 export class XboxStore extends Store {
   constructor() {
-    super("Xbox", "https://www.xbox.com/en-US/search/results/games?q=");
-  }
-
-  modifyUrl(query: string): string {
-    const queryUrl = parseUrl(query, "+");
-    this.setUrl(this.getUrl() + queryUrl + "&PlayWith=PC"); // pc game
-    return this.getUrl();
+    super("Xbox");
   }
 
   private searchUrl(term: string) {
@@ -21,7 +16,24 @@ export class XboxStore extends Store {
     return `SEARCH_GAMES_SEARCHQUERY=${queryParsed}_PLAYWITH=PC`;
   }
 
-  async scrapeGamesFromSearch(query: string, currency: string) {
+  private singleSearchUrl(id: string) {
+    return `https://emerald.xboxservices.com/xboxcomfd/productDetails/${id}?locale=en-CL&enableFullDetail=true`;
+  }
+
+  private xboxSearchImage(images: XboxSearchImage) {
+    return (
+      images.boxArt?.url ?? images.poster?.url ?? images.superHeroArt?.url ?? ""
+    );
+  }
+
+  private offerEndDate(discount: number, endDate: string) {
+    return discount === 0 ? null : endDate;
+  }
+
+  async scrapeGamesFromSearch(
+    query: string,
+    currency: string,
+  ): Promise<StoreInfo> {
     const data = {
       Query: query.trim(),
       Filters: xboxStoreConfig.Filters,
@@ -36,11 +48,9 @@ export class XboxStore extends Store {
     });
 
     const responseData = await res.json();
-    // console.log(responseData);
 
-    // return responseData;
     if (responseData.productSummaries.length <= 0) {
-      return [];
+      return { store: this.name, type: this.type, storeInfo: [] };
     }
 
     const currData: XboxSearch[] = [...responseData.productSummaries];
@@ -48,16 +58,18 @@ export class XboxStore extends Store {
     const formatedData = currData
       .filter((element) => element.specificPrices.purchaseable.length > 0)
       .map((element) => {
-        const { productId, specificPrices, title } = element;
+        const { productId, specificPrices, title, images } = element;
         const { listPrice, msrp, discountPercentage, currencyCode } =
           specificPrices.purchaseable[0];
         const urlTitle = parseUrl(title.toLowerCase(), "-");
+
         return {
           storeId: productId,
           gameName: title,
           gamepass: "optimalSatisfyingPassId" in element ? true : false,
           url: `https://www.xbox.com/es-CL/games/store/${urlTitle}/${productId}`,
-          discount_percent: discountPercentage,
+          imgStore: this.xboxSearchImage(images),
+          discount_percent: discountPercentage.toFixed(),
           currency: currencyCode,
           initial_price: msrp.toFixed(),
           final_price: listPrice.toFixed(),
@@ -68,198 +80,43 @@ export class XboxStore extends Store {
       .map((el) => {
         return { ...el, gameName: replaceSteam(replaceXbox(el.gameName)) };
       })
-      // .filter((game) =>
-      //   game.gameName.toLowerCase().includes(query.trim().toLowerCase()),
-      // )
-      .filter((game) => game.initial_price && game.final_price)
-      .filter((game) => !game.gameName.toLowerCase().includes("xbox"));
-
-    return { [this.name]: games };
-    // return formatedData;
-  }
-
-  async scrapeGames(page: Page, query: string): Promise<StoreInfo> {
-    await page.goto(this.modifyUrl(query));
-
-    await page.waitForSelector("div.SearchTabs-module__tabContainer___MR492");
-
-    const notFound = await page.evaluate(() =>
-      document.querySelector("h4.ErrorWithImage-module__errorHeading___xEheO"),
-    );
-
-    if (notFound) {
-      return { [this.name]: [] };
-    }
-
-    const content: GamePriceInfo[] = await page.$$eval(
-      "div.ProductCard-module__cardWrapper___6Ls86",
-      (elements) => {
-        return elements.map((element) => {
-          const gameName: HTMLDivElement = element.querySelector(
-            "div.ProductCard-module__infoBox___M5x18 span",
-          )!;
-          const url: HTMLAnchorElement = element.querySelector(
-            "a.commonStyles-module__basicButton___go-bX",
-          )!;
-          const gameDiscount: HTMLDivElement | null = element.querySelector(
-            "div.ProductCard-module__discountTag___OjGFy",
-          );
-          const gameFinalPrice: HTMLSpanElement | null = element.querySelector(
-            "span.Price-module__boldText___1i2Li.Price-module__moreText___sNMVr.ProductCard-module__price___cs1xr",
-          );
-          const originalPriceSelector = gameDiscount
-            ? ""
-            : ".Price-module__moreText___q5KoT";
-          const gameOriginalPrice: HTMLSpanElement | null =
-            element.querySelector(
-              `div.typography-module__xdsBody2___RNdGY span${originalPriceSelector}`,
-            );
-          const gamePass: HTMLTitleElement | null = element.querySelector(
-            "svg.SubscriptionBadge-module__gamePassBadge___ukbVg title",
-          );
-          return {
-            gameName: gameName.innerText,
-            url: url.href,
-            discount_percent: gameDiscount ? gameDiscount.innerText : "-",
-            initial_price: gameOriginalPrice?.innerText,
-            final_price: gameFinalPrice
-              ? gameFinalPrice?.innerText
-              : gameOriginalPrice?.innerText,
-            gamepass: gamePass ? true : false,
-          };
-        });
-      },
-    );
-
-    // return content;
-
-    const games: GamePriceInfo[] = content
-      .map((el) => {
-        return { ...el, gameName: replaceSteam(replaceXbox(el.gameName)) };
-      })
-      .filter((game: GamePriceInfo) =>
+      .filter((game) =>
         game.gameName.toLowerCase().includes(query.trim().toLowerCase()),
       )
       .filter((game) => game.initial_price && game.final_price)
       .filter((game) => !game.gameName.toLowerCase().includes("xbox"));
 
-    return { [this.name]: games };
+    return { store: this.name, type: this.type, storeInfo: games };
   }
 
-  async scrapePriceGameFromUrl(page: Page, url: string) {
-    await page.goto(url);
+  async scrapeGameFromUrl(storeId: string) {
+    const res = await fetch(this.singleSearchUrl(storeId), {
+      headers: xboxStoreConfig.singleGameHeaders,
+    });
 
-    // await page.waitForSelector(
-    //   "div.ProductActionsPanel-module__desktopProductActionsPanel___J1Jn3",
-    // );
-    await page.waitForLoadState("networkidle");
+    const responseData = await res.json();
 
-    const notFound = await page.evaluate(() =>
-      document.querySelector("div.ErrorPage-module__errorContainer___DRsEx"),
-    );
-
-    if (notFound) {
+    if (responseData.productSummaries.length <= 0) {
       return null;
     }
 
-    // await page.waitForSelector(
-    //   "div.ModuleRow-module__row___N1V3E.ProductDetailsHeader-module__tagsContainerDesktop___6K0K8.ProductDetailsHeader-module__hideOnMobileView___6l6Ro",
-    // );
-    await page.waitForTimeout(500);
+    const currData: XboxSearch[] = [...responseData.productSummaries];
 
-    const currPrice = await page.$eval(
-      "div.ProductActionsPanel-module__desktopProductActionsPanel___J1Jn3",
-      (element: HTMLDivElement) => {
-        const calculateDiscountPercent = (
-          initial_price: string,
-          final_price: string,
-        ) => {
-          const initial = Number(initial_price?.replace(/[^0-9.]/g, "")) * 100;
-          const final = Number(final_price?.replace(/[^0-9.]/g, "")) * 100;
+    const currGame = currData.find((data) => data.productId === storeId);
 
-          const discount: number = (final / initial) * 100 - 100;
+    if (!currGame) {
+      return null;
+    }
 
-          return Math.round(discount).toFixed() + "%";
-        };
-
-        const gamepass: HTMLSpanElement | null = element.querySelector(
-          "span.glyph-prepend.glyph-prepend-xbox-game-pass-inline",
-        );
-        //  ? "span.Price-module__brandOriginalPrice___hNhzI"
-        const originalPriceSelector: string = document.querySelector(
-          "span.Price-module__brandOriginalPrice___ayJAn",
-        )
-          ? "span.Price-module__brandOriginalPrice___ayJAn"
-          : "span.Price-module__boldText___vmNHu.Price-module__moreText___q5KoT";
-
-        const initialGamePrice: HTMLSpanElement | null =
-          element.querySelector(
-            "button.CommonButtonStyles-module__variableLineDesktopButton___cxDyV.CommonButtonStyles-module__highContrastAwareButton___DgX7Y span",
-          ) || gamepass
-            ? element.querySelector(
-                "button.CommonButtonStyles-module__variableLineDesktopButton___cxDyV.CommonButtonStyles-module__highContrastAwareButton___DgX7Y span",
-              )
-            : element.querySelector(originalPriceSelector);
-
-        const finalGamePrice: HTMLDivElement | null = element.querySelector(
-          "span.Price-module__boldText___1i2Li.Price-module__moreText___sNMVr.AcquisitionButtons-module__listedPrice___PS6Zm",
-        );
-
-        return {
-          gamepass: gamepass ? true : false,
-          discount_percent:
-            !finalGamePrice ||
-            initialGamePrice!.innerText.replace(/[^0-9.]/g, "") ===
-              finalGamePrice.innerText.replace(/[^0-9.]/g, "")
-              ? "-"
-              : calculateDiscountPercent(
-                  initialGamePrice!.innerText,
-                  finalGamePrice.innerText,
-                ),
-          initial_price: initialGamePrice!.innerText,
-          final_price: finalGamePrice
-            ? finalGamePrice.innerText
-            : initialGamePrice?.innerText || "-",
-        };
-      },
-    );
-
-    const offerEndDate = await page.$eval(
-      "div.ModuleRow-module__row___N1V3E.ProductDetailsHeader-module__tagsContainerDesktop___6K0K8.ProductDetailsHeader-module__hideOnMobileView___6l6Ro",
-      (element: HTMLDivElement) => {
-        const iconOffer: HTMLDivElement | null = element.querySelector(
-          "svg.TagIcon-module__icon___idvrW.TagIcon-module__primaryIcon___kF7Ys.ProductTags-module__salesTagIcon___YZ-rE.Icon-module__icon___6ICyA",
-        );
-
-        const offerDate: ChildNode | null = iconOffer
-          ? iconOffer.nextSibling
-          : null;
-
-        return offerDate ? offerDate.textContent : null;
-      },
-    );
-
-    return { ...currPrice, offerEndDate: this.offerDateFormat(offerEndDate!) };
+    const { currencyCode, msrp, listPrice, discountPercentage, endDate } =
+      currGame.specificPrices.purchaseable[0];
+    return {
+      gamepass: "optimalSatisfyingPassId" in currGame ? true : false,
+      offerEndDate: this.offerEndDate(discountPercentage, endDate),
+      currency: currencyCode,
+      discount_percent: discountPercentage.toFixed(),
+      initial_price: msrp.toFixed(),
+      final_price: listPrice.toFixed(),
+    };
   }
-
-  private offerDateFormat = (offer: string) => {
-    if (!offer) {
-      return;
-    }
-
-    const regex = /(?:finaliza en|ends in)\s(\d+)\s(?:días|days)/i;
-    const match = offer.match(regex);
-
-    if (match) {
-      const days = parseInt(match[1]);
-
-      const currentDate = new Date();
-
-      const endDate = new Date(currentDate);
-      endDate.setDate(currentDate.getDate() + days);
-
-      return endDate.toISOString();
-    }
-    return;
-  };
 }

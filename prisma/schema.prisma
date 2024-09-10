@@ -63,8 +63,11 @@ model Game {
 
 model StoreGame {
   id Int @id @default(autoincrement())
+  storeIdGame String
   store String
-  url String
+  type String @default("Official")
+  url String 
+  imgStore String @default("-")
   edition String
   gamepass Boolean? 
   createdAt DateTime @default(now())
@@ -82,7 +85,7 @@ model StorePrice {
   initial_price  String @default("-")
   final_price  String @default("-")
   offer_end_date DateTime?
-  currency CurrencyTypes @default(USD)
+  currency CurrencyTypes @default(CLP)
   storeGame StoreGame @relation(fields:[store_game_id],references: [id])
   store_game_id Int 
 }

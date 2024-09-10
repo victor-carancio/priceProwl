@@ -6,7 +6,7 @@ import {
   getGameById,
   getCurrentOffers,
   getAllGames,
-  testUpdateGamePrice,
+  // testUpdateGamePrice,
 } from "../controllers/game.controller";
 
 const router = Router();
@@ -191,7 +191,7 @@ router.get("/offers", getCurrentOffers);
  *           description: "Internal server error."
  *  */
 
-router.get("/test", testUpdateGamePrice);
+// router.get("/test", testUpdateGamePrice);
 router.get("/:id", getGameById);
 
 export default router;

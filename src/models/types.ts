@@ -1,11 +1,15 @@
 export interface EpicSearch {
   title: string;
   id: string;
+  namespace: string;
   catalogNs: {
     mappings: {
       pageSlug: string;
     }[];
   };
+  keyImages: {
+    url: string;
+  }[];
   price: {
     totalPrice: {
       discount: number;
@@ -14,22 +18,40 @@ export interface EpicSearch {
       discountPrice: number;
       currencyInfo: { decimals: number };
     };
+    lineOffers: EpicOffer[];
   };
 }
 
+export interface EpicOffer {
+  appliedRules: {
+    endDate?: string;
+  }[];
+}
 export interface XboxSearch {
   title: string;
   productId: string;
+  images: XboxSearchImage;
   specificPrices: {
     purchaseable: {
       listPrice: number;
       msrp: number;
       discountPercentage: number;
       currencyCode: string;
+      endDate: string;
     }[];
   };
 }
-
+export interface XboxSearchImage {
+  boxArt?: {
+    url: string;
+  };
+  poster?: {
+    url: string;
+  };
+  superHeroArt?: {
+    url: string;
+  };
+}
 export interface SteamAppsSearch {
   appid: string;
   name: string;
@@ -46,6 +68,15 @@ export interface SteamSearch {
         final: number;
         discount_percent: number;
       };
+    };
+  };
+}
+
+export interface SteamSearchImg {
+  [appid: string]: {
+    success: boolean;
+    data: {
+      header_image: string;
     };
   };
 }

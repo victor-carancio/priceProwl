@@ -19,21 +19,31 @@ export interface UserTokenData {
 }
 export enum StoreTypes {
   STEAM_STORE = "Steam",
-  // XBOX_STORE = "Xbox",
+  XBOX_STORE = "Xbox",
   EPIC_STORE = "Epic",
 }
 
+export enum CurrencyCodes {
+  CL = "CL",
+  US = "US",
+}
+
 export interface GamePriceInfo {
+  storeId: string;
   gameName: string;
   url: string;
-  discount_percent?: string;
-  initial_price?: string;
-  final_price?: string;
+  imgStore: string;
+  discount_percent: string;
+  initial_price: string;
+  final_price: string;
+  currency: string;
   gamepass?: boolean;
 }
 
 export interface StoreInfo {
-  [storeName: string]: GamePriceInfo[] | [];
+  store: string;
+  type: string;
+  storeInfo: GamePriceInfo[] | [];
 }
 
 export interface IGDBQueries {
@@ -42,13 +52,17 @@ export interface IGDBQueries {
 
 export interface StorePriceInfo {
   store: string;
+  type: string;
+  storeIdGame: string;
   url: string;
+  imgStore: string;
   edition: string;
   gamepass?: boolean;
   info: {
     discount_percent?: string;
     initial_price?: string;
     final_price?: string;
+    currency: string;
   };
 }
 export interface GameStoresPrices {
@@ -130,7 +144,8 @@ export interface PriceFromUrlScraped {
   discount_percent: string;
   initial_price: string;
   final_price: string;
-  offerEndDate?: string;
+  offerEndDate: string | null;
+  currency: string;
 }
 
 export interface JwtToken {
@@ -155,7 +170,5 @@ export interface WishList {
     final_price: string;
     offer_end_date: Date | null;
     discount_percent: string;
-    cover: Image | null;
-    summary: string | null;
   }[];
 }

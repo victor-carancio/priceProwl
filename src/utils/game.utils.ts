@@ -1,4 +1,11 @@
-import { GameStoresPrices, InfoGame, AlternativeName } from "../types";
+import { EpicStore, SteamStore, XboxStore } from "../models/index.model";
+import { Store } from "../models/store.class";
+import {
+  GameStoresPrices,
+  InfoGame,
+  AlternativeName,
+  StoreTypes,
+} from "../types";
 
 //regex
 
@@ -148,6 +155,12 @@ export const compareScrapedAndIgdbGameTitle = (
     })
   );
 };
+export const stores: Record<StoreTypes, Store> = {
+  [StoreTypes.STEAM_STORE]: new SteamStore(),
+  [StoreTypes.XBOX_STORE]: new XboxStore(),
+  [StoreTypes.EPIC_STORE]: new EpicStore(),
+};
+
 //borrar
 export const calculateDiscountPercent = (
   initial_price: string,

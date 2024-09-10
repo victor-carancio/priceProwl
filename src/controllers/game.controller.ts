@@ -1,5 +1,8 @@
 import { Request, Response } from "express";
-import { findGamesPricesByName } from "../services/game.service";
+import {
+  findGamesPricesByName,
+  // offerNotification,
+} from "../services/game.service";
 import {
   findAllGames,
   findCurrOfferGames,
@@ -10,7 +13,9 @@ import {
 } from "../services/gameServices/manageGameData.service";
 import { parseInteger, parseString } from "../utils/validation";
 import { BadRequestError } from "../responses/customApiError";
-import { newScrape } from "../services/gameServices/scrapeGameData.service";
+import // scrapeAllGamesFromUrl,
+// scrapeAllStores,
+"../services/gameServices/scrapeGameData.service";
 // import { scrapeAllGamesFromUrl } from "../services/gameServices/scrapeGameData.service";
 
 export const getGamesPrices = async (req: Request, res: Response) => {
@@ -69,9 +74,10 @@ export const getGameById = async (req: Request, res: Response) => {
 
 /* ------------------------------ test de funciones --------------------------*/
 
-export const testUpdateGamePrice = async (_req: Request, res: Response) => {
-  const title = parseString(_req.query.title, "Game title");
+// export const testUpdateGamePrice = async (_req: Request, res: Response) => {
+// const title = parseString(_req.query.title, "Game title");
 
-  const data = await newScrape(title);
-  return res.status(200).json({ data });
-};
+// await offerNotification();
+// console.log("finish");
+// return res.status(200).json();
+// };

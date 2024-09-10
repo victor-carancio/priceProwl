@@ -1,8 +1,8 @@
-import { Page } from "playwright";
+// import { Page } from "playwright";
 import { parseUrl, replaceSteam } from "../../utils/game.utils";
 import { Store } from "../store.class";
 import { GamePriceInfo, StoreInfo } from "../../types";
-import { SteamAppsSearch, SteamSearch } from "../types";
+import { SteamAppsSearch, SteamSearch, SteamSearchImg } from "../types";
 import { formatToDecimals } from "../utils.model";
 
 //https://github.com/Revadike/InternalSteamWebAPI/wiki/Get-App-Details
@@ -10,13 +10,7 @@ import { formatToDecimals } from "../utils.model";
 
 export class SteamStore extends Store {
   constructor() {
-    super("Steam", "https://store.steampowered.com/search/?term=");
-  }
-
-  modifyUrl(query: string): string {
-    const queryUrl = parseUrl(query, "+");
-    this.setUrl(this.getUrl() + queryUrl + "&category1=998&ndl=1"); // pc game
-    return this.getUrl();
+    super("Steam");
   }
 
   private searchUrl(term: string) {
@@ -24,12 +18,15 @@ export class SteamStore extends Store {
     return `https://steamcommunity.com/actions/SearchApps/${queryParsed}`;
   }
 
-  async scrapeGamesFromSearch(query: string, currency: string) {
+  async scrapeGamesFromSearch(
+    query: string,
+    currency: string,
+  ): Promise<StoreInfo> {
     const res = await fetch(this.searchUrl(query));
     const gamesInfo: SteamAppsSearch[] = await res.json();
 
     if (gamesInfo.length <= 0) {
-      return [];
+      return { store: this.name, type: this.type, storeInfo: [] };
     }
 
     const onlyIds = gamesInfo.map((game) => game.appid).join(",");
@@ -39,234 +36,206 @@ export class SteamStore extends Store {
     );
     const detailData: SteamSearch = await detailRes.json();
 
-    const formatedData = gamesInfo.map((game) => {
-      const { appid, name } = game;
-      const gamePrices = { ...detailData[appid].data.price_overview };
-      const {
-        initial,
-        currency: currencyStore,
-        discount_percent,
-        final,
-      } = gamePrices;
+    const formatedData: GamePriceInfo[] = [];
 
-      const urlTitle = parseUrl(name, "_");
-      return {
-        storeId: appid,
-        gameName: name,
-        url: `https://store.steampowered.com/app/${appid}/${urlTitle}/`,
-        discount_percent: discount_percent,
-        currency: currencyStore,
-        initial_price:
-          currency === "CL" ? formatToDecimals(initial, 2) : initial,
-        final_price: currency === "CL" ? formatToDecimals(final, 2) : final,
-      };
-    });
+    for (const game of gamesInfo) {
+      const { appid, name } = game;
+      if (
+        "data" in detailData[appid] &&
+        "price_overview" in detailData[appid].data
+      ) {
+        const gamePrices = { ...detailData[appid].data.price_overview };
+        const {
+          initial,
+          currency: currencyStore,
+          discount_percent,
+          final,
+        } = gamePrices;
+
+        const urlTitle = parseUrl(name, "_");
+
+        const imgRes = await fetch(
+          `https://store.steampowered.com/api/appdetails?appids=${appid}&cc=${currency}`,
+        );
+        const imgData: SteamSearchImg = await imgRes.json();
+        const data = {
+          storeId: appid,
+          gameName: name,
+          url: `https://store.steampowered.com/app/${appid}/${urlTitle}/`,
+          imgStore: imgData[appid].data.header_image,
+          discount_percent: discount_percent.toFixed(),
+          currency: currencyStore,
+          initial_price:
+            currency === "CL"
+              ? formatToDecimals(initial, 2)
+              : initial.toFixed(),
+          final_price:
+            currency === "CL" ? formatToDecimals(final, 2) : final.toFixed(),
+        };
+        formatedData.push(data);
+      }
+    }
 
     const games = formatedData.map((el) => {
       return { ...el, gameName: replaceSteam(el.gameName) };
     });
 
-    return {
-      [this.name]: games,
-    };
+    return { store: this.name, type: this.type, storeInfo: games };
+  }
+  // https://store.steampowered.com/api/appdetails?appids=${onlyIds}&filters=price_overview&cc=${currency}
+  async scrapeGameFromUrl(storeId: string) {
+    const res = await fetch(
+      `https://store.steampowered.com/api/appdetails?appids=${storeId}&filters=price_overview&cc=CL`,
+    );
+    const data: SteamSearch = await res.json();
+
+    if (storeId in data) {
+      const { currency, discount_percent, initial, final } =
+        data[storeId].data.price_overview;
+
+      return {
+        offerEndDate: null,
+        currency: currency,
+        discount_percent: discount_percent.toFixed(),
+        initial_price: formatToDecimals(initial, 2),
+        final_price: formatToDecimals(final, 2),
+      };
+    }
+    return null;
   }
 
-  async scrapeGames(page: Page, query: string): Promise<StoreInfo> {
-    await page.goto(this.modifyUrl(query));
-    await page.waitForSelector("div.search_results");
-    await this.changeLanguage(page);
+  // async scrapePriceGameFromUrl(page: Page, url: string, gameName: string) {
+  //   await page.goto(url);
 
-    const notFound = await page.evaluate(() =>
-      document.querySelector("div#search_resultsRows"),
-    );
-    if (!notFound) {
-      return { [this.name]: [] };
-    }
+  //   await page.waitForLoadState("domcontentloaded");
+  //   await page.waitForTimeout(500);
 
-    const content: GamePriceInfo[] = await page.$$eval(
-      "div#search_resultsRows a.search_result_row",
-      (elements: HTMLAnchorElement[]) => {
-        return elements.map((element) => {
-          const gameName: HTMLSpanElement = element.querySelector(
-            "div.search_name span.title",
-          )!;
-          const gameDiscount: HTMLDivElement | null =
-            element.querySelector("div.discount_pct");
-          const gameFinalPrice: HTMLDivElement | null = element.querySelector(
-            "div.discount_final_price",
-          );
-          const originalPriceSelector = gameDiscount
-            ? "discount_original_price"
-            : "discount_final_price";
-          const gameOriginalPrice: HTMLDivElement | null =
-            element.querySelector(`div.${originalPriceSelector}`);
-          return {
-            gameName: gameName.innerText,
-            url: element.href,
-            discount_percent: gameDiscount ? gameDiscount.innerText : "-",
-            initial_price: gameOriginalPrice?.innerText,
-            final_price: gameFinalPrice?.innerText,
-          };
-        });
-      },
-    );
+  //   await this.changeLanguage(page);
 
-    const games: GamePriceInfo[] = content
-      .map((el) => {
-        return { ...el, gameName: replaceSteam(el.gameName) };
-      })
-      .filter((game) =>
-        game.gameName.toLowerCase().includes(query.trim().toLowerCase()),
-      )
-      .filter(
-        (game) =>
-          !game.gameName.toLowerCase().includes("demo") &&
-          !game.gameName.toLowerCase().includes("bundle") &&
-          !game.gameName.toLowerCase().includes("teaser") &&
-          !game.gameName.toLowerCase().includes("pack") &&
-          !game.gameName.toLowerCase().includes("mod") &&
-          (!game.initial_price?.toLowerCase().includes("free to play") ||
-            !game.final_price?.toLocaleLowerCase().includes("gratuito")),
-      )
-      .filter((game) => game.initial_price && game.final_price);
+  //   // await page.waitForTimeout(60 * 1000);
+  //   const birthdaySelector = await page.evaluate(() =>
+  //     document.querySelector("div.agegate_birthday_selector"),
+  //   );
+  //   if (birthdaySelector) {
+  //     await page.locator("select#ageYear").selectOption("1994");
+  //     await page.locator("a#view_product_page_btn span").click();
+  //     await page.waitForSelector("div.game_purchase_action_bg");
+  //   }
 
-    return {
-      [this.name]: games,
-    };
-  }
+  //   const currPrice = await page.$$eval(
+  //     "div.game_area_purchase_game",
+  //     (element: HTMLDivElement[]) => {
+  //       return element.map((el) => {
+  //         const gameDiscount: HTMLDivElement | null =
+  //           el.querySelector("div.discount_pct");
 
-  async scrapePriceGameFromUrl(page: Page, url: string, gameName: string) {
-    await page.goto(url);
+  //         const initialGamePrice: HTMLDivElement = gameDiscount
+  //           ? el.querySelector("div.discount_original_price")!
+  //           : el.querySelector("div.game_purchase_price")!;
 
-    await page.waitForLoadState("domcontentloaded");
-    await page.waitForTimeout(500);
+  //         const finalGamePrice: HTMLDivElement = gameDiscount
+  //           ? el.querySelector("div.discount_final_price")!
+  //           : el.querySelector("div.game_purchase_price")!;
 
-    await this.changeLanguage(page);
+  //         const name: HTMLHeadingElement | null = el.querySelector("h1");
 
-    // await page.waitForTimeout(60 * 1000);
-    const birthdaySelector = await page.evaluate(() =>
-      document.querySelector("div.agegate_birthday_selector"),
-    );
-    if (birthdaySelector) {
-      await page.locator("select#ageYear").selectOption("1994");
-      await page.locator("a#view_product_page_btn span").click();
-      await page.waitForSelector("div.game_purchase_action_bg");
-    }
+  //         return {
+  //           name: name?.innerText,
+  //           currPrice: {
+  //             discount_percent: gameDiscount ? gameDiscount.innerText : "-",
+  //             initial_price: initialGamePrice?.innerText.replace("$ ", "$"),
+  //             final_price: finalGamePrice?.innerText.replace("$ ", "$"),
+  //           },
+  //         };
+  //       });
+  //     },
+  //   );
 
-    const currPrice = await page.$$eval(
-      "div.game_area_purchase_game",
-      (element: HTMLDivElement[]) => {
-        return element.map((el) => {
-          const gameDiscount: HTMLDivElement | null =
-            el.querySelector("div.discount_pct");
+  //   let correctName = currPrice.find(
+  //     (element) => element.name === `Buy ${gameName}`,
+  //   );
 
-          const initialGamePrice: HTMLDivElement = gameDiscount
-            ? el.querySelector("div.discount_original_price")!
-            : el.querySelector("div.game_purchase_price")!;
+  //   if (!correctName) {
+  //     correctName = { ...currPrice[0] };
+  //   }
 
-          const finalGamePrice: HTMLDivElement = gameDiscount
-            ? el.querySelector("div.discount_final_price")!
-            : el.querySelector("div.game_purchase_price")!;
+  //   const offerEndDate = await page.$eval(
+  //     "div.game_area_purchase_game",
+  //     (element: HTMLDivElement) => {
+  //       const countDown = element.querySelector(
+  //         "p.game_purchase_discount_countdown",
+  //       );
+  //       return countDown ? element.innerText : null;
+  //     },
+  //   );
 
-          const name: HTMLHeadingElement | null = el.querySelector("h1");
+  //   return {
+  //     ...correctName!.currPrice,
+  //     offerEndDate: this.offerDateFormat(offerEndDate!),
+  //   };
+  // }
 
-          return {
-            name: name?.innerText,
-            currPrice: {
-              discount_percent: gameDiscount ? gameDiscount.innerText : "-",
-              initial_price: initialGamePrice?.innerText.replace("$ ", "$"),
-              final_price: finalGamePrice?.innerText.replace("$ ", "$"),
-            },
-          };
-        });
-      },
-    );
+  // private offerDateFormat(offer: string) {
+  //   if (!offer) {
+  //     return;
+  //   }
 
-    let correctName = currPrice.find(
-      (element) => element.name === `Buy ${gameName}`,
-    );
+  //   const regex = /(?:Offer ends|Termina el)\s(\d{1,2})\s(\w+)/i;
+  //   const match = offer.match(regex);
 
-    if (!correctName) {
-      correctName = { ...currPrice[0] };
-    }
+  //   if (match) {
+  //     const day = parseInt(match[1]);
+  //     const monthName = match[2].toLowerCase();
+  //     const monthNames = [
+  //       "january",
+  //       "february",
+  //       "march",
+  //       "april",
+  //       "may",
+  //       "june",
+  //       "july",
+  //       "august",
+  //       "september",
+  //       "october",
+  //       "november",
+  //       "december",
+  //     ];
+  //     const monthIndex = monthNames.indexOf(monthName);
 
-    const offerEndDate = await page.$eval(
-      "div.game_area_purchase_game",
-      (element: HTMLDivElement) => {
-        const countDown = element.querySelector(
-          "p.game_purchase_discount_countdown",
-        );
-        return countDown ? element.innerText : null;
-      },
-    );
+  //     if (monthIndex !== -1) {
+  //       const year = new Date().getFullYear();
 
-    return {
-      ...correctName!.currPrice,
-      offerEndDate: this.offerDateFormat(offerEndDate!),
-    };
-  }
+  //       const date = new Date(year, monthIndex, day);
+  //       return date.toISOString();
+  //     }
+  //   }
+  //   return;
+  // }
 
-  private offerDateFormat(offer: string) {
-    if (!offer) {
-      return;
-    }
+  // private async changeLanguage(page: Page) {
+  //   const currContext = page.context();
 
-    const regex = /(?:Offer ends|Termina el)\s(\d{1,2})\s(\w+)/i;
-    const match = offer.match(regex);
+  //   const cookiesInContext = await currContext.cookies();
 
-    if (match) {
-      const day = parseInt(match[1]);
-      const monthName = match[2].toLowerCase();
-      const monthNames = [
-        "january",
-        "february",
-        "march",
-        "april",
-        "may",
-        "june",
-        "july",
-        "august",
-        "september",
-        "october",
-        "november",
-        "december",
-      ];
-      const monthIndex = monthNames.indexOf(monthName);
-
-      if (monthIndex !== -1) {
-        const year = new Date().getFullYear();
-
-        const date = new Date(year, monthIndex, day);
-        return date.toISOString();
-      }
-    }
-    return;
-  }
-
-  private async changeLanguage(page: Page) {
-    const currContext = page.context();
-
-    const cookiesInContext = await currContext.cookies();
-
-    if (
-      !cookiesInContext.some(
-        (cookie) =>
-          cookie.domain === "store.steampowered.com" &&
-          cookie.name === "Steam_Language" &&
-          cookie.value === "english",
-      )
-    ) {
-      await currContext.addCookies([
-        {
-          domain: "store.steampowered.com",
-          name: "Steam_Language",
-          value: "english",
-          path: "/",
-        },
-      ]);
-      await page.reload();
-      await page.waitForLoadState("domcontentloaded");
-      await page.waitForTimeout(500);
-    }
-  }
+  //   if (
+  //     !cookiesInContext.some(
+  //       (cookie) =>
+  //         cookie.domain === "store.steampowered.com" &&
+  //         cookie.name === "Steam_Language" &&
+  //         cookie.value === "english",
+  //     )
+  //   ) {
+  //     await currContext.addCookies([
+  //       {
+  //         domain: "store.steampowered.com",
+  //         name: "Steam_Language",
+  //         value: "english",
+  //         path: "/",
+  //       },
+  //     ]);
+  //     await page.reload();
+  //     await page.waitForLoadState("domcontentloaded");
+  //     await page.waitForTimeout(500);
+  //   }
+  // }
 }
