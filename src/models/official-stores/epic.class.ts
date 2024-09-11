@@ -1,5 +1,4 @@
 import { calculateDiscountPercent, formatToDecimals } from "./../utils.model";
-// import { Page } from "playwright";
 import { parseUrl, replaceSteam } from "../../utils/game.utils";
 import { Store } from "../store.class";
 import { StoreInfo } from "../../types";

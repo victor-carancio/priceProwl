@@ -1,5 +1,4 @@
 import { xboxStoreConfig } from "./../utils.model";
-// import { Page } from "playwright";
 import { parseUrl, replaceSteam, replaceXbox } from "../../utils/game.utils";
 import { Store } from "../store.class";
 import { StoreInfo } from "../../types";

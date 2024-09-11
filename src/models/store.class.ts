@@ -1,4 +1,3 @@
-// import { Page } from "playwright";
 import { CurrencyCodes, PriceFromUrlScraped, StoreInfo } from "../types";
 
 export abstract class Store {

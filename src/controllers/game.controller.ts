@@ -13,10 +13,6 @@ import {
 } from "../services/gameServices/manageGameData.service";
 import { parseInteger, parseString } from "../utils/validation";
 import { BadRequestError } from "../responses/customApiError";
-import // scrapeAllGamesFromUrl,
-// scrapeAllStores,
-"../services/gameServices/scrapeGameData.service";
-// import { scrapeAllGamesFromUrl } from "../services/gameServices/scrapeGameData.service";
 
 export const getGamesPrices = async (req: Request, res: Response) => {
   const title = parseString(req.query.title, "Game title");
