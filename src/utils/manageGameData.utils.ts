@@ -89,7 +89,15 @@ export const completeInfo = {
       porting: true,
       publisher: true,
       supporting: true,
-      company: true,
+      company: {
+        select: {
+          name: true,
+          logo: true,
+          country: true,
+          start_date: true,
+          id: true,
+        },
+      },
     },
   },
   keywords: {
