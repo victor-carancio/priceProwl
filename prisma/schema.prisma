@@ -57,24 +57,40 @@ model Game {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   stores StoreGame[]
-  infoGame GameOnInfoGame[]
   user UserGameWishList[]
+  featuredIn FeaturedGameCategory[] 
 }
 
 model StoreGame {
   id Int @id @default(autoincrement())
-  storeIdGame String
   store String
   type String @default("Official")
   url String 
-  imgStore String @default("-")
   edition String
   gamepass Boolean? 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   game Game  @relation( fields: [game_id], references: [id])
   game_id Int 
-  info StorePrice[]
+  info_price StorePrice[]
+  info_game InfoGame?
+  featuredIn FeaturedGameCategory[] 
+}
+
+model FeatureCategory{
+  id Int @id @default(autoincrement())
+  name String @unique
+  stores FeaturedGameCategory[] 
+}
+model FeaturedGameCategory{
+  id Int @id @default(autoincrement())
+  game Game @relation(fields:[game_id], references: [id], onDelete: Cascade)
+  game_id Int
+  store StoreGame @relation(fields: [store_id], references: [id], onDelete: Cascade)
+  store_id Int 
+  feature_category FeatureCategory @relation(fields:[feature_category_id], references: [id], onDelete: Cascade)
+  feature_category_id Int
+  createdAt DateTime @default(now())
 }
 
 model StorePrice {
@@ -90,201 +106,283 @@ model StorePrice {
   store_game_id Int 
 }
 
-model GameOnInfoGame{
-  game Game @relation(fields: [game_id], references: [id])
-  game_id Int
-  info_game InfoGame @relation(fields: [info_game_id], references: [id])
-  info_game_id Int
-  @@id([game_id,info_game_id])
-}
+// model GameOnInfoGame{
+//   // id Int @id @default(autoincrement())
+//   game Game @relation(fields: [game_id], references: [id])
+//   game_id Int
+//   info_game InfoGame @relation(fields: [info_game_id], references: [id])
+//   info_game_id Int
+//   // store_info_game StoreInfoGame? @relation(fields:[store_info_game_id], references: [id])
+//   // store_info_game_id Int?
+  
+//   // @@unique([game_id,info_game_id])
+//   // @@unique([game_id,store_info_game_id])
+//   @@id([game_id,info_game_id])
+// }
 
 model InfoGame {
-  id Int @id
-  name String
-  first_release_date String?
-  storyline String?
-  summary String? @db.VarChar(3500)
-  version_title String?
+  id Int @id @default(autoincrement())
+  storeIdGame String
+  imgStore String @default("-")
+  about String? @default("-")
+  description String
+  release_date String
+  developer String
+  publisher String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  cover Cover?
-  alternative_names AlternativeNameOnInfoGame[]
-  artworks Artwork[]
-  game_engines GameEngineOnInfoGame[]
+  screenshots Screenshots[]
+  videos Videos[]
   genres GenreOnInfoGame[]
-  involved_companies InvolvedCompany[]
-  keywords KeywordOnInfoGame[]
-  platforms PlatformOnInfoGame[]
- 
- 
-  videos Video[]
-  
-  game GameOnInfoGame[]
-  
-}
+  categories CategoriesOnInfoGame[] 
+  website String? @default("-")
+  supportedLanguages String? @default("-")
+  pc_requirements PcRequirements?
 
-model Cover {
-  id Int @id
-  height Int
+  store_game StoreGame @relation(fields: [store_game_id], references: [id])
+  store_game_id Int @unique
+ 
+}
+model Videos{
+  id Int @id @default(autoincrement())
+  title String
   url String
-  width Int
-  image_id String
-  info_game InfoGame @relation(fields: [info_game_id], references: [id])
-  info_game_id Int @unique
-}
-
-
-
-model AlternativeName {
-  id Int @id
-  comment String? 
-  name String
-  info_games AlternativeNameOnInfoGame[]
-}
-
-model AlternativeNameOnInfoGame{
-  alternative_name AlternativeName @relation(fields: [alternative_name_id], references: [id])
-  alternative_name_id Int
+  thumbnail String
   info_game InfoGame @relation(fields: [info_game_id], references: [id])
   info_game_id Int
-  @@id([alternative_name_id ,info_game_id])
+
 }
-
-
-model Artwork {
-  id Int @id
-  height Int
-  url String
-  width Int
-  image_id String
-  info_game InfoGame @relation(fields: [info_game_id], references: [id])
-  info_game_id Int 
-}
-
-model GameEngine {
-  id Int @id
-  name String
-  info_games GameEngineOnInfoGame[]
-  
-}
-
-model GameEngineOnInfoGame{
-  game_engine GameEngine @relation(fields: [game_engine_id], references: [id])
-  game_engine_id Int
-  info_game InfoGame @relation(fields: [info_game_id], references: [id])
-  info_game_id Int
-  @@id([game_engine_id,info_game_id])
-}
-
-model Genre {
-  id Int @id
-  name String
+model Genres{
+  id Int @id @default(autoincrement())
+  genre String @unique
   info_games GenreOnInfoGame[]
 }
 
 model GenreOnInfoGame{
-  genre Genre @relation(fields: [genre_id],references: [id])
+  genre Genres @relation(fields: [genre_id], references: [id])
   genre_id Int
-  info_game InfoGame @relation(fields: [info_game_id], references: [id])
+  info_game InfoGame @relation(fields: [info_game_id],references: [id])
   info_game_id Int
-  @@id([genre_id,info_game_id])
+  @@id([genre_id, info_game_id])
 }
-
-model InvolvedCompany{
-  id Int @id
-  developer Boolean 
-  porting Boolean
-  publisher Boolean
-  supporting Boolean
-  company Company @relation(fields: [company_id],references: [id])
-  company_id Int
-  info_game InfoGame @relation(fields: [info_game_id], references: [id])
-  info_game_id Int
-
-}
-
-model Company{
-  id Int @id
-  country Int?
-  name String
-  start_date String?
-  involved_company InvolvedCompany[]
-  logo CompanyLogo?
-}
-
-model CompanyLogo{
-  id Int @id
-  height Int
+model Screenshots{
+  id Int @id @default(autoincrement())
   url String
-  width Int
-  image_id String
-  company Company @relation(fields: [company_id], references: [id])
-  company_id Int @unique
+  thumbUrl String?
+  info_game InfoGame @relation(fields: [info_game_id], references: [id])
+  info_game_id Int
 }
 
-model Keyword{
-  id Int @id
-  name String 
-  info_games KeywordOnInfoGame[]
+model Categories{
+  id Int @id @default(autoincrement())
+  category String @unique
+  info_games CategoriesOnInfoGame[]
+}
+
+model CategoriesOnInfoGame{
+  category Categories @relation(fields: [category_id], references: [id])
+  category_id Int
+  info_game InfoGame @relation(fields: [info_game_id],references: [id])
+  info_game_id Int
+  @@id([category_id, info_game_id])
+}
+
+model PcRequirements{
+ id Int @id @default(autoincrement())
+ minimum String @default("-")
+ recommended String @default("-")
+ info_game InfoGame @relation(fields: [info_game_id], references: [id])
+ info_game_id Int @unique
+}
+
+
+// model InfoGame {
+//   id Int @id
+//   name String
+//   first_release_date String?
+//   storyline String?
+//   summary String? @db.VarChar(3500)
+//   version_title String?
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+//   cover Cover?
+//   alternative_names AlternativeNameOnInfoGame[]
+//   artworks Artwork[]
+//   game_engines GameEngineOnInfoGame[]
+//   genres GenreOnInfoGame[]
+//   involved_companies InvolvedCompany[]
+//   keywords KeywordOnInfoGame[]
+//   platforms PlatformOnInfoGame[]
  
-}
-
-model KeywordOnInfoGame{
-  keyword Keyword @relation(fields: [keyword_id], references: [id])
-  keyword_id Int
-  info_game InfoGame @relation(fields: [info_game_id],references: [id])
-  info_game_id Int
-  @@id([keyword_id, info_game_id])
-}
-
-model Platform{
-  id Int @id
-  abbreviation String?
-  alternative_name String?
-  name String
-  platform_logo PlatformLogo?
-  info_games PlatformOnInfoGame[]
-  release_date ReleaseDate[]
+ 
+//   videos Video[]
   
-}
+//   game GameOnInfoGame[]
+  
+// }
 
-model PlatformLogo{
-  id Int @id
-  height Int
-  url String
-  width Int
-  image_id String
-  platform Platform @relation(fields: [platform_id],references: [id])
-  platform_id Int @unique
-}
-
-model PlatformOnInfoGame{
-  platform Platform @relation(fields: [platform_id],references: [id])
-  platform_id Int
-  info_game InfoGame @relation(fields: [info_game_id],references: [id])
-  info_game_id Int
-  @@id([platform_id,info_game_id])
-}
+// model Cover {
+//   id Int @id
+//   height Int
+//   url String
+//   width Int
+//   image_id String
+//   info_game InfoGame @relation(fields: [info_game_id], references: [id])
+//   info_game_id Int @unique
+// }
 
 
 
-model ReleaseDate{
-  id Int @id
-  category Int
-  date String
-  region Int
-  platform Platform @relation(fields: [platform_id], references: [id])
-  platform_id Int
-}
+// model AlternativeName {
+//   id Int @id
+//   comment String? 
+//   name String
+//   info_games AlternativeNameOnInfoGame[]
+// }
+
+// model AlternativeNameOnInfoGame{
+//   alternative_name AlternativeName @relation(fields: [alternative_name_id], references: [id])
+//   alternative_name_id Int
+//   info_game InfoGame @relation(fields: [info_game_id], references: [id])
+//   info_game_id Int
+//   @@id([alternative_name_id ,info_game_id])
+// }
 
 
-model Video {
-  id Int @id
-  name String
-  video_id String
-  info_game InfoGame @relation(fields: [info_game_id], references: [id])
-  info_game_id Int
-}
+// model Artwork {
+//   id Int @id
+//   height Int
+//   url String
+//   width Int
+//   image_id String
+//   info_game InfoGame @relation(fields: [info_game_id], references: [id])
+//   info_game_id Int 
+// }
+
+// model GameEngine {
+//   id Int @id
+//   name String
+//   info_games GameEngineOnInfoGame[]
+  
+// }
+
+// model GameEngineOnInfoGame{
+//   game_engine GameEngine @relation(fields: [game_engine_id], references: [id])
+//   game_engine_id Int
+//   info_game InfoGame @relation(fields: [info_game_id], references: [id])
+//   info_game_id Int
+//   @@id([game_engine_id,info_game_id])
+// }
+
+// model Genre {
+//   id Int @id
+//   name String
+//   info_games GenreOnInfoGame[]
+// }
+
+// model GenreOnInfoGame{
+//   genre Genre @relation(fields: [genre_id],references: [id])
+//   genre_id Int
+//   info_game InfoGame @relation(fields: [info_game_id], references: [id])
+//   info_game_id Int
+//   @@id([genre_id,info_game_id])
+// }
+
+// model InvolvedCompany{
+//   id Int @id
+//   developer Boolean 
+//   porting Boolean
+//   publisher Boolean
+//   supporting Boolean
+//   company Company @relation(fields: [company_id],references: [id])
+//   company_id Int
+//   info_game InfoGame @relation(fields: [info_game_id], references: [id])
+//   info_game_id Int
+
+// }
+
+// model Company{
+//   id Int @id
+//   country Int?
+//   name String
+//   start_date String?
+//   involved_company InvolvedCompany[]
+//   logo CompanyLogo?
+// }
+
+// model CompanyLogo{
+//   id Int @id
+//   height Int
+//   url String
+//   width Int
+//   image_id String
+//   company Company @relation(fields: [company_id], references: [id])
+//   company_id Int @unique
+// }
+
+// model Keyword{
+//   id Int @id
+//   name String 
+//   info_games KeywordOnInfoGame[]
+ 
+// }
+
+// model KeywordOnInfoGame{
+//   keyword Keyword @relation(fields: [keyword_id], references: [id])
+//   keyword_id Int
+//   info_game InfoGame @relation(fields: [info_game_id],references: [id])
+//   info_game_id Int
+//   @@id([keyword_id, info_game_id])
+// }
+
+// model Platform{
+//   id Int @id
+//   abbreviation String?
+//   alternative_name String?
+//   name String
+//   platform_logo PlatformLogo?
+//   info_games PlatformOnInfoGame[]
+//   release_date ReleaseDate[]
+  
+// }
+
+// model PlatformLogo{
+//   id Int @id
+//   height Int
+//   url String
+//   width Int
+//   image_id String
+//   platform Platform @relation(fields: [platform_id],references: [id])
+//   platform_id Int @unique
+// }
+
+// model PlatformOnInfoGame{
+//   platform Platform @relation(fields: [platform_id],references: [id])
+//   platform_id Int
+//   info_game InfoGame @relation(fields: [info_game_id],references: [id])
+//   info_game_id Int
+//   @@id([platform_id,info_game_id])
+// }
+
+
+
+// model ReleaseDate{
+//   id Int @id
+//   category Int
+//   date String
+//   region Int
+//   platform Platform @relation(fields: [platform_id], references: [id])
+//   platform_id Int
+// }
+
+
+// model Video {
+//   id Int @id
+//   name String
+//   video_id String
+//   info_game InfoGame @relation(fields: [info_game_id], references: [id])
+//   info_game_id Int
+// }
 
 
 

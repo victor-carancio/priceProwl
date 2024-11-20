@@ -6,6 +6,8 @@ import {
   getGameById,
   getCurrentOffers,
   getAllGames,
+  getGamesGenresInDatabase,
+  testUpdateGamePrice,
   // testUpdateGamePrice,
 } from "../controllers/game.controller";
 
@@ -158,6 +160,9 @@ router.get("/all", getAllGames);
  *  */
 router.get("/offers", getCurrentOffers);
 
+//todo: swagger para genre
+router.get("/genres", getGamesGenresInDatabase);
+
 /**
  * Get track
  * @openapi
@@ -191,7 +196,7 @@ router.get("/offers", getCurrentOffers);
  *           description: "Internal server error."
  *  */
 
-// router.get("/test", testUpdateGamePrice);
+router.get("/test", testUpdateGamePrice);
 router.get("/:id", getGameById);
 
 export default router;

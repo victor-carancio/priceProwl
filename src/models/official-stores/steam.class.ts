@@ -1,7 +1,17 @@
 import { parseUrl, replaceSteam } from "../../utils/game.utils";
 import { Store } from "../store.class";
-import { GamePriceInfo, StoreInfo } from "../../types";
-import { SteamAppsSearch, SteamSearch, SteamSearchImg } from "../types";
+import { SingleGame, StoreInfo } from "../../types";
+import {
+  // NewreleasesSteamFeatured,
+  NewreleasesSteamFeatured,
+  SteamAppsSearch,
+  SteamDetails,
+  // SteamFeaturedCategories,
+  // SteamFeaturedItems,
+  SteamFeaturedTypeId,
+  SteamSearch,
+  TopsellerSteamFeatured,
+} from "../types";
 import { formatToDecimals } from "../utils.model";
 
 //https://github.com/Revadike/InternalSteamWebAPI/wiki/Get-App-Details
@@ -28,55 +38,12 @@ export class SteamStore extends Store {
       return { store: this.name, type: this.type, storeInfo: [] };
     }
 
-    const onlyIds = gamesInfo.map((game) => game.appid).join(",");
+    const numberIds = gamesInfo.map((game) => parseInt(game.appid));
 
-    const detailRes = await fetch(
-      `https://store.steampowered.com/api/appdetails?appids=${onlyIds}&filters=price_overview&cc=${currency}`,
-    );
-    const detailData: SteamSearch = await detailRes.json();
+    const findGames = await this.findDetail(numberIds, currency);
 
-    const formatedData: GamePriceInfo[] = [];
-
-    for (const game of gamesInfo) {
-      const { appid, name } = game;
-      if (
-        "data" in detailData[appid] &&
-        "price_overview" in detailData[appid].data
-      ) {
-        const gamePrices = { ...detailData[appid].data.price_overview };
-        const {
-          initial,
-          currency: currencyStore,
-          discount_percent,
-          final,
-        } = gamePrices;
-
-        const urlTitle = parseUrl(name, "_");
-
-        const imgRes = await fetch(
-          `https://store.steampowered.com/api/appdetails?appids=${appid}&cc=${currency}`,
-        );
-        const imgData: SteamSearchImg = await imgRes.json();
-        const data = {
-          storeId: appid,
-          gameName: name,
-          url: `https://store.steampowered.com/app/${appid}/${urlTitle}/`,
-          imgStore: imgData[appid].data.header_image,
-          discount_percent: discount_percent.toFixed(),
-          currency: currencyStore,
-          initial_price:
-            currency === "CL"
-              ? formatToDecimals(initial, 2)
-              : initial.toFixed(),
-          final_price:
-            currency === "CL" ? formatToDecimals(final, 2) : final.toFixed(),
-        };
-        formatedData.push(data);
-      }
-    }
-
-    const games = formatedData.map((el) => {
-      return { ...el, gameName: replaceSteam(el.gameName) };
+    const games = findGames.map((game) => {
+      return { ...game, gameName: replaceSteam(game.gameName) };
     });
 
     return { store: this.name, type: this.type, storeInfo: games };
@@ -88,7 +55,7 @@ export class SteamStore extends Store {
     );
     const data: SteamSearch = await res.json();
 
-    if (storeId in data) {
+    if (storeId in data && "price_overview" in data[storeId].data) {
       const { currency, discount_percent, initial, final } =
         data[storeId].data.price_overview;
 
@@ -103,138 +70,268 @@ export class SteamStore extends Store {
     return null;
   }
 
-  // async scrapePriceGameFromUrl(page: Page, url: string, gameName: string) {
-  //   await page.goto(url);
+  async findDetail(items: number[], currency: string) {
+    const gamesFounded = [];
 
-  //   await page.waitForLoadState("domcontentloaded");
-  //   await page.waitForTimeout(500);
+    for (const item of items) {
+      const res = await fetch(
+        `https://store.steampowered.com/api/appdetails?appids=${item}&cc=${currency}&l=spanish`,
+      );
+      const data: SteamDetails = await res.json();
 
-  //   await this.changeLanguage(page);
+      if (!("data" in data[item.toFixed(0)])) {
+        continue;
+      }
 
-  //   // await page.waitForTimeout(60 * 1000);
-  //   const birthdaySelector = await page.evaluate(() =>
-  //     document.querySelector("div.agegate_birthday_selector"),
-  //   );
-  //   if (birthdaySelector) {
-  //     await page.locator("select#ageYear").selectOption("1994");
-  //     await page.locator("a#view_product_page_btn span").click();
-  //     await page.waitForSelector("div.game_purchase_action_bg");
-  //   }
+      const {
+        detailed_description,
+        developers,
+        genres,
+        header_image,
+        movies,
+        name,
+        is_free,
+        publishers,
+        ratings,
+        release_date,
+        screenshots,
+        short_description,
 
-  //   const currPrice = await page.$$eval(
-  //     "div.game_area_purchase_game",
-  //     (element: HTMLDivElement[]) => {
-  //       return element.map((el) => {
-  //         const gameDiscount: HTMLDivElement | null =
-  //           el.querySelector("div.discount_pct");
+        categories,
+        pc_requirements,
+        supported_languages,
+        type,
+        website,
+      } = data[item.toFixed(0)].data;
 
-  //         const initialGamePrice: HTMLDivElement = gameDiscount
-  //           ? el.querySelector("div.discount_original_price")!
-  //           : el.querySelector("div.game_purchase_price")!;
+      let price_overview: {
+        currency: string;
+        discount_percent: string | number;
+        final: string | number;
+        initial: string | number;
+      } = {
+        currency: "CLP",
+        discount_percent: 0,
+        final: 0,
+        initial: 0,
+      };
 
-  //         const finalGamePrice: HTMLDivElement = gameDiscount
-  //           ? el.querySelector("div.discount_final_price")!
-  //           : el.querySelector("div.game_purchase_price")!;
+      if (
+        ratings &&
+        "steam_germany" in ratings &&
+        (ratings.steam_germany?.rating === "BANNED" ||
+          ratings.steam_germany?.banned === "1")
+      ) {
+        continue;
+      }
 
-  //         const name: HTMLHeadingElement | null = el.querySelector("h1");
+      if (
+        !is_free &&
+        !release_date.coming_soon &&
+        "price_overview" in data[item.toFixed(0)].data
+      ) {
+        price_overview = { ...data[item.toFixed(0)].data.price_overview };
+      }
 
-  //         return {
-  //           name: name?.innerText,
-  //           currPrice: {
-  //             discount_percent: gameDiscount ? gameDiscount.innerText : "-",
-  //             initial_price: initialGamePrice?.innerText.replace("$ ", "$"),
-  //             final_price: finalGamePrice?.innerText.replace("$ ", "$"),
-  //           },
-  //         };
-  //       });
-  //     },
-  //   );
+      const {
+        currency: currencyStore,
+        discount_percent,
+        final,
+        initial,
+      } = price_overview;
 
-  //   let correctName = currPrice.find(
-  //     (element) => element.name === `Buy ${gameName}`,
-  //   );
+      const urlTitle = parseUrl(name, "_");
+      const game = {
+        gameName: name,
+        url: `https://store.steampowered.com/app/${item}/${urlTitle}/`,
 
-  //   if (!correctName) {
-  //     correctName = { ...currPrice[0] };
-  //   }
+        infoPrice: {
+          initial_price: this.formatPrice(initial, currencyStore),
+          final_price: this.formatPrice(final, currencyStore),
+          discount_percent: this.formatDiscount(discount_percent),
+          currency: currencyStore,
+        },
+        infoGame: {
+          storeId: item.toFixed(),
+          imgStore: header_image,
+          storeName: this.name,
+          about: short_description,
+          type: type,
+          supported_languages: this.extractTextFromHtml(supported_languages),
+          website: website,
+          pc_requirements: {
+            minimum: pc_requirements.minimum
+              ? this.extractTextFromHtml(pc_requirements.minimum)
+              : "-",
+            recommended: pc_requirements.recommended
+              ? this.extractTextFromHtml(pc_requirements.recommended)
+              : "-",
+          },
+          description: this.extractTextFromHtml(detailed_description),
+          release_date: release_date.date,
+          developer: developers ? developers.join(" ,") : "-",
+          publisher: publishers ? publishers.join(" ,") : "-",
 
-  //   const offerEndDate = await page.$eval(
-  //     "div.game_area_purchase_game",
-  //     (element: HTMLDivElement) => {
-  //       const countDown = element.querySelector(
-  //         "p.game_purchase_discount_countdown",
-  //       );
-  //       return countDown ? element.innerText : null;
-  //     },
-  //   );
+          categories: categories.map((category) => category.description),
+          screenshots: screenshots.map((screenshot) => {
+            return {
+              url: screenshot.path_full,
+              thumbUrl: screenshot.path_thumbnail,
+            };
+          }),
+          videos: movies?.map((movie) => {
+            return {
+              title: movie.name,
+              url: movie.webm.max,
+              thumbnail: movie.thumbnail,
+            };
+          }),
+          genres: genres.map((genre) => genre.description),
 
-  //   return {
-  //     ...correctName!.currPrice,
-  //     offerEndDate: this.offerDateFormat(offerEndDate!),
-  //   };
-  // }
+          //añadir cooming soon y ver que todas las store retornen datos iguales o similares
+        },
+      };
+      gamesFounded.push(game);
+    }
 
-  // private offerDateFormat(offer: string) {
-  //   if (!offer) {
-  //     return;
-  //   }
+    // const filterBannedGames = gamesFounded.filter(
+    //   (game) =>
+    //     game.game_info.ratings?.steam_germany?.rating !== "BANNED" ||
+    //     game.game_info.ratings?.steam_germany?.banned !== "1",
+    // );
 
-  //   const regex = /(?:Offer ends|Termina el)\s(\d{1,2})\s(\w+)/i;
-  //   const match = offer.match(regex);
+    return gamesFounded;
+  }
 
-  //   if (match) {
-  //     const day = parseInt(match[1]);
-  //     const monthName = match[2].toLowerCase();
-  //     const monthNames = [
-  //       "january",
-  //       "february",
-  //       "march",
-  //       "april",
-  //       "may",
-  //       "june",
-  //       "july",
-  //       "august",
-  //       "september",
-  //       "october",
-  //       "november",
-  //       "december",
-  //     ];
-  //     const monthIndex = monthNames.indexOf(monthName);
+  private formatPrice(price: string | number, currency: string) {
+    if (typeof price === "string") {
+      return "-";
+    }
+    return currency === "CLP" ? formatToDecimals(price, 2) : price.toFixed();
+  }
 
-  //     if (monthIndex !== -1) {
-  //       const year = new Date().getFullYear();
+  private formatDiscount(discount: string | number) {
+    return typeof discount === "number" ? discount.toFixed() : "-";
+  }
 
-  //       const date = new Date(year, monthIndex, day);
-  //       return date.toISOString();
-  //     }
-  //   }
-  //   return;
-  // }
+  async scrapeSingleGameFromName(
+    term: string,
+    currency: string,
+  ): Promise<SingleGame> {
+    const res = await fetch(this.searchUrl(term));
+    const gamesInfo: SteamAppsSearch[] = await res.json();
 
-  // private async changeLanguage(page: Page) {
-  //   const currContext = page.context();
+    if (gamesInfo.length <= 0) {
+      return { store: this.name, type: this.type, storeInfo: null };
+    }
 
-  //   const cookiesInContext = await currContext.cookies();
+    const searchTermGames = gamesInfo.find(
+      (game) => game.name.trim().toLowerCase() === term.trim().toLowerCase(),
+    );
 
-  //   if (
-  //     !cookiesInContext.some(
-  //       (cookie) =>
-  //         cookie.domain === "store.steampowered.com" &&
-  //         cookie.name === "Steam_Language" &&
-  //         cookie.value === "english",
-  //     )
-  //   ) {
-  //     await currContext.addCookies([
-  //       {
-  //         domain: "store.steampowered.com",
-  //         name: "Steam_Language",
-  //         value: "english",
-  //         path: "/",
-  //       },
-  //     ]);
-  //     await page.reload();
-  //     await page.waitForLoadState("domcontentloaded");
-  //     await page.waitForTimeout(500);
-  //   }
+    if (!searchTermGames) {
+      return { store: this.name, type: this.type, storeInfo: null };
+    }
+
+    const gameDetail = await this.findDetail(
+      [parseInt(searchTermGames.appid)],
+      currency,
+    );
+
+    let gameFormat = {
+      ...gameDetail[0],
+      gameName: replaceSteam(gameDetail[0].gameName),
+    };
+
+    return { store: this.name, type: this.type, storeInfo: gameFormat };
+  }
+  async scrapeFeaturedSales(currency: string) {
+    //todo: usar como cron job, para evitar problemas de limitee de api request
+    // const specialRes = await fetch(
+    //   `https://store.steampowered.com/api/getappsincategory/?category=cat_specials&cc=${currency}&l=english`,
+    // );
+    // const specialData: SpecialsSteamFeatured = await specialRes.json();
+
+    const newreleasesRes = await fetch(
+      `https://store.steampowered.com/api/getappsincategory/?category=cat_newreleases&cc=${currency}&l=spanish`,
+    );
+    const newreleasesData: NewreleasesSteamFeatured =
+      await newreleasesRes.json();
+
+    const topsellerRes = await fetch(
+      `https://store.steampowered.com/api/getappsincategory/?category=cat_topsellers&cc=${currency}&l=spanish`,
+    );
+    const topsellerData: TopsellerSteamFeatured = await topsellerRes.json();
+
+    const viewallIds = [
+      ...this.getFeaturedIds(topsellerData.tabs.viewall.items),
+    ];
+
+    const specialsIds = [
+      ...this.getFeaturedIds(topsellerData.tabs.specials.items),
+    ];
+
+    const newreleasesIds = [
+      ...this.getFeaturedIds(newreleasesData.tabs.topsellers.items),
+    ];
+
+    const topSellers = await this.findDetail(viewallIds, currency);
+    const specials = await this.findDetail(specialsIds, currency);
+    const releases = await this.findDetail(newreleasesIds, currency);
+
+    const featuredGames = {
+      topsellers: topSellers.map((topseller) => {
+        return {
+          ...topseller,
+          type: this.type,
+          store: this.name,
+          feature: "Steam - Más vendidos",
+        };
+      }),
+      specials: specials.map((special) => {
+        return {
+          ...special,
+          type: this.type,
+          store: this.name,
+          feature: "Steam - Ofertas especiales",
+        };
+      }),
+      newReleases: releases.map((release) => {
+        return {
+          ...release,
+          type: this.type,
+          store: this.name,
+          feature: "Steam - Nuevos Lanzamientos",
+        };
+      }),
+    };
+
+    return featuredGames;
+  }
+
+  getFeaturedIds(items: SteamFeaturedTypeId[]) {
+    return items.filter((item) => item.type === 0).map((item) => item.id);
+  }
+
+  // formatedFeatured(items: SteamFeaturedItems[]) {
+  //   return items.map((item) => {
+  //     const urlTitle = parseUrl(item.name, "_");
+  //     return {
+  //       storeId: item.id,
+  //       gameName: item.name,
+  //       url: `https://store.steampowered.com/app/${item.id}/${urlTitle}/`,
+  //       imgStore: item.header_image,
+  //       discount_percent: item.discount_percent.toFixed(),
+  //       currency: item.currency,
+  //       initial_price:
+  //         item.currency === "CL"
+  //           ? formatToDecimals(item.original_price, 2)
+  //           : item.original_price.toFixed(),
+  //       final_price:
+  //         item.currency === "CL"
+  //           ? formatToDecimals(item.final_price, 2)
+  //           : item.final_price.toFixed(),
+  //     };
+  //   });
   // }
 }

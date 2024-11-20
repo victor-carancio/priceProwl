@@ -1,4 +1,4 @@
-import { StoreGame } from "@prisma/client";
+import { StorePrice } from "@prisma/client";
 
 export interface ShortInfoFormat {
   id: number;
@@ -6,8 +6,7 @@ export interface ShortInfoFormat {
   platform: string;
   createdAt: Date;
   updatedAt: Date;
-  stores: StoreGame[];
-  infoGame: InfoGameShort[];
+  stores: StoreShortPrismaFormat[];
 }
 
 export interface CompleteInfoFormat {
@@ -16,15 +15,44 @@ export interface CompleteInfoFormat {
   platform: string;
   createdAt: Date;
   updatedAt: Date;
-  stores: StoreGame[];
-  infoGame: InfoGameComplete[];
+  stores: StoreCompletePrismaFormat[];
 }
 
-export interface InfoGameShort {
+export interface StoreShortPrismaFormat {
+  id: number;
+  store: string;
+  type: string;
+  url: string;
+  edition: string;
+  gamepass?: boolean;
+  createdAt: Date;
+  updatedAt: Date;
   game_id: number;
-  info_game_id: number;
+  info_price: StorePrice[];
   info_game: InfoGameClassShort;
 }
+
+export interface StoreCompletePrismaFormat {
+  id: number;
+  store: string;
+  type: string;
+  url: string;
+  edition: string;
+  gamepass?: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  game_id: number;
+  info_price: StorePrice[];
+  info_game: InfoGameClassComplete;
+}
+
+export type OrderPriceByStore = Pick<StoreCompletePrismaFormat, "info_price">;
+
+// export interface InfoGameShort {
+//   game_id: number;
+//   info_game_id: number;
+//   info_game: InfoGameClassShort;
+// }
 
 export interface InfoGameComplete {
   game_id: number;
@@ -34,66 +62,64 @@ export interface InfoGameComplete {
 
 export interface InfoGameClassComplete {
   id: number;
-  name: string;
-  first_release_date: string;
-  storyline: null;
-  summary: string;
-  version_title: string;
-  cover: Cover;
-  artworks: Cover[];
-  alternative_names: AlternativeNameElement[];
-  game_engines: GameEngine[];
-  involved_companies: InvolvedCompany[];
-  videos: Video[];
+  storeIdGame: string;
+  about: string;
+  description: string;
+  release_date: string;
+  imgStore: string;
+  developer: string;
+  publisher: string;
+  pc_requirements?: {
+    id: number;
+    minimum: string;
+    recommended: string;
+  };
+  screenshots: {
+    id: number;
+    url: string;
+    thumbUrl: string;
+    info_game_id: number;
+  }[];
+  supportedLanguages?: string;
+  videos?: {
+    id: number;
+    title: string;
+    url: string;
+    thumbnail: string;
+    info_game_id: number;
+  }[];
+  website?: string;
+
   genres: GenreElement[];
-  keywords: Keyword[];
-  platforms: PlatformElement[];
+  categories: CategoryElement[];
 }
 
 export interface InfoGameClassShort {
   id: number;
-  name: string;
-  first_release_date: string;
-  storyline: null;
-  summary: string;
-  version_title: string;
-  cover: Cover;
+  description: string;
+  about: string;
+  imgStore: string;
+  release_date: string;
+  storeIdGame: string;
   genres: GenreElement[];
-  keywords: Keyword[];
-  platforms: PlatformElement[];
-}
-
-export interface Cover {
-  id: number;
-  height: number;
-  url: string;
-  width: number;
-  image_id: string;
-  info_game_id: number;
+  categories: CategoryElement[];
 }
 
 export interface GenreElement {
-  genre: KeywordClass;
+  genre_id: number;
+  info_game_id: number;
+  genre: {
+    id: number;
+    genre: string;
+  };
 }
-
-export interface KeywordClass {
-  name: string;
-  id: number;
-}
-
-export interface Keyword {
-  keyword: KeywordClass;
-}
-
-export interface PlatformElement {
-  platform: PlatformPlatform;
-}
-
-export interface PlatformPlatform {
-  id: number;
-  name: string;
-  abbreviation: string;
-  alternative_name: string;
+export interface CategoryElement {
+  category_id: number;
+  info_game_id: number;
+  category: {
+    id: number;
+    category: string;
+  };
 }
 
 export interface Info {
@@ -108,38 +134,47 @@ export interface Info {
   store_game_id: number;
 }
 
-export interface AlternativeNameElement {
-  alternative_name: GameEngineClass;
-}
+interface StoreFinalFormat {
+  // id: number;
+  // storeIdGame: string;
+  // store: string;
+  // type: string;
+  // url: string;
+  // imgStore: string;
+  // edition: string;
+  // gamepass?: boolean;
+  // createdAt: Date;
+  // updatedAt: Date;
 
-export interface GameEngineClass {
+  // game_id: number;
+  info_price: StorePrice;
+}
+// interface InfoGameFinalClassShort {
+//   id: number;
+//   name: string;
+//   first_release_date: string;
+//   storyline: null;
+//   summary: string;
+//   version_title: string;
+//   cover: Cover;
+
+// }
+
+export interface ShortFinalFormat {
   id: number;
-  name: string;
+  gameName: string;
+  platform: string;
+  createdAt: Date;
+  updatedAt: Date;
+  stores: StoreFinalFormat[];
+  // infoGame: InfoGameFinalClassShort[];
 }
 
-export interface GameEngine {
-  game_engine: GameEngineClass;
-}
+export type Jio = Pick<ShortFinalFormat, "stores">;
 
-export interface InvolvedCompany {
+export interface StoreIds {
   id: number;
-  developer: boolean;
-  porting: boolean;
-  publisher: boolean;
-  supporting: boolean;
-  company: Company;
-}
-
-export interface Company {
-  id: number;
-  country: number;
-  name: string;
-  start_date: string;
-}
-
-export interface Video {
-  id: number;
-  name: string;
-  video_id: string;
-  info_game_id: number;
+  store: string;
+  info_game: { storeIdGame: string };
+  game: { gameName: string };
 }

@@ -1,5 +1,53 @@
-import { storeGameData } from "./manageGameData.service";
-import { scrapeAllStores } from "./scrapeGameData.service";
-import { getGameInfoFromIgdb } from "./fetchGameData.service";
+import {
+  scrapeAllStores,
+  scrapeSpecialSales,
+  featureGameScrape,
+  storesPriceScrape,
+} from "./scrapeGameData.service";
 
-export { storeGameData, scrapeAllStores, getGameInfoFromIgdb };
+import {
+  storeGameData,
+  featureCreate,
+  updateStoreGamePrice,
+} from "./gameData/createOrUpdateGameData.service";
+import {
+  findGameByName,
+  findGameById,
+  findAllGames,
+  findCurrOfferGames,
+  findAllWishList,
+  wishListToNotified,
+  findEndOffer,
+  getAllStoreGames,
+  getCurrentGenres,
+} from ".//gameData/findDataGame.service";
+import { getFilter } from "./filters.service";
+import { sendEmails } from "./email.service";
+
+export {
+  //scrapeGameData
+  scrapeAllStores,
+  scrapeSpecialSales,
+  featureGameScrape,
+  storesPriceScrape,
+
+  //filter
+  getFilter,
+
+  //emailService
+  sendEmails,
+
+  //manageGameData
+  storeGameData,
+  featureCreate,
+  updateStoreGamePrice,
+  findGameByName,
+  findGameById,
+  findAllGames,
+  findCurrOfferGames,
+  findAllWishList,
+  wishListToNotified,
+  findEndOffer,
+  getAllStoreGames,
+  getCurrentGenres,
+};

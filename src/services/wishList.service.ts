@@ -17,22 +17,8 @@ export const findWishListOfUser = async (user: UserTokenData) => {
         include: {
           stores: {
             include: {
-              info: true,
-            },
-          },
-          infoGame: {
-            include: {
-              info_game: {
-                include: {
-                  artworks: true,
-                  cover: true,
-                  platforms: {
-                    include: {
-                      platform: true,
-                    },
-                  },
-                },
-              },
+              info_price: true,
+              info_game: true,
             },
           },
         },

@@ -1,0 +1,341 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // directUrl = env("DIRECT_URL")
+}
+
+enum CurrencyTypes {
+  USD
+  CLP
+}
+
+enum PlatformsTypes {
+  PC
+}
+
+model User {
+  id         Int      @id @default(autoincrement())
+  username String? @unique
+  email String @unique
+  password String
+  isActive Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  wishList UserGameWishList[]
+
+}
+
+model UserGameWishList{
+  id         Int      @id @default(autoincrement())
+  game Game @relation(fields: [game_id], references: [id])
+  game_id Int
+  user User @relation(fields: [user_id], references: [id])
+  user_id Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  notified Boolean @default(false)
+
+  @@unique([game_id,user_id])
+
+}
+
+model Game {
+  id         Int      @id @default(autoincrement())
+  gameName String 
+  platform PlatformsTypes @default(PC)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  stores StoreGame[]
+  infoGame GameOnInfoGame[]
+  user UserGameWishList[]
+}
+
+model StoreGame {
+  id Int @id @default(autoincrement())
+  storeIdGame String
+  store String
+  type String @default("Official")
+  url String 
+  imgStore String @default("-")
+  edition String
+  gamepass Boolean? 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  game Game  @relation( fields: [game_id], references: [id])
+  game_id Int 
+  info StorePrice[]
+}
+
+model StorePrice {
+  id Int @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  discount_percent  String @default("-")
+  initial_price  String @default("-")
+  final_price  String @default("-")
+  offer_end_date DateTime?
+  currency CurrencyTypes @default(CLP)
+  storeGame StoreGame @relation(fields:[store_game_id],references: [id])
+  store_game_id Int 
+}
+
+model GameOnInfoGame{
+  id Int @id @default(autoincrement())
+  game Game @relation(fields: [game_id], references: [id])
+  game_id Int
+  info_game InfoGame? @relation(fields: [info_game_id], references: [id])
+  info_game_id Int?
+  store_info_game StoreInfoGame? @relation(fields:[store_info_game_id], references: [id])
+  store_info_game_id Int?
+  
+  @@unique([game_id,info_game_id])
+  @@unique([game_id,store_info_game_id])
+  // @@id([game_id,info_game_id,store_info_game_id])
+}
+
+model StoreInfoGame{
+  id Int @id @default(autoincrement())
+  storeName String
+  about String
+  description String
+  release_date String
+  developer String
+  publisher String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  screenshots ScreenshotsStore[]
+  videos VideosStore[]
+  genres GenreStoreInStoreInfoGame[]
+  game GameOnInfoGame[]
+}
+model VideosStore{
+  id Int @id @default(autoincrement())
+  title String
+  url String
+  thumbnail String
+  store_info_game StoreInfoGame @relation(fields: [store_info_game_id], references: [id])
+  store_info_game_id Int
+
+}
+model GenresStore{
+  id Int @id @default(autoincrement())
+   genre String @unique
+ store_info_games GenreStoreInStoreInfoGame[]
+}
+
+model GenreStoreInStoreInfoGame{
+  genre_store GenresStore @relation(fields: [genre_store_id], references: [id])
+  genre_store_id Int
+  store_info_game StoreInfoGame @relation(fields: [store_info_game_id],references: [id])
+  store_info_game_id Int
+  @@id([genre_store_id, store_info_game_id])
+}
+model ScreenshotsStore{
+  id Int @id @default(autoincrement())
+  url String
+  thumbUrl String?
+  store_info_game StoreInfoGame @relation(fields: [store_info_game_id], references: [id])
+  store_info_game_id Int
+}
+
+model InfoGame {
+  id Int @id
+  name String
+  first_release_date String?
+  storyline String?
+  summary String? @db.VarChar(3500)
+  version_title String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  cover Cover?
+  alternative_names AlternativeNameOnInfoGame[]
+  artworks Artwork[]
+  game_engines GameEngineOnInfoGame[]
+  genres GenreOnInfoGame[]
+  involved_companies InvolvedCompany[]
+  keywords KeywordOnInfoGame[]
+  platforms PlatformOnInfoGame[]
+ 
+ 
+  videos Video[]
+  
+  game GameOnInfoGame[]
+  
+}
+
+model Cover {
+  id Int @id
+  height Int
+  url String
+  width Int
+  image_id String
+  info_game InfoGame @relation(fields: [info_game_id], references: [id])
+  info_game_id Int @unique
+}
+
+
+
+model AlternativeName {
+  id Int @id
+  comment String? 
+  name String
+  info_games AlternativeNameOnInfoGame[]
+}
+
+model AlternativeNameOnInfoGame{
+  alternative_name AlternativeName @relation(fields: [alternative_name_id], references: [id])
+  alternative_name_id Int
+  info_game InfoGame @relation(fields: [info_game_id], references: [id])
+  info_game_id Int
+  @@id([alternative_name_id ,info_game_id])
+}
+
+
+model Artwork {
+  id Int @id
+  height Int
+  url String
+  width Int
+  image_id String
+  info_game InfoGame @relation(fields: [info_game_id], references: [id])
+  info_game_id Int 
+}
+
+model GameEngine {
+  id Int @id
+  name String
+  info_games GameEngineOnInfoGame[]
+  
+}
+
+model GameEngineOnInfoGame{
+  game_engine GameEngine @relation(fields: [game_engine_id], references: [id])
+  game_engine_id Int
+  info_game InfoGame @relation(fields: [info_game_id], references: [id])
+  info_game_id Int
+  @@id([game_engine_id,info_game_id])
+}
+
+model Genre {
+  id Int @id
+  name String
+  info_games GenreOnInfoGame[]
+}
+
+model GenreOnInfoGame{
+  genre Genre @relation(fields: [genre_id],references: [id])
+  genre_id Int
+  info_game InfoGame @relation(fields: [info_game_id], references: [id])
+  info_game_id Int
+  @@id([genre_id,info_game_id])
+}
+
+model InvolvedCompany{
+  id Int @id
+  developer Boolean 
+  porting Boolean
+  publisher Boolean
+  supporting Boolean
+  company Company @relation(fields: [company_id],references: [id])
+  company_id Int
+  info_game InfoGame @relation(fields: [info_game_id], references: [id])
+  info_game_id Int
+
+}
+
+model Company{
+  id Int @id
+  country Int?
+  name String
+  start_date String?
+  involved_company InvolvedCompany[]
+  logo CompanyLogo?
+}
+
+model CompanyLogo{
+  id Int @id
+  height Int
+  url String
+  width Int
+  image_id String
+  company Company @relation(fields: [company_id], references: [id])
+  company_id Int @unique
+}
+
+model Keyword{
+  id Int @id
+  name String 
+  info_games KeywordOnInfoGame[]
+ 
+}
+
+model KeywordOnInfoGame{
+  keyword Keyword @relation(fields: [keyword_id], references: [id])
+  keyword_id Int
+  info_game InfoGame @relation(fields: [info_game_id],references: [id])
+  info_game_id Int
+  @@id([keyword_id, info_game_id])
+}
+
+model Platform{
+  id Int @id
+  abbreviation String?
+  alternative_name String?
+  name String
+  platform_logo PlatformLogo?
+  info_games PlatformOnInfoGame[]
+  release_date ReleaseDate[]
+  
+}
+
+model PlatformLogo{
+  id Int @id
+  height Int
+  url String
+  width Int
+  image_id String
+  platform Platform @relation(fields: [platform_id],references: [id])
+  platform_id Int @unique
+}
+
+model PlatformOnInfoGame{
+  platform Platform @relation(fields: [platform_id],references: [id])
+  platform_id Int
+  info_game InfoGame @relation(fields: [info_game_id],references: [id])
+  info_game_id Int
+  @@id([platform_id,info_game_id])
+}
+
+
+
+model ReleaseDate{
+  id Int @id
+  category Int
+  date String
+  region Int
+  platform Platform @relation(fields: [platform_id], references: [id])
+  platform_id Int
+}
+
+
+model Video {
+  id Int @id
+  name String
+  video_id String
+  info_game InfoGame @relation(fields: [info_game_id], references: [id])
+  info_game_id Int
+}
+
+
+

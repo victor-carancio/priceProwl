@@ -1,0 +1,364 @@
+import { CurrencyTypes, Game, StoreGame } from "@prisma/client";
+import prisma from "../../../db/client.db";
+import {
+  GameInfoAndPrices,
+  PriceFromUrlScraped,
+  StorePriceInfo,
+} from "../../../types";
+
+const gameCreateOrFind = async (game: GameInfoAndPrices) => {
+  let existingGame = await prisma.game.findFirst({
+    where: { gameName: game.gameName },
+  });
+
+  if (!existingGame) {
+    existingGame = await prisma.game.create({
+      data: { gameName: game.gameName },
+    });
+  }
+  return existingGame;
+};
+
+const storeCreateOrFind = async (store: StorePriceInfo, existingGame: Game) => {
+  let existingStore = await prisma.storeGame.findFirst({
+    where: {
+      store: store.store,
+      game_id: existingGame.id,
+      edition: store.edition,
+    },
+  });
+
+  if (!existingStore) {
+    existingStore = await prisma.storeGame.create({
+      data: {
+        store: store.store,
+        type: store.type,
+        url: store.url,
+        edition: store.edition,
+        gamepass: store.store === "Xbox" ? store.gamepass : null,
+        game: { connect: { id: existingGame.id } },
+        info_price: {
+          create: {
+            initial_price: store.infoPrice.initial_price || "-",
+            discount_percent: store.infoPrice.discount_percent || "-",
+            final_price: store.infoPrice.final_price || "-",
+            currency: store.infoPrice.currency as CurrencyTypes,
+          },
+        },
+      },
+    });
+  }
+  return existingStore;
+};
+
+const featureCreateOrConnect = async (
+  store: StorePriceInfo,
+  existingGame: Game,
+  existingStore: StoreGame,
+) => {
+  if ("feature" in store && store.feature) {
+    let existingFeature = await prisma.featureCategory.findUnique({
+      where: {
+        name: store.feature,
+      },
+    });
+
+    if (!existingFeature) {
+      existingFeature = await prisma.featureCategory.create({
+        data: {
+          name: store.feature,
+        },
+      });
+    }
+
+    await prisma.featuredGameCategory.create({
+      data: {
+        game: { connect: { id: existingGame.id } },
+        store: { connect: { id: existingStore.id } },
+        feature_category: {
+          connect: {
+            id: existingFeature.id,
+          },
+        },
+      },
+    });
+  }
+};
+
+const priceCreateOrUpdate = async (
+  store: StorePriceInfo,
+  existingStore: StoreGame,
+) => {
+  const existingPrice = await prisma.storePrice.findFirst({
+    where: {
+      storeGame: {
+        id: existingStore.id,
+        store: existingStore.store,
+        edition: existingStore.edition,
+      },
+      initial_price: store.infoPrice.initial_price,
+      discount_percent: store.infoPrice.discount_percent,
+      final_price: store.infoPrice.final_price,
+    },
+  });
+
+  if (!existingPrice) {
+    await prisma.storePrice.create({
+      data: {
+        initial_price: store.infoPrice.initial_price || "-",
+        discount_percent: store.infoPrice.discount_percent || "-",
+        final_price: store.infoPrice.final_price || "-",
+        storeGame: { connect: { id: existingStore.id } },
+      },
+    });
+  } else {
+    await prisma.storePrice.update({
+      where: {
+        id: existingPrice.id,
+      },
+      data: {
+        initial_price: store.infoPrice.initial_price,
+        final_price: store.infoPrice.final_price,
+        discount_percent: store.infoPrice.discount_percent,
+        storeGame: {
+          connect: { id: existingStore.id },
+          update: {
+            gamepass: existingStore.store === "Xbox" ? store.gamepass : null,
+          },
+        },
+      },
+    });
+  }
+};
+
+const gameInfoCreate = async (
+  store: StorePriceInfo,
+  existingStore: StoreGame,
+) => {
+  const { infoGame } = store;
+
+  const newInfoGame = await prisma.infoGame.create({
+    data: {
+      storeIdGame: infoGame.storeId,
+      imgStore: infoGame.imgStore,
+      about: infoGame.about,
+      description: infoGame.description,
+      developer: infoGame.developer,
+      publisher: infoGame.publisher,
+      release_date: infoGame.release_date,
+      supportedLanguages: infoGame.supported_languages,
+      website: infoGame.website,
+      store_game: {
+        connect: {
+          id: existingStore.id,
+        },
+      },
+    },
+  });
+
+  for (const genre of infoGame.genres) {
+    let existingGenre = await prisma.genres.findUnique({
+      where: {
+        genre,
+      },
+    });
+
+    if (!existingGenre) {
+      existingGenre = await prisma.genres.create({
+        data: {
+          genre,
+        },
+      });
+    }
+
+    await prisma.genreOnInfoGame.create({
+      data: {
+        genre: { connect: { id: existingGenre.id } },
+        info_game: { connect: { id: newInfoGame.id } },
+      },
+    });
+  }
+  if (infoGame.categories.length >= 1) {
+    for (const category of infoGame.categories) {
+      let existingCategory = await prisma.categories.findUnique({
+        where: {
+          category,
+        },
+      });
+
+      if (!existingCategory) {
+        existingCategory = await prisma.categories.create({
+          data: {
+            category,
+          },
+        });
+      }
+
+      await prisma.categoriesOnInfoGame.create({
+        data: {
+          category: {
+            connect: {
+              id: existingCategory.id,
+            },
+          },
+          info_game: {
+            connect: {
+              id: newInfoGame.id,
+            },
+          },
+        },
+      });
+    }
+  }
+
+  for (const screenshot of infoGame.screenshots) {
+    await prisma.screenshots.create({
+      data: {
+        url: screenshot.url,
+        thumbUrl: screenshot.thumbUrl ? screenshot.thumbUrl : "-",
+        info_game: {
+          connect: {
+            id: newInfoGame.id,
+          },
+        },
+      },
+    });
+  }
+
+  if ("videos" in infoGame && Array.isArray(infoGame.videos)) {
+    for (const video of infoGame.videos) {
+      await prisma.videos.create({
+        data: {
+          title: video.title,
+          url: video.url,
+          thumbnail: video.thumbnail,
+          info_game: {
+            connect: {
+              id: newInfoGame.id,
+            },
+          },
+        },
+      });
+    }
+  }
+
+  if ("pc_requirements" in infoGame) {
+    await prisma.pcRequirements.create({
+      data: {
+        recommended: infoGame.pc_requirements!.recommended,
+        minimum: infoGame.pc_requirements!.minimum,
+        info_game: {
+          connect: {
+            id: newInfoGame.id,
+          },
+        },
+      },
+    });
+  }
+};
+
+export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
+  for (const game of gamesData) {
+    await prisma.$transaction(async () => {
+      const existingGame = await gameCreateOrFind(game);
+
+      for (const store of game.stores) {
+        const existingStore = await storeCreateOrFind(store, existingGame);
+
+        await featureCreateOrConnect(store, existingGame, existingStore);
+
+        await priceCreateOrUpdate(store, existingStore);
+
+        const existingInfo = await prisma.infoGame.findFirst({
+          where: {
+            store_game: {
+              id: existingStore.id,
+            },
+          },
+        });
+
+        if (existingInfo) {
+          continue;
+        }
+
+        await gameInfoCreate(store, existingStore);
+      }
+    });
+  }
+};
+
+const deleteCurrentFeatured = async () => {
+  await prisma.featuredGameCategory.deleteMany();
+};
+
+export const featureCreate = async (gamesData: {
+  special: GameInfoAndPrices[];
+  newRelease: GameInfoAndPrices[];
+  topSeller: GameInfoAndPrices[];
+  freeEpic: GameInfoAndPrices[];
+  // topSellerEpic: GameInfoAndPrices[];
+  // wishlistedEpic: GameInfoAndPrices[];
+}) => {
+  await prisma.$transaction(async () => {
+    await deleteCurrentFeatured();
+  });
+
+  await storeGameData(gamesData.topSeller);
+  await storeGameData(gamesData.newRelease);
+  await storeGameData(gamesData.special);
+  await storeGameData(gamesData.freeEpic);
+  // await storeGameData(gamesData.topSellerEpic);
+};
+
+export const updateStoreGamePrice = async (
+  gameByStore: Pick<StoreGame, "id" | "store">,
+  currPrice: PriceFromUrlScraped,
+) => {
+  const storePrice = await prisma.storePrice.findFirst({
+    where: {
+      storeGame: {
+        id: gameByStore.id,
+
+        // edition: gameByStore.edition,
+        // url: gameByStore.url,
+      },
+      initial_price: currPrice.initial_price,
+      final_price: currPrice.final_price,
+      discount_percent: currPrice.discount_percent,
+      currency: "CLP",
+    },
+  });
+
+  if (!storePrice) {
+    await prisma.storePrice.create({
+      data: {
+        initial_price: currPrice.initial_price,
+        final_price: currPrice.final_price,
+        discount_percent: currPrice.discount_percent,
+        offer_end_date: currPrice.offerEndDate,
+        currency: "CLP",
+        storeGame: { connect: { id: gameByStore.id } },
+      },
+    });
+    // console.log("created");
+  } else {
+    await prisma.storePrice.update({
+      where: {
+        id: storePrice?.id,
+      },
+      data: {
+        initial_price: currPrice.initial_price,
+        final_price: currPrice.final_price,
+        discount_percent: currPrice.discount_percent,
+        offer_end_date: currPrice.offerEndDate,
+        storeGame: {
+          connect: { id: gameByStore.id },
+          update: {
+            gamepass: gameByStore.store === "Xbox" ? currPrice.gamepass : null,
+          },
+        },
+      },
+    });
+    // console.log("updated");
+  }
+};

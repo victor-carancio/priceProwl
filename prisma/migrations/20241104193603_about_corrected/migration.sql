@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "InfoGame" ALTER COLUMN "about" DROP NOT NULL,
+ALTER COLUMN "about" SET DEFAULT '-';

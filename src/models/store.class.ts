@@ -1,4 +1,5 @@
 import { CurrencyCodes, PriceFromUrlScraped, StoreInfo } from "../types";
+import * as cheerio from "cheerio";
 
 export abstract class Store {
   readonly name: string;
@@ -17,4 +18,10 @@ export abstract class Store {
   abstract scrapeGameFromUrl(
     storeId: string,
   ): Promise<PriceFromUrlScraped | null>;
+
+  extractTextFromHtml(element: string) {
+    const $ = cheerio.load(element);
+    const extractedText = $.text();
+    return extractedText;
+  }
 }

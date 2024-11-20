@@ -2,8 +2,8 @@ import express from "express";
 import "express-async-errors";
 import bodyParser from "body-parser";
 import gamesRoutes from "./routes/game.route";
-import authRoutes from "./routes/auth.route";
-import wishListRoutes from "./routes/wishList.route";
+// import authRoutes from "./routes/auth.route";
+// import wishListRoutes from "./routes/wishList.route";
 import dotenv from "dotenv";
 import errorHandlerMiddleware from "./middlewares/errorHandler";
 import notFound from "./middlewares/notFound";
@@ -45,13 +45,9 @@ app.get("/", (_req, res) => {
   res.redirect("documentation");
 });
 
-// app.get("/api", (_req, res) => {
-//   res.redirect("/api/v1/api-docs");
-// });
-
 app.use("/api/v1/game", gamesRoutes);
-app.use("/api/v1/auth", authRoutes);
-app.use("/api/v1/wishlist", wishListRoutes);
+// app.use("/api/v1/auth", authRoutes);
+// app.use("/api/v1/wishlist", wishListRoutes);
 
 app.use(errorHandlerMiddleware);
 app.use(notFound);

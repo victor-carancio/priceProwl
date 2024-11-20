@@ -1,4 +1,7 @@
-import { EpicStore, SteamStore, XboxStore } from "../models/index.model";
+// import { EpicStore, SteamStore, XboxStore } from "../models/index.model";
+import { EpicStore } from "../models/official-stores/epic.class";
+import { SteamStore } from "../models/official-stores/steam.class";
+import { XboxStore } from "../models/official-stores/xbox.class";
 import { Store } from "../models/store.class";
 import {
   GameStoresPrices,

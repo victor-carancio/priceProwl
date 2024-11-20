@@ -28,18 +28,65 @@ export enum CurrencyCodes {
   US = "US",
 }
 
-export interface GamePriceInfo {
-  storeId: string;
-  gameName: string;
-  url: string;
-  imgStore: string;
-  discount_percent: string;
-  initial_price: string;
-  final_price: string;
-  currency: string;
-  gamepass?: boolean;
+export enum SortFilters {
+  PRICE = "price",
+  ALPHABETICAL = "alphabetical",
+  OFFER = "offer",
+  GENRE = "genre",
 }
 
+export enum OrderFilters {
+  ASC = "asc",
+  DESC = "desc",
+}
+
+export interface GamePriceInfo {
+  gameName: string;
+  url: string;
+  gamepass?: boolean;
+  infoPrice: {
+    discount_percent: string;
+    initial_price: string;
+    final_price: string;
+    currency: string;
+  };
+  infoGame: {
+    storeId: string;
+    imgStore: string;
+    storeName: string;
+    about: string;
+    description: string;
+    short_description?: string;
+    release_date: string;
+    developer: string;
+    publisher: string;
+    categories: string[];
+    screenshots: {
+      url: string;
+      thumbUrl?: string;
+    }[];
+    videos?: {
+      title: string;
+      thumbnail: string;
+      url: string;
+    }[];
+    genres: string[];
+    pc_requirements?: {
+      minimum: string;
+      recommended: string;
+    };
+    website?: string;
+    supported_languages?: string;
+
+    //añadir cooming soon y ver que todas las store retornen datos iguales o similares
+  };
+}
+
+export interface SingleGame {
+  store: string;
+  type: string;
+  storeInfo: GamePriceInfo | null;
+}
 export interface StoreInfo {
   store: string;
   type: string;
@@ -50,30 +97,80 @@ export interface IGDBQueries {
   [key: string]: string;
 }
 
+export interface FeaturedGameDetail {
+  gameName: string;
+  url: string;
+  type: string;
+  store: string;
+  feature: string;
+  infoPrice: {
+    discount_percent: string;
+    initial_price: string;
+    final_price: string;
+    currency: string;
+  };
+  infoGame: StoreInfoGame;
+}
+
 export interface StorePriceInfo {
   store: string;
   type: string;
-  storeIdGame: string;
   url: string;
-  imgStore: string;
   edition: string;
   gamepass?: boolean;
-  info: {
+  feature?: string;
+  infoPrice: {
     discount_percent?: string;
     initial_price?: string;
     final_price?: string;
     currency: string;
   };
+  infoGame: StoreInfoGame;
 }
 export interface GameStoresPrices {
   gameName: string;
   stores: StorePriceInfo[];
 }
+export interface StoreInfoGame {
+  storeId: string;
+  imgStore: string;
+
+  about: string;
+  description: string;
+  release_date: string;
+  developer: string;
+  publisher: string;
+  screenshots: {
+    url: string;
+    thumbUrl?: string;
+  }[];
+  videos?: {
+    title: string;
+    url: string;
+    thumbnail: string;
+  }[];
+  genres: string[];
+  categories: string[];
+  pc_requirements?: {
+    minimum: string;
+    recommended: string;
+  };
+  website?: string;
+  supported_languages?: string;
+}
+
 export interface GameInfoAndPrices {
   gameName: string;
   stores: StorePriceInfo[];
-  infoGame: InfoGame[];
 }
+// export interface GameInfoAndPrices {
+//   gameName: string;
+//   stores: StorePriceInfo[];
+//   infoGame: {
+//     origin: "IGDB" | "STORE";
+//     data: InfoGame[] | StoreInfoGame[];
+//   };
+// }
 
 export interface InfoGame {
   id: number;
