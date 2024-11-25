@@ -80,9 +80,6 @@ export const scrapeAllStores = async (term: string) => {
 };
 
 export const scrapeSpecialSales = async () => {
-  // const steam = new SteamStore();
-  // const epic = new EpicStore();
-  // const xbox = new XboxStore();
   const stores = {
     steam: new SteamStore(),
     epic: new EpicStore(),
@@ -90,7 +87,6 @@ export const scrapeSpecialSales = async () => {
   };
 
   const steamFeaturedGames = await stores.steam.scrapeFeaturedSales("CL");
-  // const featuredGames = await stores.epic.scrapeFeaturedSales("CL");
 
   const specialGameScraped = await featureGameScrape(
     steamFeaturedGames.specials,
@@ -105,18 +101,24 @@ export const scrapeSpecialSales = async () => {
     stores,
   );
 
-  // await delay(1000 * 300);
-
-  const epicFeaturedGames = await stores.epic.freeEpicGame("CL");
-
-  const freeEpic = await featureGameScrape(epicFeaturedGames, stores);
-
   return {
     special: specialGameScraped,
     topSeller: topSellersGameScraped,
     newRelease: newReleasesGameScraped,
-    freeEpic,
   };
+};
+
+export const scrapeFreeEpicSales = async () => {
+  const stores = {
+    steam: new SteamStore(),
+    epic: new EpicStore(),
+    xbox: new XboxStore(),
+  };
+
+  const epicFeaturedGames = await stores.epic.freeEpicGame("CL");
+
+  const freeEpic = await featureGameScrape(epicFeaturedGames, stores);
+  return freeEpic;
 };
 
 export const scrapeAllGamesFromUrl = async () => {
@@ -146,17 +148,34 @@ export const scrapeAllGamesFromUrl = async () => {
 export const storesPriceScrape = async (gamesByStore: StoreIds[]) => {
   for (const gameByStore of gamesByStore) {
     const store = stores[gameByStore.store as StoreTypes];
-    // if (timer >= 25) {
-    //   console.log("pausa");
-    //   await delay(1000 * 46);
-    //   console.log("continua");
-    //   timer = 0;
-    // }
+
     const currPrice = await store.scrapeGameFromUrl(
       gameByStore.info_game.storeIdGame,
     );
-    console.log(gameByStore.game.gameName);
+
     if (currPrice) await updateStoreGamePrice(gameByStore, currPrice);
+  }
+};
+
+export const searchingStoresPriceScrape = async (gamesByStore: StoreIds[]) => {
+  const epicStores = gamesByStore.filter((game) => game.store === "Epic");
+  const xboxStores = gamesByStore.filter((game) => game.store === "Steam");
+  const steamStores = gamesByStore.filter((game) => game.store === "Xbox");
+
+  const steamIds = steamStores.map((store) => store.info_game.storeIdGame);
+  const storesWithoutSteam = [...epicStores, ...xboxStores];
+
+  await storesPriceScrape(storesWithoutSteam);
+
+  const steam = new SteamStore();
+  const updatedPrices = await steam.idListScrapeGame(steamIds);
+
+  for (const steamStore of steamStores) {
+    const currGame = updatedPrices.find(
+      (price) => steamStore.info_game.storeIdGame === price.storeId,
+    );
+
+    if (currGame) await updateStoreGamePrice(steamStore, currGame);
   }
 };
 
@@ -171,8 +190,6 @@ export const featureGameScrape = async (
   const featureGames: GameStoresPrices[] = [];
 
   for (const featureGame of features) {
-    //buscar info del game en epic y xbox
-
     const { gameName, infoGame, infoPrice, url, type, store, feature } =
       featureGame;
 

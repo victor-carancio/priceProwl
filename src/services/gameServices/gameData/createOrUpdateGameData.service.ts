@@ -96,9 +96,10 @@ const priceCreateOrUpdate = async (
         store: existingStore.store,
         edition: existingStore.edition,
       },
-      initial_price: store.infoPrice.initial_price,
-      discount_percent: store.infoPrice.discount_percent,
-      final_price: store.infoPrice.final_price,
+      currency: store.infoPrice.currency as CurrencyTypes,
+      // initial_price: store.infoPrice.initial_price,
+      // discount_percent: store.infoPrice.discount_percent,
+      // final_price: store.infoPrice.final_price,
     },
   });
 
@@ -108,6 +109,7 @@ const priceCreateOrUpdate = async (
         initial_price: store.infoPrice.initial_price || "-",
         discount_percent: store.infoPrice.discount_percent || "-",
         final_price: store.infoPrice.final_price || "-",
+        currency: store.infoPrice.currency as CurrencyTypes,
         storeGame: { connect: { id: existingStore.id } },
       },
     });
@@ -121,7 +123,7 @@ const priceCreateOrUpdate = async (
         final_price: store.infoPrice.final_price,
         discount_percent: store.infoPrice.discount_percent,
         storeGame: {
-          connect: { id: existingStore.id },
+          // connect: { id: existingStore.id },
           update: {
             gamepass: existingStore.store === "Xbox" ? store.gamepass : null,
           },
@@ -288,16 +290,33 @@ export const storeGameData = async (gamesData: GameInfoAndPrices[]) => {
 };
 
 const deleteCurrentFeatured = async () => {
-  await prisma.featuredGameCategory.deleteMany();
+  await prisma.featuredGameCategory.deleteMany({
+    where: {
+      feature_category: {
+        name: {
+          not: "Epic Free Game",
+        },
+      },
+    },
+  });
+};
+
+const deleteCurrentFreeEpic = async () => {
+  await prisma.featuredGameCategory.deleteMany({
+    where: {
+      feature_category: {
+        name: {
+          equals: "Epic Free Game",
+        },
+      },
+    },
+  });
 };
 
 export const featureCreate = async (gamesData: {
   special: GameInfoAndPrices[];
   newRelease: GameInfoAndPrices[];
   topSeller: GameInfoAndPrices[];
-  freeEpic: GameInfoAndPrices[];
-  // topSellerEpic: GameInfoAndPrices[];
-  // wishlistedEpic: GameInfoAndPrices[];
 }) => {
   await prisma.$transaction(async () => {
     await deleteCurrentFeatured();
@@ -306,8 +325,13 @@ export const featureCreate = async (gamesData: {
   await storeGameData(gamesData.topSeller);
   await storeGameData(gamesData.newRelease);
   await storeGameData(gamesData.special);
-  await storeGameData(gamesData.freeEpic);
-  // await storeGameData(gamesData.topSellerEpic);
+};
+
+export const freeEpicCreate = async (freeEpic: GameInfoAndPrices[]) => {
+  await prisma.$transaction(async () => {
+    await deleteCurrentFreeEpic();
+  });
+  await storeGameData(freeEpic);
 };
 
 export const updateStoreGamePrice = async (
@@ -318,47 +342,58 @@ export const updateStoreGamePrice = async (
     where: {
       storeGame: {
         id: gameByStore.id,
-
         // edition: gameByStore.edition,
         // url: gameByStore.url,
       },
-      initial_price: currPrice.initial_price,
-      final_price: currPrice.final_price,
-      discount_percent: currPrice.discount_percent,
       currency: "CLP",
     },
   });
 
   if (!storePrice) {
-    await prisma.storePrice.create({
-      data: {
-        initial_price: currPrice.initial_price,
-        final_price: currPrice.final_price,
-        discount_percent: currPrice.discount_percent,
-        offer_end_date: currPrice.offerEndDate,
-        currency: "CLP",
-        storeGame: { connect: { id: gameByStore.id } },
-      },
+    await prisma.$transaction(async () => {
+      await prisma.storePrice.create({
+        data: {
+          initial_price: currPrice.initial_price,
+          final_price: currPrice.final_price,
+          discount_percent: currPrice.discount_percent,
+          offer_end_date: currPrice.offerEndDate,
+          currency: "CLP",
+          storeGame: { connect: { id: gameByStore.id } },
+        },
+      });
     });
+
     // console.log("created");
   } else {
-    await prisma.storePrice.update({
-      where: {
-        id: storePrice?.id,
-      },
-      data: {
-        initial_price: currPrice.initial_price,
-        final_price: currPrice.final_price,
-        discount_percent: currPrice.discount_percent,
-        offer_end_date: currPrice.offerEndDate,
-        storeGame: {
-          connect: { id: gameByStore.id },
-          update: {
-            gamepass: gameByStore.store === "Xbox" ? currPrice.gamepass : null,
+    const hasChanged =
+      storePrice.initial_price !== currPrice.initial_price ||
+      storePrice.final_price !== currPrice.final_price ||
+      storePrice.discount_percent !== currPrice.discount_percent ||
+      storePrice.offer_end_date !== currPrice.offerEndDate;
+
+    if (hasChanged) {
+      await prisma.$transaction(async () => {
+        await prisma.storePrice.update({
+          where: {
+            id: storePrice?.id,
           },
-        },
-      },
-    });
-    // console.log("updated");
+          data: {
+            initial_price: currPrice.initial_price,
+            final_price: currPrice.final_price,
+            discount_percent: currPrice.discount_percent,
+            offer_end_date: currPrice.offerEndDate,
+            storeGame: {
+              // connect: { id: gameByStore.id },
+              update: {
+                gamepass:
+                  gameByStore.store === "Xbox" ? currPrice.gamepass : null,
+              },
+            },
+          },
+        });
+      });
+
+      console.log("updated");
+    }
   }
 };

@@ -4,6 +4,7 @@ import { SingleGame, StoreInfo } from "../../types";
 import {
   // NewreleasesSteamFeatured,
   NewreleasesSteamFeatured,
+  SpecialsSteamFeatured,
   SteamAppsSearch,
   SteamDetails,
   // SteamFeaturedCategories,
@@ -68,6 +69,33 @@ export class SteamStore extends Store {
       };
     }
     return null;
+  }
+  async idListScrapeGame(storeIds: string[]) {
+    const idsToString = storeIds.join(",");
+
+    const res = await fetch(
+      `https://store.steampowered.com/api/appdetails?appids=${idsToString}&filters=price_overview&cc=CL`,
+    );
+    const data = await res.json();
+    let listOfUpdatedPrice = [];
+    for (const storeId of storeIds) {
+      if (storeId in data && "price_overview" in data[storeId].data) {
+        const { currency, discount_percent, initial, final } =
+          data[storeId].data.price_overview;
+
+        const price = {
+          storeId,
+          offerEndDate: null,
+          currency: currency,
+          discount_percent: discount_percent.toFixed(),
+          initial_price: formatToDecimals(initial, 2),
+          final_price: formatToDecimals(final, 2),
+        };
+        listOfUpdatedPrice.push(price);
+      }
+    }
+
+    return listOfUpdatedPrice;
   }
 
   async findDetail(items: number[], currency: string) {
@@ -172,7 +200,9 @@ export class SteamStore extends Store {
           developer: developers ? developers.join(" ,") : "-",
           publisher: publishers ? publishers.join(" ,") : "-",
 
-          categories: categories.map((category) => category.description),
+          categories: categories
+            ? categories.map((category) => category.description)
+            : [],
           screenshots: screenshots.map((screenshot) => {
             return {
               url: screenshot.path_full,
@@ -193,12 +223,6 @@ export class SteamStore extends Store {
       };
       gamesFounded.push(game);
     }
-
-    // const filterBannedGames = gamesFounded.filter(
-    //   (game) =>
-    //     game.game_info.ratings?.steam_germany?.rating !== "BANNED" ||
-    //     game.game_info.ratings?.steam_germany?.banned !== "1",
-    // );
 
     return gamesFounded;
   }
@@ -247,10 +271,10 @@ export class SteamStore extends Store {
   }
   async scrapeFeaturedSales(currency: string) {
     //todo: usar como cron job, para evitar problemas de limitee de api request
-    // const specialRes = await fetch(
-    //   `https://store.steampowered.com/api/getappsincategory/?category=cat_specials&cc=${currency}&l=english`,
-    // );
-    // const specialData: SpecialsSteamFeatured = await specialRes.json();
+    const specialRes = await fetch(
+      `https://store.steampowered.com/api/getappsincategory/?category=cat_specials&cc=${currency}&l=english`,
+    );
+    const specialData: SpecialsSteamFeatured = await specialRes.json();
 
     const newreleasesRes = await fetch(
       `https://store.steampowered.com/api/getappsincategory/?category=cat_newreleases&cc=${currency}&l=spanish`,
@@ -263,19 +287,19 @@ export class SteamStore extends Store {
     );
     const topsellerData: TopsellerSteamFeatured = await topsellerRes.json();
 
-    const viewallIds = [
+    const topSellerIds = [
       ...this.getFeaturedIds(topsellerData.tabs.viewall.items),
     ];
 
     const specialsIds = [
-      ...this.getFeaturedIds(topsellerData.tabs.specials.items),
+      ...this.getFeaturedIds(specialData.tabs.viewall.items),
     ];
 
     const newreleasesIds = [
       ...this.getFeaturedIds(newreleasesData.tabs.topsellers.items),
     ];
 
-    const topSellers = await this.findDetail(viewallIds, currency);
+    const topSellers = await this.findDetail(topSellerIds, currency);
     const specials = await this.findDetail(specialsIds, currency);
     const releases = await this.findDetail(newreleasesIds, currency);
 

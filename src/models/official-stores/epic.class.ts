@@ -2,7 +2,7 @@ import { calculateDiscountPercent, formatToDecimals } from "./../utils.model";
 import { parseUrl, replaceSteam } from "../../utils/game.utils";
 import { Store } from "../store.class";
 import { SingleGame, StoreInfo } from "../../types";
-import { CustomApiError } from "../../responses/customApiError";
+// import { CustomApiError } from "../../responses/customApiError";
 import {
   EpicDetail,
   EpicOffer,
@@ -34,9 +34,9 @@ export class EpicStore extends Store {
     currency: string,
   ): Promise<StoreInfo> {
     const res = await fetch(this.searchUrl(term, currency));
-    if (!res.ok) {
-      throw new CustomApiError("Something went wrong.");
-    }
+    // if (!res.ok) {
+    //   throw new CustomApiError("Something went wrong.");
+    // }
     const data = await res.json();
 
     if (data.data.Catalog.searchStore.elements.length <= 0) {
@@ -79,17 +79,17 @@ export class EpicStore extends Store {
     currency: string,
   ): Promise<SingleGame> {
     const res = await fetch(this.searchUrl(term, currency));
-    if (!res.ok) {
-      throw new CustomApiError("Something went wrong.");
-    }
+    // if (!res.ok) {
+    //   return { store: this.name, type: this.type, storeInfo: null };
+    // }
+    // console.log(res);
     const data = await res.json();
-    // console.log(term);
     // console.log(data);
+
     if (data.data.Catalog.searchStore.elements.length <= 0) {
       return { store: this.name, type: this.type, storeInfo: null };
     }
     const currData: EpicSearch[] = [...data.data.Catalog.searchStore.elements];
-    // return currData;
 
     const searchTermGames = currData.find(
       (game) => game.title.trim().toLowerCase() === term.trim().toLowerCase(),
@@ -103,8 +103,6 @@ export class EpicStore extends Store {
       { namespace: searchTermGames.namespace, id: searchTermGames.id },
     ]);
     return { store: this.name, type: this.type, storeInfo: gameDetail[0] };
-
-    // console.log(searchTermGames);
   }
 
   async scrapeGameFromUrl(storeId: string) {
@@ -331,7 +329,7 @@ export class EpicStore extends Store {
         ...game,
         type: this.type,
         store: this.name,
-        feature: "Epic Free Games",
+        feature: "Epic Free Game",
       };
     });
   }

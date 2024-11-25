@@ -1,22 +1,22 @@
 import { Request, Response } from "express";
 import {
+  EpicFreeGamesCheck,
   featuredGamesCheck,
-  // featuredGamesCheck,
-  // featuredGamesCheck,
-  // featuredGamesCheck,
   findAllGamesAndFilters,
   findGamesByNameFromDb,
   findGamesPricesByName,
-  // offerNotification,
 } from "../services/game.service";
 
 import { parseInteger, parseString } from "../utils/validation";
 import { BadRequestError } from "../responses/customApiError";
 import {
-  findCurrOfferGames,
   findGameById,
   getCurrentGenres,
 } from "../services/gameServices/index.service";
+import {
+  getCurrentCategories,
+  getFeaturedGamesByStore,
+} from "../services/gameServices/gameData/findDataGame.service";
 
 export const getGamesPrices = async (req: Request, res: Response) => {
   const title = parseString(req.query.title, "Game title");
@@ -31,12 +31,12 @@ export const getGamesByNameFromDB = async (req: Request, res: Response) => {
   return res.status(200).json({ nbHts: data.length, data });
 };
 
-export const getCurrentOffers = async (_req: Request, res: Response) => {
-  const data = await findCurrOfferGames();
-  return res.status(200).json({ nbHts: data.length, data });
-};
+// export const getCurrentOffers = async (_req: Request, res: Response) => {
+//   const data = await findCurrOfferGames();
+//   return res.status(200).json({ nbHts: data.length, data });
+// };
 
-export const getAllGames = async (req: Request, res: Response) => {
+export const getGamesByFilters = async (req: Request, res: Response) => {
   const { currentPage, games, totalGames, totalPages } =
     await findAllGamesAndFilters(req.query);
 
@@ -61,6 +61,18 @@ export const getGamesGenresInDatabase = async (
 ) => {
   const genres = await getCurrentGenres();
   return res.status(200).json({ nbHts: genres.length, genres });
+};
+export const getGamesCategoriesInDatabase = async (
+  _req: Request,
+  res: Response,
+) => {
+  const categories = await getCurrentCategories();
+  return res.status(200).json({ nbHts: categories.length, categories });
+};
+
+export const getCurrentFeaturedGames = async (_req: Request, res: Response) => {
+  const featuredGames = await getFeaturedGamesByStore();
+  return res.status(200).json(featuredGames);
 };
 
 /* ------------------------------ Web sockets --------------------------*/
@@ -87,26 +99,10 @@ export const getGamesGenresInDatabase = async (
 /* ------------------------------ test de funciones --------------------------*/
 
 export const testUpdateGamePrice = async (_req: Request, res: Response) => {
-  // const title = parseString(_req.query.title, "Game title");
+  await featuredGamesCheck();
+  await EpicFreeGamesCheck();
+  const jio = await getFeaturedGamesByStore();
 
-  // await offerNotification();
-
-  // const steam = new SteamStore();
-  // const epic = new EpicStore();
-  // const xbox = new XboxStore();
-  // const epicData = await xbox.singleNameScrapeFromName(
-  //   "Resident Evil 7 Biohazard",
-  //   "CL",
-  // );
-  // const epicData = await epic.scrapeGamesFromSearch("alan wake", "CL");
-  // const xboxData = await xbox.scrapeGamesFromSearch("resident evil", "CL");
-
-  // const data = await scrapeAllStores("darkest dungeon");
-  // await scrapeAllGamesFromUrl();
-  // console.log(steamData);
-  const jio = await featuredGamesCheck();
-  // const epic = new EpicStore();
-  // const jio = await epic.freeEpicGame("CL");
   console.log("finish");
   return res.status(200).json({
     jio,

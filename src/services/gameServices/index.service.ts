@@ -13,7 +13,7 @@ import {
 import {
   findGameByName,
   findGameById,
-  findAllGames,
+  findGamesByFilters,
   findCurrOfferGames,
   findAllWishList,
   wishListToNotified,
@@ -43,7 +43,7 @@ export {
   updateStoreGamePrice,
   findGameByName,
   findGameById,
-  findAllGames,
+  findGamesByFilters,
   findCurrOfferGames,
   findAllWishList,
   wishListToNotified,

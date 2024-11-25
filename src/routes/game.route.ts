@@ -4,12 +4,16 @@ import {
   getGamesByNameFromDB,
   // testUpdateGamePrice,
   getGameById,
-  getCurrentOffers,
-  getAllGames,
+  // getCurrentOffers,
+  getGamesByFilters,
   getGamesGenresInDatabase,
   testUpdateGamePrice,
+  getGamesCategoriesInDatabase,
+  getCurrentFeaturedGames,
   // testUpdateGamePrice,
 } from "../controllers/game.controller";
+import { validateDataQuery } from "../middlewares/validation";
+import { filtersSchema } from "../schemas/game.schema";
 
 const router = Router();
 
@@ -133,7 +137,7 @@ router.get("/search", getGamesByNameFromDB);
  *           description: "Internal server error."
  *  */
 
-router.get("/all", getAllGames);
+router.get("/filters", validateDataQuery(filtersSchema), getGamesByFilters);
 
 /**
  * Get track
@@ -158,10 +162,11 @@ router.get("/all", getAllGames);
  *       '500':
  *           description: "Internal server error."
  *  */
-router.get("/offers", getCurrentOffers);
+// router.get("/offers", getCurrentOffers);
 
 //todo: swagger para genre
 router.get("/genres", getGamesGenresInDatabase);
+router.get("/categories", getGamesCategoriesInDatabase);
 
 /**
  * Get track
@@ -197,6 +202,7 @@ router.get("/genres", getGamesGenresInDatabase);
  *  */
 
 router.get("/test", testUpdateGamePrice);
+router.get("/feature", getCurrentFeaturedGames);
 router.get("/:id", getGameById);
 
 export default router;

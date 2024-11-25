@@ -27,46 +27,6 @@ export const shortInfo = {
       category: true,
     },
   },
-
-  // id: true,
-  // name: true,
-  // first_release_date: true,
-  // storyline: true,
-  // summary: true,
-  // version_title: true,
-  // cover: true,
-  // genres: {
-  //   select: {
-  //     genre: {
-  //       select: {
-  //         name: true,
-  //         id: true,
-  //       },
-  //     },
-  //   },
-  // },
-  // keywords: {
-  //   select: {
-  //     keyword: {
-  //       select: {
-  //         id: true,
-  //         name: true,
-  //       },
-  //     },
-  //   },
-  // },
-  // platforms: {
-  //   select: {
-  //     platform: {
-  //       select: {
-  //         id: true,
-  //         name: true,
-  //         abbreviation: true,
-  //         alternative_name: true,
-  //       },
-  //     },
-  //   },
-  // },
 };
 
 export const completeInfo = {
@@ -93,87 +53,6 @@ export const completeInfo = {
   supportedLanguages: true,
   videos: true,
   website: true,
-  // id: true,
-  // name: true,
-  // first_release_date: true,
-  // storyline: true,
-  // summary: true,
-  // version_title: true,
-  // cover: true,
-  // artworks: true,
-  // alternative_names: {
-  //   select: {
-  //     alternative_name: {
-  //       select: {
-  //         id: true,
-  //         name: true,
-  //       },
-  //     },
-  //   },
-  // },
-
-  // game_engines: {
-  //   select: {
-  //     game_engine: {
-  //       select: {
-  //         id: true,
-  //         name: true,
-  //       },
-  //     },
-  //   },
-  // },
-  // genres: {
-  //   select: {
-  //     genre: {
-  //       select: {
-  //         name: true,
-  //         id: true,
-  //       },
-  //     },
-  //   },
-  // },
-  // involved_companies: {
-  //   select: {
-  //     id: true,
-  //     developer: true,
-  //     porting: true,
-  //     publisher: true,
-  //     supporting: true,
-  //     company: {
-  //       select: {
-  //         name: true,
-  //         logo: true,
-  //         country: true,
-  //         start_date: true,
-  //         id: true,
-  //       },
-  //     },
-  //   },
-  // },
-  // keywords: {
-  //   select: {
-  //     keyword: {
-  //       select: {
-  //         id: true,
-  //         name: true,
-  //       },
-  //     },
-  //   },
-  // },
-  // platforms: {
-  //   select: {
-  //     platform: {
-  //       select: {
-  //         id: true,
-  //         name: true,
-  //         abbreviation: true,
-  //         alternative_name: true,
-  //       },
-  //     },
-  //   },
-  // },
-
-  // videos: true,
 };
 
 export const shortInfoInclude = {
@@ -190,25 +69,32 @@ export const shortInfoInclude = {
       },
     },
   },
+};
 
-  // stores: {
-  //   include: {
-  //     info: {
-  //       orderBy: {
-  //         updatedAt: "desc",
-  //       } as const,
-  //       take: 1,
-  //     },
-
-  //   },
-  // },
-  // infoGame: {
-  //   include: {
-  //     info_game: {
-  //       select: shortInfo,
-  //     },
-  //   },
-  // },
+export const shortInfoFeatureInclude = {
+  stores: {
+    include: {
+      info_price: {
+        orderBy: {
+          updatedAt: "desc",
+        } as const,
+        take: 1,
+      },
+      info_game: {
+        select: shortInfo,
+      },
+      featuredIn: {
+        select: {
+          feature_category_id: true,
+          feature_category: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  },
 };
 
 export const completInfoInclude = {
@@ -264,7 +150,6 @@ export const formatShortInfo = (gamesFounded: ShortInfoFormat[]) => {
 
 export const sortByPrice = (gamesFounded: Jio[], order?: string) => {
   const sort = order ? order : "asc";
-  console.log(sort);
 
   const desc = sort === "asc" ? 1 : -1;
   return [...gamesFounded].sort((a, b) => {

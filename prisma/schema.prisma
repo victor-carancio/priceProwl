@@ -104,6 +104,8 @@ model StorePrice {
   currency CurrencyTypes @default(CLP)
   storeGame StoreGame @relation(fields:[store_game_id],references: [id])
   store_game_id Int 
+
+  @@unique([id,currency])
 }
 
 // model GameOnInfoGame{

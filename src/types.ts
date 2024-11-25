@@ -28,11 +28,17 @@ export enum CurrencyCodes {
   US = "US",
 }
 
+export enum SearchFilters {
+  GENRE_CATEGORY = "genre category",
+  GENRE = "genre",
+  CATEGORY = "category",
+}
+
 export enum SortFilters {
   PRICE = "price",
   ALPHABETICAL = "alphabetical",
-  OFFER = "offer",
-  GENRE = "genre",
+  // GENRE = "genre",
+  // CATEGORY = "category",
 }
 
 export enum OrderFilters {

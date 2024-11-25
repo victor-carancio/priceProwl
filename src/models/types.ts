@@ -159,7 +159,7 @@ export interface SteamFeaturedCategories {
 
 export interface SpecialsSteamFeatured {
   tabs: {
-    topsellers: SteamFeaturedItems;
+    // topsellers: SteamFeaturedItems;
     viewall: SteamFeaturedItems;
   };
 }
@@ -167,12 +167,13 @@ export interface SpecialsSteamFeatured {
 export interface TopsellerSteamFeatured {
   tabs: {
     viewall: SteamFeaturedItems;
-    specials: SteamFeaturedItems;
+    // specials: SteamFeaturedItems;
   };
 }
 
 export interface NewreleasesSteamFeatured {
   tabs: {
+    // viewall: SteamFeaturedItems;
     topsellers: SteamFeaturedItems;
   };
 }

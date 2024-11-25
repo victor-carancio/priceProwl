@@ -5,6 +5,7 @@ import {
   formatCompleteInfo,
   formatShortInfo,
   shortInfo,
+  shortInfoFeatureInclude,
   shortInfoInclude,
 } from "../../../utils/manageGameData.utils";
 import {
@@ -12,10 +13,41 @@ import {
   ShortInfoFormat,
   StoreIds,
 } from "../../../utils/types";
-import { storesPriceScrape } from "../scrapeGameData.service";
+import {
+  searchingStoresPriceScrape,
+  storesPriceScrape,
+} from "../scrapeGameData.service";
 
 export const findGameByName = async (name: string, orderBy: any) => {
   const include = { ...shortInfoInclude };
+
+  const gamesByStores = await prisma.storeGame.findMany({
+    where: {
+      game: {
+        gameName: {
+          contains: name.trim(),
+          mode: "insensitive",
+        },
+      },
+    },
+    include: {
+      info_game: true,
+      game: {
+        select: {
+          gameName: true,
+        },
+      },
+    },
+  });
+
+  // if (!gamesByStores) {
+  //   throw new NotFoundError(
+  //     `There is not game with name ${name}  in the database.`,
+  //   );
+  // }
+
+  await searchingStoresPriceScrape(gamesByStores as StoreIds[]);
+
   const gamesFounded = await prisma.game.findMany({
     where: {
       OR: [
@@ -72,7 +104,10 @@ export const findGameById = async (id: number) => {
   return formatCompleteInfo(gamesFounded as CompleteInfoFormat);
 };
 
-export const findAllGames = async (filters: { where: any; orderBy: any }) => {
+export const findGamesByFilters = async (filters: {
+  where: any;
+  orderBy: any;
+}) => {
   const where = { ...filters.where };
   const orderBy = { ...filters.orderBy };
   const include = { ...shortInfoInclude };
@@ -418,13 +453,6 @@ export const getAllStoreGames = async () => {
 };
 
 export const getCurrentGenres = async () => {
-  // const genres = await prisma.genreOnInfoGame.findMany({
-  //   where: {},
-  //   include: {
-  //     genre: true,
-  //   },
-  // });
-
   const genres = await prisma.genres.findMany({
     where: {},
   });
@@ -432,4 +460,52 @@ export const getCurrentGenres = async () => {
   return genres.map((genre) => genre.genre);
 
   // return genres.map((genre) => genre.genre.genre);
+};
+
+export const getCurrentCategories = async () => {
+  const categories = await prisma.categories.findMany({
+    where: {},
+  });
+
+  return categories.map((category) => category.category);
+};
+
+export const getFeaturedGamesByStore = async () => {
+  const include = { ...shortInfoFeatureInclude };
+
+  const featureCategories = await prisma.featureCategory.findMany({
+    where: {},
+  });
+
+  let featuredGamesFounded = [];
+  for (const category of featureCategories) {
+    const featureGames = await prisma.game.findMany({
+      where: {
+        featuredIn: {
+          some: {
+            feature_category: {
+              name: {
+                contains: category.name,
+              },
+            },
+          },
+        },
+      },
+      include,
+    });
+
+    const filterStore = featureGames.map((game) => {
+      return {
+        ...game,
+        stores: game.stores.filter((store) =>
+          store.featuredIn.some(
+            (feature) => feature.feature_category.name === category.name,
+          ),
+        ),
+      };
+    });
+
+    featuredGamesFounded.push({ feature: category.name, games: filterStore });
+  }
+  return featuredGamesFounded;
 };

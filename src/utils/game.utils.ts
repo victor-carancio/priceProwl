@@ -80,7 +80,11 @@ export const parseTitle = (field: string) => {
 };
 
 export const parseUrl = (field: string, term: string) => {
-  return field.trim().replace(/ /g, term);
+  return field
+    .trim()
+    .replace(/&/g, "") // Elimina todos los '&' del texto
+    .replace(/ +/g, " ") // Asegura que no queden espacios dobles
+    .replace(/ /g, term);
 };
 
 export const replaceSteam = (field: string) => {

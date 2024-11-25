@@ -11,7 +11,7 @@ import {
 import { isString } from "../utils/validation";
 import {
   featureCreate,
-  findAllGames,
+  findGamesByFilters,
   findGameByName,
   getFilter,
   scrapeAllStores,
@@ -24,6 +24,9 @@ import {
   // sendEmails,
 } from "./gameServices/index.service";
 import cron from "node-cron";
+import { getSort } from "./gameServices/filters.service";
+import { scrapeFreeEpicSales } from "./gameServices/scrapeGameData.service";
+import { freeEpicCreate } from "./gameServices/gameData/createOrUpdateGameData.service";
 
 // import { sendEmails } from "./gameServices/email.service";
 
@@ -63,27 +66,25 @@ export const findGamesByNameFromDb = async (
 };
 
 export const findAllGamesAndFilters = async (filters: {
+  category?: string;
+  genre?: string;
   sort?: string;
   order?: string;
-  genre?: string;
   page?: string;
   limit?: string;
 }) => {
-  const where =
-    filters.sort === SortFilters.GENRE && filters.genre
-      ? getFilter(filters)
-      : {};
+  const where = getFilter(filters);
 
   let orderBy = {};
 
   if (filters.sort === SortFilters.ALPHABETICAL) {
-    orderBy = getFilter(filters) || { gameName: "asc" };
+    orderBy = getSort(filters) || { gameName: "asc" };
   }
 
   const page = parseInt(filters.page as string) || 1;
   const limit = parseInt(filters.limit as string) || 10;
 
-  const allGames = await findAllGames({ where, orderBy });
+  const allGames = await findGamesByFilters({ where, orderBy });
   // return allGames;
 
   if (filters.sort === SortFilters.PRICE || (!filters.sort && !filters.order)) {
@@ -107,7 +108,7 @@ export const findAllGamesAndFilters = async (filters: {
   };
 };
 
-cron.schedule("0 */12 * * *", async () => {
+cron.schedule("0 1 * * *", async () => {
   await featuredGamesCheck();
 
   //Todo: notificacion por correo
@@ -115,16 +116,20 @@ cron.schedule("0 */12 * * *", async () => {
   // await checkOfferEnd();
 });
 
+cron.schedule("0 16 * * *", async () => {
+  await EpicFreeGamesCheck();
+});
+
 export const featuredGamesCheck = async () => {
   const feature = await scrapeSpecialSales();
   await featureCreate(feature);
-
-  return feature;
 };
 
-export const featuredGamesCheckSteam = async () => {};
+export const EpicFreeGamesCheck = async () => {
+  const freeGames = await scrapeFreeEpicSales();
 
-export const featuredGamesCheckEpic = async () => {};
+  await freeEpicCreate(freeGames);
+};
 
 // export const offerNotification = async () => {
 //   const usersAndInfoToNotified = await findAllWishList();
