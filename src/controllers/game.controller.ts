@@ -1,7 +1,5 @@
 import { Request, Response } from "express";
 import {
-  EpicFreeGamesCheck,
-  featuredGamesCheck,
   findAllGamesAndFilters,
   findGamesByNameFromDb,
   findGamesPricesByName,
@@ -21,7 +19,8 @@ import {
 export const getGamesPrices = async (req: Request, res: Response) => {
   const title = parseString(req.query.title, "Game title");
 
-  const data = await findGamesPricesByName(title);
+  await findGamesPricesByName(title);
+  const data = await findGamesByNameFromDb(title, req.query);
   return res.status(200).json({ nbHts: data.length, data });
 };
 
@@ -98,14 +97,14 @@ export const getCurrentFeaturedGames = async (_req: Request, res: Response) => {
 
 /* ------------------------------ test de funciones --------------------------*/
 
-export const testUpdateGamePrice = async (_req: Request, res: Response) => {
-  await featuredGamesCheck();
-  await EpicFreeGamesCheck();
-  const jio = await getFeaturedGamesByStore();
+// export const testUpdateGamePrice = async (_req: Request, res: Response) => {
+//   await featuredGamesCheck();
+//   await EpicFreeGamesCheck();
+//   const jio = await getFeaturedGamesByStore();
 
-  console.log("finish");
-  return res.status(200).json({
-    jio,
-  });
-  // .json({ steam: steamData, epic: epicData, xbox: xboxData });
-};
+//   console.log("finish");
+//   return res.status(200).json({
+//     jio,
+//   });
+
+// };

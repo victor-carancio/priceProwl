@@ -140,15 +140,6 @@ const swaggerDefinition: OAS3Definition = {
           },
         },
       },
-      scraperGamePrices: {
-        type: "object",
-        properties: {
-          title: {
-            type: "string",
-            example: "game name",
-          },
-        },
-      },
       gameResponse: {
         type: "object",
         properties: {
@@ -160,58 +151,25 @@ const swaggerDefinition: OAS3Definition = {
           data: {
             type: "array",
             items: {
-              $ref: "#/components/schemas/gamesFromScraper",
+              $ref: "#/components/schemas/gameShortInfo",
             },
           },
         },
       },
-      gameResponseDB: {
+      gameShortInfo: {
         type: "object",
         properties: {
-          nbHts: {
-            type: "integer",
-            description: "Number of games found",
-            example: "1",
+          id: {
+            type: "number",
+            example: 1,
           },
-          data: {
-            type: "array",
-            items: {
-              $ref: "#/components/schemas/gamesFromDB",
-            },
-          },
-        },
-      },
-      gamesFromScraper: {
-        type: "object",
-        properties: {
-          gameName: {
-            type: "string",
-            example: "Resident Evil 2",
-          },
-          stores: {
-            type: "array",
-            items: {
-              $ref: "#/components/schemas/storesScraper",
-            },
-          },
-          infoGame: {
-            type: "array",
-            items: {
-              $ref: "#/components/schemas/infoGame",
-            },
-          },
-        },
-      },
-      gamesFromDB: {
-        type: "object",
-        properties: {
           gameName: {
             type: "string",
             example: "Resident Evil 2",
           },
           platform: {
             type: "string",
-            example: "pc",
+            example: "PC",
           },
           createdAt: {
             type: "string",
@@ -224,106 +182,25 @@ const swaggerDefinition: OAS3Definition = {
           stores: {
             type: "array",
             items: {
-              $ref: "#/components/schemas/storesDB",
-            },
-          },
-          infoGame: {
-            type: "array",
-            items: {
-              $ref: "#/components/schemas/infoList",
+              $ref: "#/components/schemas/storesShortInfo",
             },
           },
         },
       },
-      gameFromDB: {
+      storesShortInfo: {
         type: "object",
         properties: {
-          gameName: {
+          id: {
             type: "string",
-            example: "Resident Evil 2",
+            example: 1,
           },
-          platform: {
-            type: "string",
-            example: "pc",
-          },
-          createdAt: {
-            type: "string",
-            example: "2024-07-17T21:35:10.807Z",
-          },
-          updatedAt: {
-            type: "string",
-            example: "2024-07-17T21:35:10.807Z",
-          },
-          stores: {
-            type: "array",
-            items: {
-              $ref: "#/components/schemas/storesDB",
-            },
-          },
-          infoGame: {
-            type: "array",
-            items: {
-              $ref: "#/components/schemas/allInfoList",
-            },
-          },
-        },
-      },
-      storesScraper: {
-        type: "object",
-        properties: {
           store: {
             type: "string",
             example: "Steam",
           },
-          url: {
+          type: {
             type: "string",
-            example: "https://store.example.com",
-          },
-          gamepass: {
-            oneOf: [
-              {
-                type: "boolean",
-              },
-              {
-                type: "null",
-              },
-            ],
-            example: "null",
-          },
-          edition: {
-            type: "string",
-            example: "Standard",
-          },
-
-          info: {
-            type: "object",
-            $ref: "#/components/schemas/infoScraper",
-          },
-        },
-      },
-      infoScraper: {
-        type: "object",
-        properties: {
-          discount_percent: {
-            type: "string",
-            example: "-",
-          },
-          initial_price: {
-            type: "string",
-            example: "CLP$32.200",
-          },
-          final_price: {
-            type: "string",
-            example: "CLP$32.200",
-          },
-        },
-      },
-      storesDB: {
-        type: "object",
-        properties: {
-          store: {
-            type: "string",
-            example: "Steam",
+            example: "official",
           },
           url: {
             type: "string",
@@ -356,18 +233,26 @@ const swaggerDefinition: OAS3Definition = {
             type: "integer",
             example: "2",
           },
-          info: {
+          info_price: {
             type: "object",
-            $ref: "#/components/schemas/infoDB",
+            $ref: "#/components/schemas/infoPrice",
+          },
+          infoGame: {
+            type: "object",
+            $ref: "#/components/schemas/shortInfoGame",
           },
         },
       },
-      infoDB: {
+      infoPrice: {
         type: "object",
         properties: {
+          id: {
+            type: "number",
+            example: 1,
+          },
           discount_percent: {
             type: "string",
-            example: "-",
+            example: "0",
           },
           initial_price: {
             type: "string",
@@ -396,355 +281,364 @@ const swaggerDefinition: OAS3Definition = {
             ],
             example: "null",
           },
+          currency: {
+            type: "string",
+            example: "CLP",
+          },
           store_game_id: {
             type: "integer",
             example: "2",
           },
         },
       },
-      infoGame: {
+      shortInfoGame: {
         type: "object",
         properties: {
           id: {
             type: "integer",
             example: "56078",
           },
-
-          cover: {
-            $ref: "#/components/schemas/image",
+          storeIdGame: {
+            type: "string",
+            example: "282530",
           },
-          first_release_date: {
-            $ref: "#/components/schemas/unixTimeStampDate",
-          },
-
           genres: {
             type: "array",
             items: {
-              $ref: "#/components/schemas/propertiesNameAndId",
+              type: "string",
+              example: "Acción",
             },
           },
-
-          keywords: {
-            type: "array",
-            items: {
-              $ref: "#/components/schemas/propertiesNameAndId",
-            },
-          },
-          name: {
+          imgStore: {
             type: "string",
-            example: "Resident Evil 2",
+            example:
+              "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/883710/header.jpg?t=1728438541",
           },
-          platforms: {
+          categories: {
             type: "array",
             items: {
-              $ref: "#/components/schemas/platforms",
+              type: "string",
+              example: "Un jugador",
             },
           },
-
-          storyline: {
+          about: {
             type: "string",
             example: "Players join rookie police officer Leon Kennedy...",
           },
-          summary: {
+          description: {
             type: "string",
             example: "Resident Evil 2 is a remake of 1998's Resident Evil 2",
+          },
+          release_date: {
+            type: "string",
+            example: "25 ENE 2019",
           },
         },
       },
-      allInfoGame: {
+      gameDetail: {
+        type: "object",
+        properties: {
+          id: {
+            type: "number",
+            example: 1,
+          },
+          gameName: {
+            type: "string",
+            example: "Resident Evil 2",
+          },
+          platform: {
+            type: "string",
+            example: "PC",
+          },
+          createdAt: {
+            type: "string",
+            example: "2024-07-17T21:35:10.807Z",
+          },
+          updatedAt: {
+            type: "string",
+            example: "2024-07-17T21:35:10.807Z",
+          },
+          stores: {
+            type: "array",
+            items: {
+              $ref: "#/components/schemas/storesCompleteInfo",
+            },
+          },
+        },
+      },
+      storesCompleteInfo: {
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+            example: 1,
+          },
+          store: {
+            type: "string",
+            example: "Steam",
+          },
+          type: {
+            type: "string",
+            example: "official",
+          },
+          url: {
+            type: "string",
+            example: "https://store.example.com",
+          },
+          gamepass: {
+            oneOf: [
+              {
+                type: "boolean",
+              },
+              {
+                type: "null",
+              },
+            ],
+            example: "null",
+          },
+          edition: {
+            type: "string",
+            example: "Standard",
+          },
+          createdAt: {
+            type: "string",
+            example: "2024-07-17T21:35:10.807Z",
+          },
+          updatedAt: {
+            type: "string",
+            example: "2024-07-17T21:35:10.807Z",
+          },
+          game_id: {
+            type: "integer",
+            example: "2",
+          },
+          info_price: {
+            type: "object",
+            $ref: "#/components/schemas/infoPrice",
+          },
+          infoGame: {
+            type: "object",
+            $ref: "#/components/schemas/completeInfoGame",
+          },
+        },
+      },
+      completeInfoGame: {
         type: "object",
         properties: {
           id: {
             type: "integer",
             example: "56078",
           },
-          alternative_names: {
-            type: "array",
-            items: {
-              $ref: "#/components/schemas/alternative_names",
-            },
-          },
-          artworks: {
-            type: "array",
-            items: {
-              $ref: "#/components/schemas/image",
-            },
-          },
-          cover: {
-            $ref: "#/components/schemas/image",
-          },
-          first_release_date: {
-            $ref: "#/components/schemas/unixTimeStampDate",
-          },
-          game_engines: {
-            type: "array",
-            items: {
-              $ref: "#/components/schemas/propertiesNameAndId",
-            },
+          storeIdGame: {
+            type: "string",
+            example: "282530",
           },
           genres: {
             type: "array",
             items: {
-              $ref: "#/components/schemas/propertiesNameAndId",
+              type: "string",
+              example: "Acción",
             },
           },
-          involved_companies: {
+          categories: {
             type: "array",
             items: {
-              $ref: "#/components/schemas/involved_companies",
+              type: "string",
+              example: "Un jugador",
             },
           },
-          keywords: {
-            type: "array",
-            items: {
-              $ref: "#/components/schemas/propertiesNameAndId",
-            },
-          },
-          name: {
+          imgStore: {
             type: "string",
-            example: "Resident Evil 2",
+            example:
+              "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/883710/header.jpg?t=1728438541",
           },
-          platforms: {
-            type: "array",
-            items: {
-              $ref: "#/components/schemas/platforms",
-            },
-          },
-          release_dates: {
-            type: "array",
-            items: {
-              $ref: "#/components/schemas/release_dates",
-            },
-          },
-          storyline: {
+          about: {
             type: "string",
             example: "Players join rookie police officer Leon Kennedy...",
           },
-          summary: {
+          description: {
             type: "string",
             example: "Resident Evil 2 is a remake of 1998's Resident Evil 2",
+          },
+          release_date: {
+            type: "string",
+            example: "25 ENE 2019",
+          },
+          developer: {
+            type: "string",
+            example: "CAPCOM CO., LTD.",
+          },
+          publisher: {
+            type: "string",
+            example: "CAPCOM CO., LTD.",
+          },
+          pc_requirements: {
+            oneOf: [
+              {
+                type: "object",
+                properties: {
+                  id: {
+                    type: "number",
+                    example: 10,
+                  },
+                  minimum: {
+                    type: "string",
+                    example:
+                      "Mínimo:Requiere un procesador y un sistema operativo de 64 bitsSO: Windows 10 (64 bit)Procesador: AMD Ryzen 3 1200 / Intel Core i5-7500Memoria: 8 GB de RAMGráficos: AMD Radeon RX 560 with 4GB VRAM /...",
+                  },
+                  recommended: {
+                    type: "string",
+                    example:
+                      "Recomendado:Requiere un procesador y un sistema operativo de 64 bitsSO: Windows 10 (64 bit)/Windows 11 (64 bit)Procesador: AMD Ryzen 5 3600 / Intel Core i7 8700Memoria: 16 GB...",
+                  },
+                },
+              },
+              {
+                type: "null",
+              },
+            ],
+          },
+          screenshots: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                id: {
+                  type: "integer",
+                  example: "1",
+                },
+                url: {
+                  type: "string",
+                  example:
+                    "https://store-images.s-microsoft.com/image/apps.38246.71571739681700792.c61fa2d7-3d69-4edf-8e51-accc41d47823.9197ae9d-181d-44ff-a98d-7f64086f509e",
+                },
+                thumbUrl: {
+                  type: "string",
+                  example: "-",
+                },
+                info_game_id: {
+                  type: "number",
+                  example: 2,
+                },
+              },
+            },
+          },
+          supportedLanguages: {
+            type: "string",
+            example:
+              "Inglés*, Francés*, Italiano*, Alemán*, Español de España*, Árabe, Japonés*",
           },
           videos: {
             type: "array",
             items: {
-              $ref: "#/components/schemas/videos",
+              type: "object",
+              properties: {
+                id: {
+                  type: "integer",
+                  example: "1",
+                },
+                title: {
+                  type: "string",
+                  example: "Launch Trailer",
+                },
+                url: {
+                  type: "string",
+                  example:
+                    "https://store-images.s-microsoft.com/image/apps.38246.71571739681700792.c61fa2d7-3d69-4edf-8e51-accc41d47823.9197ae9d-181d-44ff-a98d-7f64086f509e",
+                },
+                thumbnail: {
+                  type: "string",
+                  example: "-",
+                },
+                info_game_id: {
+                  type: "number",
+                  example: 2,
+                },
+              },
+            },
+          },
+          website: {
+            type: "string",
+            example: "https://www.residentevil.com/re4/",
+          },
+        },
+      },
+      gameSearchFilters: {
+        type: "object",
+        properties: {
+          nbHts: {
+            type: "number",
+            example: 10,
+          },
+          currentPage: {
+            type: "number",
+            example: 1,
+          },
+          totalGames: {
+            type: "number",
+            example: 57,
+          },
+          totalPages: {
+            type: "number",
+            example: 6,
+          },
+          games: {
+            type: "array",
+            items: {
+              $ref: "#/components/schemas/gameShortInfo",
             },
           },
         },
       },
-      infoList: {
-        type: "object",
-        properties: {
-          game_id: {
-            type: "integer",
-            example: "2",
-          },
-          info_game_id: {
-            type: "integer",
-            example: "19686",
-          },
-          info_game: {
-            $ref: "#/components/schemas/infoGame",
-          },
-        },
-      },
-      allInfoList: {
-        type: "object",
-        properties: {
-          game_id: {
-            type: "integer",
-            example: "2",
-          },
-          info_game_id: {
-            type: "integer",
-            example: "19686",
-          },
-          info_game: {
-            $ref: "#/components/schemas/allInfoGame",
+      featuredGames: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            feature: {
+              type: "string",
+              example: "Steam - Más vendidos",
+            },
+            games: {
+              type: "array",
+              items: {
+                $ref: "#/components/schemas/gameShortInfo",
+              },
+            },
           },
         },
       },
-
-      alternative_names: {
+      categories: {
         type: "object",
         properties: {
-          id: {
-            type: "integer",
-            example: "82970",
+          nbHts: {
+            type: "number",
+            example: 2,
           },
-          comment: {
-            type: "string",
-            example: "Alternative title",
-          },
-          name: {
-            type: "type",
-            example: "RE2 Remake",
+          categories: {
+            type: "array",
+            items: {
+              type: "string",
+              example: "Un jugador",
+            },
           },
         },
       },
-      image: {
+      genres: {
         type: "object",
         properties: {
-          id: {
-            type: "integer",
-            example: "5081",
+          nbHts: {
+            type: "number",
+            example: 2,
           },
-          height: {
-            type: "integer",
-            example: "1399",
-          },
-          image_id: {
-            type: "string",
-            example: "qqrtgvipdy3t5xgc5u6q",
-          },
-          url: {
-            type: "string",
-            example:
-              "//images.igdb.com/igdb/image/upload/t_thumb/qqrtgvipdy3t5xgc5u6q.jpg",
-          },
-          width: {
-            type: "integer",
-            example: "958",
+          genres: {
+            type: "array",
+            items: {
+              type: "string",
+              example: "Rol",
+            },
           },
         },
-      },
-      propertiesNameAndId: {
-        type: "object",
-        properties: {
-          id: {
-            type: "integer",
-          },
-          name: {
-            type: "string",
-          },
-        },
-      },
-      involved_companies: {
-        type: "object",
-        properties: {
-          id: {
-            type: "integer",
-            example: "184693",
-          },
-          company: {
-            $ref: "#/components/schemas/company",
-          },
-          developer: {
-            type: "boolean",
-            example: "false",
-          },
-          porting: {
-            type: "boolean",
-            example: "false",
-          },
-          publisher: {
-            type: "boolean",
-            example: "true",
-          },
-          supporting: {
-            type: "boolean",
-            example: "false",
-          },
-        },
-      },
-
-      company: {
-        type: "object",
-        properties: {
-          id: {
-            type: "integer",
-            example: "37",
-          },
-          country: {
-            type: "integer",
-            example: "392",
-          },
-          logo: {
-            $ref: "#/components/schemas/image",
-          },
-          name: {
-            type: "string",
-            example: "Capcom",
-          },
-          start_date: {
-            $ref: "#/components/schemas/unixTimeStampDate",
-          },
-        },
-      },
-
-      platforms: {
-        type: "object",
-        properties: {
-          id: {
-            type: "integer",
-            example: "6",
-          },
-          abbreviation: {
-            type: "string",
-            example: "PC",
-          },
-          alternative_name: {
-            type: "string",
-            example: "mswin",
-          },
-          name: {
-            type: "string",
-            example: "PC (Microsoft Windows",
-          },
-          platform_logo: {
-            $ref: "#/components/schemas/image",
-          },
-        },
-      },
-      videos: {
-        type: "object",
-        properties: {
-          id: {
-            type: "integer",
-            example: "2",
-          },
-          name: {
-            type: "string",
-            example: "Trailer",
-          },
-          video_id: {
-            type: "string",
-            description: "Id of youtube video",
-            example: "ZcW6W-xVl-8",
-          },
-        },
-      },
-      release_dates: {
-        type: "object",
-        properties: {
-          id: {
-            type: "integer",
-            example: "12323",
-          },
-          category: {
-            type: "integer",
-            example: "0",
-          },
-          date: {
-            $ref: "#/components/schema/unixTimeStampDate",
-          },
-          region: {
-            type: "integer",
-            example: "2",
-          },
-          platform: {
-            $ref: "#/components/schema/platforms",
-          },
-        },
-      },
-
-      unixTimeStampDate: {
-        type: "integer",
-        example: "435324",
-      },
-      isoDateFormat: {
-        type: "string",
-        example: "",
       },
     },
   },

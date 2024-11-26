@@ -110,6 +110,7 @@ export const findAllGamesAndFilters = async (filters: {
 
 cron.schedule("0 1 * * *", async () => {
   await featuredGamesCheck();
+  await EpicFreeGamesCheck();
 
   //Todo: notificacion por correo
   // await offerNotification();

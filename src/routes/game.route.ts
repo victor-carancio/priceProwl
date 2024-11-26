@@ -7,7 +7,7 @@ import {
   // getCurrentOffers,
   getGamesByFilters,
   getGamesGenresInDatabase,
-  testUpdateGamePrice,
+  // testUpdateGamePrice,
   getGamesCategoriesInDatabase,
   getCurrentFeaturedGames,
   // testUpdateGamePrice,
@@ -65,6 +65,217 @@ router.get("/", getGamesPrices);
  *         description: Name of game to search in database.
  *         schema:
  *            type: string
+ *       - in: query
+ *         name: sort
+ *         required: false
+ *         description: Order search by choosen criteria, alphabetical or price.
+ *         schema:
+ *            type: string
+ *       - in: query
+ *         name: order
+ *         required: false
+ *         description: Order of sort, asc or desc.
+ *         schema:
+ *            type: string
+ *     responses:
+ *       '200':
+ *          description: Request to database succesfully, return data.
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: "#/components/schemas/gameResponse"
+ *       '400':
+ *           description: "Invalid data"
+ *       '500':
+ *           description: "Internal server error."
+ *  */
+router.get("/search", getGamesByNameFromDB);
+
+/**
+ * Get track
+ * @openapi
+ * /game/filters:
+ *   get:
+ *     tags:
+ *      - game
+ *     summary: Get all games prices and info from database by filters.
+ *     description: >
+ *        Obtain games info and prices directly from database by filters.
+ *          Either `category` or `genres` must be provided.
+ *     parameters:
+ *       - in: query
+ *         name: category
+ *         required: false
+ *         description: Name of category to filter game in database.
+ *         schema:
+ *            type: string
+ *       - in: query
+ *         name: genre
+ *         required: false
+ *         description: Name of category to filter game in database.
+ *         schema:
+ *            type: string
+ *       - in: query
+ *         name: sort
+ *         required: false
+ *         description: Order search by choosen criteria, alphabetical or price.
+ *         schema:
+ *            type: string
+ *       - in: query
+ *         name: order
+ *         required: false
+ *         description: Order of sort, asc or desc.
+ *         schema:
+ *            type: string
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         description: Specifies the page number to retrieve in paginated results. Defaults to 1 if not provided.
+ *         schema:
+ *            type: string
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         description: Specifies the maximum number of items to include in a single page of results. Defaults to 10 if not provided.
+ *         schema:
+ *            type: string
+ *     responses:
+ *       '200':
+ *          description: Request to database succesfully, return data.
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: "#/components/schemas/gameSearchFilters"
+ *       '400':
+ *           description: "Invalid data"
+ *       '500':
+ *           description: "Internal server error."
+ *  */
+
+router.get("/filters", validateDataQuery(filtersSchema), getGamesByFilters);
+
+/**
+ * Get track
+ * @openapi
+ * /game/genres:
+ *   get:
+ *     tags:
+ *      - game
+ *     summary: Get all genres stores in DB.
+ *     description: >
+ *        Get all genres stores in DB.
+ *          Only return genres of games that been previusly save in DB.
+ *     responses:
+ *       '200':
+ *          description: Request to database succesfully, return data.
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: "#/components/schemas/genres"
+ *       '400':
+ *           description: "Invalid data"
+ *       '500':
+ *           description: "Internal server error."
+ *  */
+router.get("/genres", getGamesGenresInDatabase);
+/**
+ * Get track
+ * @openapi
+ * /game/categories:
+ *   get:
+ *     tags:
+ *      - game
+ *     summary: Get all categories stores in DB.
+ *     description: >
+ *        Get all categories stores in DB.
+ *          Only return categories of games that been previusly save in DB.
+ *     responses:
+ *       '200':
+ *          description: Request to database succesfully, return data.
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: "#/components/schemas/categories"
+ *       '400':
+ *           description: "Invalid data"
+ *       '500':
+ *           description: "Internal server error."
+ *  */
+router.get("/categories", getGamesCategoriesInDatabase);
+
+/**
+ * Get track
+ * @openapi
+ * /game/feature:
+ *   get:
+ *     tags:
+ *      - game
+ *     summary: Get featured games from steam and epic.
+ *     description: >
+ *        Obtain featured games from steam an epic.
+ *          Features are updated one a day.
+ *     responses:
+ *       '200':
+ *          description: Request to database succesfully, return data.
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: "#/components/schemas/featuredGames"
+ *       '400':
+ *           description: "Invalid data"
+ *       '500':
+ *           description: "Internal server error."
+ *  */
+router.get("/feature", getCurrentFeaturedGames);
+
+// router.get("/test", testUpdateGamePrice);
+/**
+ * Get track
+ * @openapi
+ * /game/{gameId}:
+ *   get:
+ *     tags:
+ *      - game
+ *     summary: Get game prices and all info from  by id.
+ *     description: >
+ *        Obtain all game info and prices directly from database.
+ *          if the game wasn't store or search by scraper previusly, it will return empty array.
+ *     parameters:
+ *      - in: path
+ *        name: gameId
+ *        required: true
+ *        schema:
+ *          type: integer
+          
+ *     responses:
+ *       '200':
+ *          description: Request to database succesfully, return data.
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: "#/components/schemas/gameDetail"
+ *       '400':
+ *           description: "Invalid data"
+ *       '404':
+ *           description: "Game not found"
+ *       '500':
+ *           description: "Internal server error."
+ *  */
+router.get("/:id", getGameById);
+
+export default router;
+
+/*
+ * Get track
+ * @openapi
+ * /game/offers:
+ *   get:
+ *     tags:
+ *      - game
+ *     summary: Get games with offers and info from database.
+ *     description: >
+ *        Obtain games offers, info and prices directly from database.
+ *          if the game wasn't store or search by scraper previusly, it will return empty array.
  *     responses:
  *       '200':
  *          description: Request to database succesfully, return data.
@@ -77,7 +288,7 @@ router.get("/", getGamesPrices);
  *       '500':
  *           description: "Internal server error."
  *  */
-router.get("/search", getGamesByNameFromDB);
+// router.get("/offers", getCurrentOffers);
 
 /*
  * Get track
@@ -112,97 +323,3 @@ router.get("/search", getGamesByNameFromDB);
  *  */
 
 // router.get("/update/search", getGamesByNameFromDBAndUpdatePrice);
-
-/**
- * Get track
- * @openapi
- * /game/all:
- *   get:
- *     tags:
- *      - game
- *     summary: Get all games prices and info from database.
- *     description: >
- *        Obtain games info and prices directly from database.
- *          if the game wasn't store or search by scraper previusly, it will return empty array.
- *     responses:
- *       '200':
- *          description: Request to database succesfully, return data.
- *          content:
- *            application/json:
- *              schema:
- *                $ref: "#/components/schemas/gameResponseDB"
- *       '400':
- *           description: "Invalid data"
- *       '500':
- *           description: "Internal server error."
- *  */
-
-router.get("/filters", validateDataQuery(filtersSchema), getGamesByFilters);
-
-/**
- * Get track
- * @openapi
- * /game/offers:
- *   get:
- *     tags:
- *      - game
- *     summary: Get games with offers and info from database.
- *     description: >
- *        Obtain games offers, info and prices directly from database.
- *          if the game wasn't store or search by scraper previusly, it will return empty array.
- *     responses:
- *       '200':
- *          description: Request to database succesfully, return data.
- *          content:
- *            application/json:
- *              schema:
- *                $ref: "#/components/schemas/gameResponseDB"
- *       '400':
- *           description: "Invalid data"
- *       '500':
- *           description: "Internal server error."
- *  */
-// router.get("/offers", getCurrentOffers);
-
-//todo: swagger para genre
-router.get("/genres", getGamesGenresInDatabase);
-router.get("/categories", getGamesCategoriesInDatabase);
-
-/**
- * Get track
- * @openapi
- * /game/{gameId}:
- *   get:
- *     tags:
- *      - game
- *     summary: Get game prices and all info from  by id.
- *     description: >
- *        Obtain all game info and prices directly from database.
- *          if the game wasn't store or search by scraper previusly, it will return empty array.
- *     parameters:
- *      - in: path
- *        name: gameId
- *        required: true
- *        schema:
- *          type: integer
-          
- *     responses:
- *       '200':
- *          description: Request to database succesfully, return data.
- *          content:
- *            application/json:
- *              schema:
- *                $ref: "#/components/schemas/gameFromDB"
- *       '400':
- *           description: "Invalid data"
- *       '404':
- *           description: "Game not found"
- *       '500':
- *           description: "Internal server error."
- *  */
-
-router.get("/test", testUpdateGamePrice);
-router.get("/feature", getCurrentFeaturedGames);
-router.get("/:id", getGameById);
-
-export default router;
