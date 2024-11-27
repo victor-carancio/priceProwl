@@ -8,12 +8,14 @@ const swaggerDefinition: OAS3Definition = {
   },
   servers: [
     {
-      description: "Development Server (local)",
-      url: "http://localhost:3000/api/v1",
-    },
-    {
-      description: "Production",
-      url: "https://priceprowler.vcaranciodev.online/api/v1",
+      description:
+        process.env.NODE_ENV === "production"
+          ? "Production"
+          : "Development Server (local)",
+      url:
+        process.env.NODE_ENV === "production"
+          ? "https://priceprowler.vcaranciodev.online/api/v1"
+          : "http://localhost:3000/api/v1",
     },
   ],
   components: {
@@ -25,121 +27,6 @@ const swaggerDefinition: OAS3Definition = {
       },
     },
     schemas: {
-      login: {
-        type: "object",
-        required: ["identifier", "password"],
-        properties: {
-          identifier: {
-            type: "string",
-            example: "user@example.com",
-          },
-          password: {
-            type: "string",
-            example: "12345678",
-          },
-        },
-      },
-      signUp: {
-        type: "object",
-        required: ["email", "password"],
-        properties: {
-          email: {
-            type: "string",
-            example: "user@example.com",
-          },
-          password: {
-            type: "string",
-            example: "12345678",
-          },
-          username: {
-            type: "string",
-            example: "user43",
-          },
-        },
-      },
-      authResponse: {
-        type: "object",
-        properties: {
-          user: {
-            type: "object",
-            properties: {
-              userId: {
-                type: "integer",
-                example: "1",
-              },
-              email: {
-                type: "string",
-                example: "user@example.com",
-              },
-              username: {
-                type: "string",
-                example: "user",
-              },
-            },
-          },
-        },
-      },
-      updateUserResponse: {
-        type: "object",
-        properties: {
-          msg: {
-            type: "string",
-            example: "Profile info updated",
-          },
-          user: {
-            type: "object",
-            properties: {
-              userId: {
-                type: "integer",
-                example: "1",
-              },
-              email: {
-                type: "string",
-                example: "user@example.com",
-              },
-              username: {
-                type: "string",
-                example: "user",
-              },
-            },
-          },
-        },
-      },
-      updateUserInfo: {
-        type: "object",
-        properties: {
-          email: {
-            type: "string",
-            example: "user@example.com",
-          },
-          password: {
-            type: "string",
-            example: "12345678",
-          },
-          username: {
-            type: "string",
-            example: "user43",
-          },
-        },
-      },
-      deleteUserResponse: {
-        type: "object",
-        properties: {
-          msg: {
-            type: "string",
-            example: "account deleted",
-          },
-        },
-      },
-      addToWishlist: {
-        type: "object",
-        properties: {
-          gameId: {
-            type: "integer",
-            example: 2,
-          },
-        },
-      },
       gameResponse: {
         type: "object",
         properties: {
@@ -640,6 +527,121 @@ const swaggerDefinition: OAS3Definition = {
           },
         },
       },
+      // login: {
+      //   type: "object",
+      //   required: ["identifier", "password"],
+      //   properties: {
+      //     identifier: {
+      //       type: "string",
+      //       example: "user@example.com",
+      //     },
+      //     password: {
+      //       type: "string",
+      //       example: "12345678",
+      //     },
+      //   },
+      // },
+      // signUp: {
+      //   type: "object",
+      //   required: ["email", "password"],
+      //   properties: {
+      //     email: {
+      //       type: "string",
+      //       example: "user@example.com",
+      //     },
+      //     password: {
+      //       type: "string",
+      //       example: "12345678",
+      //     },
+      //     username: {
+      //       type: "string",
+      //       example: "user43",
+      //     },
+      //   },
+      // },
+      // authResponse: {
+      //   type: "object",
+      //   properties: {
+      //     user: {
+      //       type: "object",
+      //       properties: {
+      //         userId: {
+      //           type: "integer",
+      //           example: "1",
+      //         },
+      //         email: {
+      //           type: "string",
+      //           example: "user@example.com",
+      //         },
+      //         username: {
+      //           type: "string",
+      //           example: "user",
+      //         },
+      //       },
+      //     },
+      //   },
+      // },
+      // updateUserResponse: {
+      //   type: "object",
+      //   properties: {
+      //     msg: {
+      //       type: "string",
+      //       example: "Profile info updated",
+      //     },
+      //     user: {
+      //       type: "object",
+      //       properties: {
+      //         userId: {
+      //           type: "integer",
+      //           example: "1",
+      //         },
+      //         email: {
+      //           type: "string",
+      //           example: "user@example.com",
+      //         },
+      //         username: {
+      //           type: "string",
+      //           example: "user",
+      //         },
+      //       },
+      //     },
+      //   },
+      // },
+      // updateUserInfo: {
+      //   type: "object",
+      //   properties: {
+      //     email: {
+      //       type: "string",
+      //       example: "user@example.com",
+      //     },
+      //     password: {
+      //       type: "string",
+      //       example: "12345678",
+      //     },
+      //     username: {
+      //       type: "string",
+      //       example: "user43",
+      //     },
+      //   },
+      // },
+      // deleteUserResponse: {
+      //   type: "object",
+      //   properties: {
+      //     msg: {
+      //       type: "string",
+      //       example: "account deleted",
+      //     },
+      //   },
+      // },
+      // addToWishlist: {
+      //   type: "object",
+      //   properties: {
+      //     gameId: {
+      //       type: "integer",
+      //       example: 2,
+      //     },
+      //   },
+      // },
     },
   },
 };

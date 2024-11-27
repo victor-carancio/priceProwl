@@ -13,7 +13,7 @@ import {
   // testUpdateGamePrice,
 } from "../controllers/game.controller";
 import { validateDataQuery } from "../middlewares/validation";
-import { filtersSchema } from "../schemas/game.schema";
+import { filtersSchema, searchByNameSchema } from "../schemas/game.schema";
 
 const router = Router();
 
@@ -45,7 +45,7 @@ const router = Router();
  *       '500':
  *           description: "Internal server error."
  *  */
-router.get("/", getGamesPrices);
+router.get("/", validateDataQuery(searchByNameSchema), getGamesPrices);
 
 /**
  * Get track
@@ -89,7 +89,11 @@ router.get("/", getGamesPrices);
  *       '500':
  *           description: "Internal server error."
  *  */
-router.get("/search", getGamesByNameFromDB);
+router.get(
+  "/search",
+  validateDataQuery(searchByNameSchema),
+  getGamesByNameFromDB,
+);
 
 /**
  * Get track

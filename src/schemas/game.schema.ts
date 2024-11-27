@@ -6,11 +6,11 @@ export const filtersSchema = z
     // filter: z.enum([SearchFilters.CATEGORY, SearchFilters.GENRE]),
     genre: z
       .string()
-      .min(1, { message: "Must be 2 or more character long!" })
+      .min(1, { message: "Must be 1 or more character long!" })
       .optional(),
     category: z
       .string()
-      .min(1, { message: "Must be 2 or more character long!" })
+      .min(1, { message: "Must be 1 or more character long!" })
       .optional(),
     sort: z.enum([SortFilters.ALPHABETICAL, SortFilters.PRICE]).optional(),
     order: z.enum([OrderFilters.ASC, OrderFilters.DESC]).optional(),
@@ -22,3 +22,9 @@ export const filtersSchema = z
   .refine((data) => data.category || data.genre, {
     message: "At least on of 'category' or 'genre' must be provided!",
   });
+
+export const searchByNameSchema = z.object({
+  title: z.string().min(1, { message: "Must be 1 or more character long!" }),
+  sort: z.enum([SortFilters.ALPHABETICAL, SortFilters.PRICE]).optional(),
+  order: z.enum([OrderFilters.ASC, OrderFilters.DESC]).optional(),
+});

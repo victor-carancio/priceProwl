@@ -97,9 +97,6 @@ const priceCreateOrUpdate = async (
         edition: existingStore.edition,
       },
       currency: store.infoPrice.currency as CurrencyTypes,
-      // initial_price: store.infoPrice.initial_price,
-      // discount_percent: store.infoPrice.discount_percent,
-      // final_price: store.infoPrice.final_price,
     },
   });
 

@@ -40,12 +40,6 @@ export const findGameByName = async (name: string, orderBy: any) => {
     },
   });
 
-  // if (!gamesByStores) {
-  //   throw new NotFoundError(
-  //     `There is not game with name ${name}  in the database.`,
-  //   );
-  // }
-
   await searchingStoresPriceScrape(gamesByStores as StoreIds[]);
 
   const gamesFounded = await prisma.game.findMany({
@@ -100,7 +94,6 @@ export const findGameById = async (id: number) => {
     include,
   });
 
-  // return gamesFounded;
   return formatCompleteInfo(gamesFounded as CompleteInfoFormat);
 };
 
@@ -117,7 +110,7 @@ export const findGamesByFilters = async (filters: {
     orderBy,
     include,
   });
-  // return allGames;
+
   return formatShortInfo(allGames as ShortInfoFormat[]);
 };
 

@@ -30,11 +30,6 @@ export const getGamesByNameFromDB = async (req: Request, res: Response) => {
   return res.status(200).json({ nbHts: data.length, data });
 };
 
-// export const getCurrentOffers = async (_req: Request, res: Response) => {
-//   const data = await findCurrOfferGames();
-//   return res.status(200).json({ nbHts: data.length, data });
-// };
-
 export const getGamesByFilters = async (req: Request, res: Response) => {
   const { currentPage, games, totalGames, totalPages } =
     await findAllGamesAndFilters(req.query);
@@ -73,6 +68,11 @@ export const getCurrentFeaturedGames = async (_req: Request, res: Response) => {
   const featuredGames = await getFeaturedGamesByStore();
   return res.status(200).json(featuredGames);
 };
+
+// export const getCurrentOffers = async (_req: Request, res: Response) => {
+//   const data = await findCurrOfferGames();
+//   return res.status(200).json({ nbHts: data.length, data });
+// };
 
 /* ------------------------------ Web sockets --------------------------*/
 
