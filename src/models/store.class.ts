@@ -20,6 +20,7 @@ export abstract class Store {
   ): Promise<PriceFromUrlScraped | null>;
 
   extractTextFromHtml(element: string) {
+    // console.log(element);
     const $ = cheerio.load(element);
     const extractedText = $.text();
     return extractedText;

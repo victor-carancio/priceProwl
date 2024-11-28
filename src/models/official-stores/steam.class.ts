@@ -185,7 +185,9 @@ export class SteamStore extends Store {
           storeName: this.name,
           about: short_description,
           type: type,
-          supported_languages: this.extractTextFromHtml(supported_languages),
+          supported_languages: supported_languages
+            ? this.extractTextFromHtml(supported_languages)
+            : "-",
           website: website,
           pc_requirements: {
             minimum: pc_requirements.minimum
@@ -216,7 +218,7 @@ export class SteamStore extends Store {
               thumbnail: movie.thumbnail,
             };
           }),
-          genres: genres.map((genre) => genre.description),
+          genres: genres ? genres.map((genre) => genre.description) : [],
 
           //añadir cooming soon y ver que todas las store retornen datos iguales o similares
         },
