@@ -20,9 +20,34 @@ export abstract class Store {
   ): Promise<PriceFromUrlScraped | null>;
 
   extractTextFromHtml(element: string) {
-    // console.log(element);
     const $ = cheerio.load(element);
-    const extractedText = $.text();
-    return extractedText;
+
+    const paragraphs: string[] = [];
+
+    $("body")
+      .contents()
+      .each((_, el) => {
+        if (el.type === "text") {
+          const text = $(el).text().trim();
+          if (text) {
+            paragraphs.push(text);
+          }
+        } else if (el.type === "tag") {
+          const tagName = el.tagName?.toLowerCase();
+
+          if (
+            tagName &&
+            ["script", "style", "img", "meta", "link"].includes(tagName)
+          ) {
+            return;
+          }
+          const text = $(el).text().trim();
+          if (text) {
+            paragraphs.push(text);
+          }
+        }
+      });
+
+    return paragraphs;
   }
 }

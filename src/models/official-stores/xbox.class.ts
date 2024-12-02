@@ -269,7 +269,7 @@ export class XboxStore extends Store {
           storeName: this.name,
           about: shortDescription,
           type: productKind,
-          description: this.extractTextFromHtml(description),
+          description: this.extractTextFromHtml(description).join("\n"),
           release_date: releaseDate ? releaseDate : "-",
           developer: developerName ? developerName : "-",
           publisher: publisherName ? publisherName : "-",

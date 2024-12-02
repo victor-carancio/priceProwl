@@ -186,18 +186,19 @@ export class SteamStore extends Store {
           about: short_description,
           type: type,
           supported_languages: supported_languages
-            ? this.extractTextFromHtml(supported_languages)
+            ? this.extractTextFromHtml(supported_languages).join(", ")
             : "-",
           website: website,
           pc_requirements: {
             minimum: pc_requirements.minimum
-              ? this.extractTextFromHtml(pc_requirements.minimum)
+              ? this.extractTextFromHtml(pc_requirements.minimum).join("\n")
               : "-",
             recommended: pc_requirements.recommended
-              ? this.extractTextFromHtml(pc_requirements.recommended)
+              ? this.extractTextFromHtml(pc_requirements.recommended).join("\n")
               : "-",
           },
-          description: this.extractTextFromHtml(detailed_description),
+          description:
+            this.extractTextFromHtml(detailed_description).join("\n"),
           release_date: release_date.date,
           developer: developers ? developers.join(" ,") : "-",
           publisher: publishers ? publishers.join(" ,") : "-",
