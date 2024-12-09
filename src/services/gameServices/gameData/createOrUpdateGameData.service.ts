@@ -1,3 +1,4 @@
+// import { RatingOnInfoGame } from "./../../../../node_modules/.prisma/client/index.d";
 import { CurrencyTypes, Game, StoreGame } from "@prisma/client";
 import prisma from "../../../db/client.db";
 import {
@@ -170,12 +171,23 @@ const gameInfoCreate = async (
       });
     }
 
-    await prisma.genreOnInfoGame.create({
-      data: {
-        genre: { connect: { id: existingGenre.id } },
-        info_game: { connect: { id: newInfoGame.id } },
+    const findGenreOnInfoGame = await prisma.genreOnInfoGame.findUnique({
+      where: {
+        genre_id_info_game_id: {
+          genre_id: existingGenre.id,
+          info_game_id: newInfoGame.id,
+        },
       },
     });
+
+    if (!findGenreOnInfoGame) {
+      await prisma.genreOnInfoGame.create({
+        data: {
+          genre: { connect: { id: existingGenre.id } },
+          info_game: { connect: { id: newInfoGame.id } },
+        },
+      });
+    }
   }
   if (infoGame.categories.length >= 1) {
     for (const category of infoGame.categories) {
@@ -193,20 +205,32 @@ const gameInfoCreate = async (
         });
       }
 
-      await prisma.categoriesOnInfoGame.create({
-        data: {
-          category: {
-            connect: {
-              id: existingCategory.id,
+      const findCategoryOnInfoGame =
+        await prisma.categoriesOnInfoGame.findUnique({
+          where: {
+            category_id_info_game_id: {
+              category_id: existingCategory.id,
+              info_game_id: newInfoGame.id,
             },
           },
-          info_game: {
-            connect: {
-              id: newInfoGame.id,
+        });
+
+      if (!findCategoryOnInfoGame) {
+        await prisma.categoriesOnInfoGame.create({
+          data: {
+            category: {
+              connect: {
+                id: existingCategory.id,
+              },
+            },
+            info_game: {
+              connect: {
+                id: newInfoGame.id,
+              },
             },
           },
-        },
-      });
+        });
+      }
     }
   }
 
@@ -253,6 +277,54 @@ const gameInfoCreate = async (
         },
       },
     });
+  }
+
+  if ("ratings" in infoGame && infoGame.ratings !== null) {
+    for (const rating of infoGame.ratings) {
+      let existingRating = await prisma.rating.findFirst({
+        where: {
+          name: rating.name,
+          descriptors: rating.descriptors,
+        },
+      });
+
+      if (!existingRating) {
+        existingRating = await prisma.rating.create({
+          data: {
+            name: rating.name,
+            descriptors: rating.descriptors,
+            rating: rating.rating,
+            imageUrl: rating.imageUrl,
+          },
+        });
+      }
+
+      const findRatingOnInfoGame = await prisma.ratingOnInfoGame.findUnique({
+        where: {
+          info_game_id_rating_id: {
+            info_game_id: newInfoGame.id,
+            rating_id: existingRating.id,
+          },
+        },
+      });
+
+      if (!findRatingOnInfoGame) {
+        await prisma.ratingOnInfoGame.create({
+          data: {
+            infoGame: {
+              connect: {
+                id: newInfoGame.id,
+              },
+            },
+            rating: {
+              connect: {
+                id: existingRating.id,
+              },
+            },
+          },
+        });
+      }
+    }
   }
 };
 

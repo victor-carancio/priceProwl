@@ -45,6 +45,78 @@ export abstract class Store {
           if (text) {
             paragraphs.push(text);
           }
+
+          if (tagName === "ul") {
+            $(el)
+              .children("li")
+              .each((_, li) => {
+                const liText = $(li).text().trim();
+                if (liText) {
+                  paragraphs.push(`- ${liText}`);
+                }
+              });
+          } else {
+            // Extraer texto del resto de etiquetas, asegurando que no se mezcle con el texto de los hijos
+            const directText = $(el)
+              .contents()
+              .filter((_, child) => child.type === "text")
+              .text()
+              .trim();
+
+            if (directText) {
+              paragraphs.push(directText);
+            }
+          }
+        }
+      });
+
+    return paragraphs;
+  }
+
+  extractTextFromTagsHtml(element: string) {
+    const $ = cheerio.load(element);
+
+    const paragraphs: string[] = [];
+
+    $("body")
+      .contents()
+      .each((_, el) => {
+        if (el.type === "text") {
+          const text = $(el).text().trim();
+          if (text) {
+            paragraphs.push(text);
+          }
+        } else if (el.type === "tag") {
+          const tagName = el.tagName?.toLowerCase();
+
+          if (
+            tagName &&
+            ["script", "style", "img", "meta", "link"].includes(tagName)
+          ) {
+            return;
+          }
+
+          if (tagName === "ul") {
+            $(el)
+              .children("li")
+              .each((_, li) => {
+                const liText = $(li).text().trim();
+                if (liText) {
+                  paragraphs.push(`${liText}`);
+                }
+              });
+          } else {
+            // Extraer texto del resto de etiquetas, asegurando que no se mezcle con el texto de los hijos
+            const directText = $(el)
+              .contents()
+              .filter((_, child) => child.type === "text")
+              .text()
+              .trim();
+
+            if (directText) {
+              paragraphs.push(directText);
+            }
+          }
         }
       });
 

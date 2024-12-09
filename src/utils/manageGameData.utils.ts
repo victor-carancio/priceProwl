@@ -53,6 +53,11 @@ export const completeInfo = {
   supportedLanguages: true,
   videos: true,
   website: true,
+  ratings: {
+    include: {
+      rating: true,
+    },
+  },
 };
 
 export const shortInfoInclude = {
@@ -171,7 +176,7 @@ export const sortByPrice = (gamesFounded: Jio[], order?: string) => {
 export const formatCompleteInfo = (gamesFounded: CompleteInfoFormat) => {
   return {
     ...gamesFounded,
-    stores: orderStoreByPrice(gamesFounded.stores).map((store) => {
+    stores: orderStoreByPriceComplete(gamesFounded.stores).map((store) => {
       return {
         ...store,
         info_game: {
@@ -183,6 +188,8 @@ export const formatCompleteInfo = (gamesFounded: CompleteInfoFormat) => {
                 )
               : store.info_game.categories,
           genres: store.info_game.genres.map((genre) => genre.genre.genre),
+
+          ratings: store.info_game.ratings.map((rating) => rating.rating),
         },
       };
     }),
@@ -214,6 +221,27 @@ export const formatCompleteInfo = (gamesFounded: CompleteInfoFormat) => {
 const orderStoreByPrice = (
   stores: StoreCompletePrismaFormat[] | StoreShortPrismaFormat[],
 ) => {
+  return stores
+    .map((store) => {
+      return { ...store, info_price: store.info_price[0] };
+    })
+    .sort((a, b) => {
+      const finalPriceA = parseInt(a.info_price.final_price);
+      const finalPriceB = parseInt(b.info_price.final_price);
+
+      if (finalPriceA > finalPriceB) {
+        return 1;
+      }
+
+      if (finalPriceA < finalPriceB) {
+        return -1;
+      }
+
+      return 0;
+    });
+};
+
+const orderStoreByPriceComplete = (stores: StoreCompletePrismaFormat[]) => {
   return stores
     .map((store) => {
       return { ...store, info_price: store.info_price[0] };

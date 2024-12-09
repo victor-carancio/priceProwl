@@ -229,6 +229,7 @@ export class EpicStore extends Store {
           categories: tags
             .filter((category) => category.groupName === "feature")
             .map((category) => category.name),
+          ratings: null,
         },
       };
 

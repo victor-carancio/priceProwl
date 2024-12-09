@@ -83,6 +83,14 @@ export interface GamePriceInfo {
     };
     website?: string;
     supported_languages?: string;
+    ratings:
+      | {
+          name: string;
+          descriptors: string;
+          rating: string;
+          imageUrl: string | null;
+        }[]
+      | null;
 
     //añadir cooming soon y ver que todas las store retornen datos iguales o similares
   };
@@ -163,6 +171,14 @@ export interface StoreInfoGame {
   };
   website?: string;
   supported_languages?: string;
+  ratings:
+    | {
+        name: string;
+        descriptors: string;
+        rating: string;
+        imageUrl: string | null;
+      }[]
+    | null;
 }
 
 export interface GameInfoAndPrices {

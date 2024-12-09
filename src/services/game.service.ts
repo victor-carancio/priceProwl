@@ -122,7 +122,9 @@ cron.schedule("0 16 * * *", async () => {
 });
 
 export const featuredGamesCheck = async () => {
+  console.log("checkea");
   const feature = await scrapeSpecialSales();
+  console.log("guarda");
   await featureCreate(feature);
 };
 

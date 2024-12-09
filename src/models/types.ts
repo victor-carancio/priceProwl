@@ -237,6 +237,8 @@ export interface SteamDetails {
       }[];
       ratings: {
         esrb?: {
+          rating: string;
+          descriptors: string;
           required_age: string;
         };
         pegi?: {

@@ -2,15 +2,11 @@ import { Router } from "express";
 import {
   getGamesPrices,
   getGamesByNameFromDB,
-  // testUpdateGamePrice,
   getGameById,
-  // getCurrentOffers,
   getGamesByFilters,
   getGamesGenresInDatabase,
-  // testUpdateGamePrice,
   getGamesCategoriesInDatabase,
   getCurrentFeaturedGames,
-  // testUpdateGamePrice,
 } from "../controllers/game.controller";
 import { validateDataQuery } from "../middlewares/validation";
 import { filtersSchema, searchByNameSchema } from "../schemas/game.schema";

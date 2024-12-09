@@ -169,6 +169,27 @@ export class SteamStore extends Store {
       } = price_overview;
 
       const urlTitle = parseUrl(name, "_");
+
+      let currRating = [];
+
+      if (ratings && ratings.esrb && ratings.esrb.descriptors) {
+        currRating.push({
+          name: "ESRB",
+          descriptors: ratings.esrb.descriptors.split("\r\n").join(", "),
+          rating: ratings.esrb.rating,
+          imageUrl: null,
+        });
+      }
+
+      if (ratings && ratings.pegi && ratings.pegi.descriptors) {
+        currRating.push({
+          name: "Pegi",
+          descriptors: ratings.pegi.descriptors.split("\r\n").join(", "),
+          rating: ratings.pegi.rating,
+          imageUrl: null,
+        });
+      }
+
       const game = {
         gameName: name,
         url: `https://store.steampowered.com/app/${item}/${urlTitle}/`,
@@ -191,10 +212,12 @@ export class SteamStore extends Store {
           website: website,
           pc_requirements: {
             minimum: pc_requirements.minimum
-              ? this.extractTextFromHtml(pc_requirements.minimum).join("\n")
+              ? this.extractTextFromTagsHtml(pc_requirements.minimum).join("\n")
               : "-",
             recommended: pc_requirements.recommended
-              ? this.extractTextFromHtml(pc_requirements.recommended).join("\n")
+              ? this.extractTextFromTagsHtml(pc_requirements.recommended).join(
+                  "\n",
+                )
               : "-",
           },
           description:
@@ -220,6 +243,7 @@ export class SteamStore extends Store {
             };
           }),
           genres: genres ? genres.map((genre) => genre.description) : [],
+          ratings: ratings ? currRating : null,
 
           //añadir cooming soon y ver que todas las store retornen datos iguales o similares
         },

@@ -282,15 +282,17 @@ export class XboxStore extends Store {
             };
           }),
           genres: categories.map((category) => category),
-          rating: findRating?.contentRating
-            ? {
-                name: findRating.contentRating.boardName,
-                descriptors: findRating.contentRating.descriptors.map(
-                  (item) => item,
-                ),
-                rating: findRating.contentRating.ratingAge,
-                imageUrl: findRating.contentRating.imageUri,
-              }
+          ratings: findRating?.contentRating
+            ? [
+                {
+                  name: findRating.contentRating.boardName,
+                  descriptors: findRating.contentRating.descriptors
+                    .map((item) => item)
+                    .join(", "),
+                  rating: findRating.contentRating.rating,
+                  imageUrl: findRating.contentRating.imageUri,
+                },
+              ]
             : null,
           categories: capabilities ? Object.values(capabilities) : [],
         },

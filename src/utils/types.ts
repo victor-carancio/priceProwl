@@ -92,6 +92,7 @@ export interface InfoGameClassComplete {
 
   genres: GenreElement[];
   categories: CategoryElement[];
+  ratings: RatingElement[];
 }
 
 export interface InfoGameClassShort {
@@ -119,6 +120,17 @@ export interface CategoryElement {
   category: {
     id: number;
     category: string;
+  };
+}
+
+export interface RatingElement {
+  rating_id: number;
+  info_game_id: number;
+  rating: {
+    id: number;
+    name: string;
+    descriptors: string;
+    rating: string;
   };
 }
 
