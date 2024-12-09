@@ -448,6 +448,46 @@ const swaggerDefinition: OAS3Definition = {
             type: "string",
             example: "https://www.residentevil.com/re4/",
           },
+          ratings: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                id: {
+                  type: "number",
+                  example: 37,
+                },
+                name: {
+                  type: "string",
+                  example: "ESRB",
+                },
+                descriptors: {
+                  type: "string",
+                  example: "Blood and Gore, Intense Violence, Strong Language",
+                },
+                rating: {
+                  type: "string",
+                  example: "m",
+                },
+                imageUrl: {
+                  oneOf: [
+                    {
+                      type: "null",
+                      example: "null",
+                    },
+                    {
+                      type: "string",
+                      example: "www.image.com/qwertyimage.jpg",
+                    },
+                  ],
+                },
+                info_game: {
+                  type: "number",
+                  example: 2,
+                },
+              },
+            },
+          },
         },
       },
       gameSearchFilters: {
