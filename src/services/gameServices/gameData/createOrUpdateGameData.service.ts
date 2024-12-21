@@ -248,23 +248,6 @@ const gameInfoCreate = async (
     });
   }
 
-  if ("videos" in infoGame && Array.isArray(infoGame.videos)) {
-    for (const video of infoGame.videos) {
-      await prisma.videos.create({
-        data: {
-          title: video.title,
-          url: video.url,
-          thumbnail: video.thumbnail,
-          info_game: {
-            connect: {
-              id: newInfoGame.id,
-            },
-          },
-        },
-      });
-    }
-  }
-
   if ("pc_requirements" in infoGame) {
     await prisma.pcRequirements.create({
       data: {

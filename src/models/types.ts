@@ -20,6 +20,42 @@ export interface EpicSearch {
     };
     lineOffers: EpicOffer[];
   };
+  releaseDate: string;
+}
+
+export interface EpicMappingProductId {
+  data: {
+    Catalog: {
+      catalogNs: {
+        mappings: {
+          productId: string;
+        }[];
+      };
+    };
+  };
+}
+
+export interface EpicMappingCover {
+  mapping: {
+    slug: string;
+  };
+  media: {
+    card16x9: {
+      imageSrc: string;
+    };
+  };
+}
+
+export interface EpicScreenshots {
+  data: {
+    Product: {
+      sandbox: {
+        configuration: {
+          configs: { keyImages: { type: string; url: string; alt: string }[] };
+        }[];
+      };
+    };
+  };
 }
 
 export interface EpicDetail {
@@ -29,6 +65,7 @@ export interface EpicDetail {
   catalogNs: {
     mappings: {
       pageSlug: string;
+      productId: string;
     }[];
   };
   keyImages: {
@@ -70,8 +107,12 @@ export interface XboxSearch {
   capabilities: {
     [key: string]: string;
   };
+  systemRequirements: {
+    minimum: string;
+    recommended: string;
+    title: string;
+  }[];
 
-  videos: { url: string; title: string; previewImage: { url: string } }[];
   specificPrices: {
     purchaseable: {
       listPrice: number;
@@ -213,14 +254,7 @@ export interface SteamDetails {
         path_thumbnail: string;
         path_full: string;
       }[];
-      movies: {
-        id: number;
-        name: string;
-        thumbnail: string;
-        webm: {
-          max: string;
-        };
-      }[];
+
       release_date: {
         coming_soon: boolean;
         date: string;

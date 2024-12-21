@@ -42,7 +42,7 @@ export const sendEmails = async (wishList: WishList) => {
   };
   return await apiInstance.sendTransacEmail(sendSmtpEmail);
 };
-
+//TODO: feature emails para futuras versiones
 // export const sendEmails = async (wishList: WishList) => {
 //   const htmlToSend = template({
 //     userName: wishList.user.userName,

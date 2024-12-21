@@ -85,7 +85,6 @@ export const findAllGamesAndFilters = async (filters: {
   const limit = parseInt(filters.limit as string) || 10;
 
   const allGames = await findGamesByFilters({ where, orderBy });
-  // return allGames;
 
   if (filters.sort === SortFilters.PRICE || (!filters.sort && !filters.order)) {
     const orderByPriceGames = [
@@ -133,6 +132,8 @@ export const EpicFreeGamesCheck = async () => {
 
   await freeEpicCreate(freeGames);
 };
+
+//TODO: notificacion a usuario se utilizara en futuras versiones
 
 // export const offerNotification = async () => {
 //   const usersAndInfoToNotified = await findAllWishList();

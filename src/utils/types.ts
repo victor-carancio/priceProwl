@@ -81,13 +81,7 @@ export interface InfoGameClassComplete {
     info_game_id: number;
   }[];
   supportedLanguages?: string;
-  videos?: {
-    id: number;
-    title: string;
-    url: string;
-    thumbnail: string;
-    info_game_id: number;
-  }[];
+
   website?: string;
 
   genres: GenreElement[];

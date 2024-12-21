@@ -134,7 +134,7 @@ model InfoGame {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   screenshots Screenshots[]
-  videos Videos[]
+  
   genres GenreOnInfoGame[]
   categories CategoriesOnInfoGame[] 
   website String? @default("-")
@@ -146,15 +146,7 @@ model InfoGame {
   store_game_id Int @unique
  
 }
-model Videos{
-  id Int @id @default(autoincrement())
-  title String
-  url String
-  thumbnail String
-  info_game InfoGame @relation(fields: [info_game_id], references: [id])
-  info_game_id Int
 
-}
 model Genres{
   id Int @id @default(autoincrement())
   genre String @unique

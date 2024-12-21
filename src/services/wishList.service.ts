@@ -1,3 +1,4 @@
+//TODO: se utilizara en futuras versiones
 // import { PrismaClient } from "@prisma/client";
 import { UserTokenData } from "../types";
 import { BadRequestError, NotFoundError } from "../responses/customApiError";

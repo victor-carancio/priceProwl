@@ -38,6 +38,7 @@ const termsDinamicXbox = [
   "for pc",
   "(for pc)",
   " - pc",
+  "para windows 10",
 ];
 
 // Crear el regex dinámico

@@ -81,7 +81,7 @@ export const findGameById = async (id: number) => {
     },
   });
 
-  if (!gameByStores) {
+  if (!gameByStores || gameByStores.length <= 0) {
     throw new NotFoundError(`There is not game with id ${id} in the database.`);
   }
 

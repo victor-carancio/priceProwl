@@ -58,5 +58,7 @@ export const calculateDiscountPercent = (
   originalPrice: number,
   discount: number,
 ) => {
-  return (100 - ((originalPrice - discount) / originalPrice) * 100).toFixed();
+  const discount_percent =
+    100 - ((originalPrice - discount) / originalPrice) * 100;
+  return discount_percent ? discount_percent.toFixed() : "0";
 };

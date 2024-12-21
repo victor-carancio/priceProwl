@@ -71,11 +71,7 @@ export interface GamePriceInfo {
       url: string;
       thumbUrl?: string;
     }[];
-    videos?: {
-      title: string;
-      thumbnail: string;
-      url: string;
-    }[];
+
     genres: string[];
     pc_requirements?: {
       minimum: string;
@@ -158,11 +154,7 @@ export interface StoreInfoGame {
     url: string;
     thumbUrl?: string;
   }[];
-  videos?: {
-    title: string;
-    url: string;
-    thumbnail: string;
-  }[];
+
   genres: string[];
   categories: string[];
   pc_requirements?: {
@@ -241,7 +233,6 @@ export interface InfoGame {
   storyline: string;
   summary: string;
   version_title?: string;
-  videos: { id: number; name: string; video_id: string }[];
 }
 
 interface Image {
@@ -290,4 +281,11 @@ export interface WishList {
     offer_end_date: Date | null;
     discount_percent: string;
   }[];
+}
+
+export interface PriceOverview {
+  currency: string;
+  discount_percent: string;
+  final: string;
+  initial: string;
 }

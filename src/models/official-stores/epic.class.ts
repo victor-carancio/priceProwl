@@ -1,11 +1,13 @@
 import { calculateDiscountPercent, formatToDecimals } from "./../utils.model";
 import { parseUrl, replaceSteam } from "../../utils/game.utils";
 import { Store } from "../store.class";
-import { SingleGame, StoreInfo } from "../../types";
-// import { CustomApiError } from "../../responses/customApiError";
+import { PriceOverview, SingleGame, StoreInfo } from "../../types";
+
 import {
   EpicDetail,
+  EpicMappingCover,
   EpicOffer,
+  EpicScreenshots,
   EpicSearch,
   FreeGamesEpic,
   PromotionsEpicGames,
@@ -18,7 +20,7 @@ export class EpicStore extends Store {
 
   private searchUrl = (term: string, currency: string) => {
     const queryTerm = parseUrl(term, "+");
-    //https://store.epicgames.com/graphql?operationName=searchStoreQuery&variables=%7B%22allowCountries%22:%22CL%22,%22category%22:%22games%2Fedition%2Fbase%7Cbundles%2Fgames%7Cgames%2Fedition%7Ceditors%7Caddons%7Cgames%2Fdemo%7Csoftware%2Fedition%2Fbase%7Cgames%2Fexperience%22,%22count%22:40,%22country%22:%22CL%22,%22keywords%22:%22god+of+war%22,%22locale%22:%22es-ES%22,%22sortBy%22:%22relevancy,viewableDate%22,%22sortDir%22:%22DESC,DESC%22,%22tag%22:%22%22,%22withPrice%22:true%7D&extensions=%7B%22persistedQuery%22:%7B%22version%22:1,%22sha256Hash%22:%227d58e12d9dd8cb14c84a3ff18d360bf9f0caa96bf218f2c5fda68ba88d68a437%22%7D%7D&=9baf7208017a41c0853fed514d62909f
+
     return `https://store.epicgames.com/graphql?operationName=searchStoreQuery&variables=%7B%22allowCountries%22:%22CL%22,%22category%22:%22games%2Fedition%2Fbase%22,%22count%22:40,%22country%22:%22${currency}%22,%22keywords%22:%22${queryTerm}%22,%22locale%22:%22en-EN%22,%22sortBy%22:%22relevancy,viewableDate%22,%22sortDir%22:%22DESC,DESC%22,%22start%22:0,%22tag%22:%22%22,%22withPrice%22:true%7D&extensions=%7B%22persistedQuery%22:%7B%22version%22:1,%22sha256Hash%22:%227d58e12d9dd8cb14c84a3ff18d360bf9f0caa96bf218f2c5fda68ba88d68a437%22%7D%7D`;
   };
 
@@ -34,16 +36,13 @@ export class EpicStore extends Store {
     currency: string,
   ): Promise<StoreInfo> {
     const res = await fetch(this.searchUrl(term, currency));
-    // if (!res.ok) {
-    //   throw new CustomApiError("Something went wrong.");
-    // }
+
     const data = await res.json();
 
     if (data.data.Catalog.searchStore.elements.length <= 0) {
       return { store: this.name, type: this.type, storeInfo: [] };
     }
     const currData: EpicSearch[] = [...data.data.Catalog.searchStore.elements];
-    // return currData;
 
     const searchTermGames = currData.filter(
       (game) =>
@@ -61,16 +60,6 @@ export class EpicStore extends Store {
       return { ...el, gameName: replaceSteam(el.gameName) };
     });
 
-    // .filter((game) =>
-    //   game.gameName.toLowerCase().includes(term.trim().toLowerCase()),
-    // )
-    // .filter(
-    //   (game) =>
-    //     game.initial_price &&
-    //     game.final_price &&
-    //     game.initial_price !== "0" &&
-    //     game.final_price !== "0",
-    // );
     return { store: this.name, type: this.type, storeInfo: games };
   }
 
@@ -79,12 +68,8 @@ export class EpicStore extends Store {
     currency: string,
   ): Promise<SingleGame> {
     const res = await fetch(this.searchUrl(term, currency));
-    // if (!res.ok) {
-    //   return { store: this.name, type: this.type, storeInfo: null };
-    // }
-    // console.log(res);
+
     const data = await res.json();
-    // console.log(data);
 
     if (data.data.Catalog.searchStore.elements.length <= 0) {
       return { store: this.name, type: this.type, storeInfo: null };
@@ -127,12 +112,30 @@ export class EpicStore extends Store {
     } = currData.price.totalPrice;
     const { lineOffers } = currData.price;
 
+    const discount_percent = calculateDiscountPercent(originalPrice, discount);
+
+    const initial_price = formatToDecimals(
+      originalPrice,
+      currencyInfo.decimals,
+    );
+
+    const final_price = formatToDecimals(discountPrice, currencyInfo.decimals);
+
+    const gamePriceData = {
+      discount_percent,
+      initial_price,
+      final_price,
+      releaseDate: currData.releaseDate,
+      currencyCode,
+    };
+
+    const price_overview = this.GamePriceCheck(gamePriceData);
     return {
       offerEndDate: this.offerEndDate(lineOffers[0]),
-      currency: currencyCode,
-      discount_percent: calculateDiscountPercent(originalPrice, discount),
-      initial_price: formatToDecimals(originalPrice, currencyInfo.decimals),
-      final_price: formatToDecimals(discountPrice, currencyInfo.decimals),
+      currency: price_overview.currency,
+      discount_percent: price_overview.discount_percent,
+      initial_price: price_overview.initial,
+      final_price: price_overview.final,
     };
   }
 
@@ -160,31 +163,6 @@ export class EpicStore extends Store {
         title,
       } = currData;
 
-      // console.log(currData.price.totalPrice);
-      // let totalPrice: {
-      //   currencyCode: string;
-      //   discount: string | number;
-      //   currencyInfo: {
-      //     decimals: number | string;
-      //   };
-      //   discountPrice: string | number;
-      //   originalPrice: string | number;
-      // } = {
-      //   currencyCode: "",
-      //   discount: "",
-      //   currencyInfo: {
-      //     decimals: "",
-      //   },
-      //   discountPrice: "",
-      //   originalPrice: "",
-      // };
-
-      // const isFree = tags.find((tag) => tag.name === "Gratuito");
-
-      // if (!isFree) {
-      //   totalPrice = { ...currData.price.totalPrice };
-      // }
-
       const {
         currencyCode,
         discount,
@@ -193,26 +171,113 @@ export class EpicStore extends Store {
         originalPrice,
       } = currData.price.totalPrice;
 
-      // console.log(title);
-      // console.log(id);
-      // console.log(namespace);
-      if (!catalogNs.mappings) {
+      const productId = catalogNs.mappings.find(
+        (element) => "productId" in element,
+      );
+
+      let extraInfo: {
+        imgStore: string | null;
+        screenshots: string[] | null;
+        slug: string | null;
+      } = {
+        imgStore: null,
+        screenshots: null,
+        slug: null,
+      };
+
+      if (productId && "productId" in productId) {
+        const getGameCover = await fetch(
+          `https://egs-platform-service.store.epicgames.com/api/v1/egs/products/${productId.productId}?country=CL&locale=es-ES&store=EGS`,
+        );
+        const gameCoverData: EpicMappingCover = await getGameCover.json();
+
+        const getScreenshots = await fetch(
+          `https://store.epicgames.com/graphql?operationName=getProductHomeConfig&variables=%7B%22locale%22:%22es-ES%22,%22sandboxId%22:%22${namespace}%22%7D&extensions=%7B%22persistedQuery%22:%7B%22version%22:1,%22sha256Hash%22:%225a922bd3e5c84b60a4f443a019ef640b05cb0ae379beb4aca4515bf9812dfcb4%22%7D%7D`,
+        );
+
+        const getScreenshotsData: EpicScreenshots = await getScreenshots.json();
+
+        const findScreenshots =
+          getScreenshotsData.data.Product.sandbox.configuration.find(
+            (element) => "configs" in element,
+          );
+
+        if (findScreenshots) {
+          extraInfo.screenshots = [
+            ...findScreenshots.configs.keyImages
+              .filter((element) => element.type === "featuredMedia")
+              .map((element) => element.url),
+          ];
+        }
+
+        extraInfo.slug =
+          "mapping" in gameCoverData && "slug" in gameCoverData.mapping
+            ? gameCoverData.mapping.slug
+            : null;
+        extraInfo.imgStore =
+          "media" in gameCoverData && "card16x9" in gameCoverData.media
+            ? gameCoverData.media.card16x9.imageSrc
+            : null;
+      }
+
+      if (!catalogNs.mappings && !extraInfo.slug) {
         continue;
       }
-      const urlTitle = catalogNs.mappings[0].pageSlug;
+      const urlTitle = extraInfo.slug
+        ? extraInfo.slug
+        : catalogNs.mappings[0].pageSlug;
+
+      const screenshots = extraInfo.screenshots
+        ? extraInfo.screenshots.map((image) => {
+            return { url: image };
+          })
+        : keyImages.map((image) => {
+            return { url: image.url };
+          });
+
+      const imgStore =
+        extraInfo.imgStore ||
+        (extraInfo.screenshots ? extraInfo.screenshots[0] : null) ||
+        screenshots[0].url;
+
+      const discount_percent = calculateDiscountPercent(
+        originalPrice,
+        discount,
+      );
+
+      const initial_price = formatToDecimals(
+        originalPrice,
+        currencyInfo.decimals,
+      );
+
+      const final_price = formatToDecimals(
+        discountPrice,
+        currencyInfo.decimals,
+      );
+
+      const gamePriceData = {
+        discount_percent,
+        initial_price,
+        final_price,
+        releaseDate,
+        currencyCode,
+      };
+
+      const price_overview = this.GamePriceCheck(gamePriceData);
 
       const gameDetail = {
         gameName: title,
         url: `https://store.epicgames.com/es-ES/p/${urlTitle}`,
 
         infoPrice: {
-          initial_price: formatToDecimals(originalPrice, currencyInfo.decimals),
-          final_price: formatToDecimals(discountPrice, currencyInfo.decimals),
-          discount_percent: calculateDiscountPercent(originalPrice, discount),
-          currency: currencyCode,
+          initial_price: price_overview.initial,
+          final_price: price_overview.final,
+          discount_percent: price_overview.discount_percent,
+          currency: price_overview.currency,
         },
         infoGame: {
-          imgStore: keyImages[0].url,
+          imgStore: imgStore,
+
           storeId: `${storeId},${namespace}`,
           storeName: this.name,
           about: description ? description : "",
@@ -220,9 +285,7 @@ export class EpicStore extends Store {
           release_date: releaseDate,
           developer: developerDisplayName ? developerDisplayName : "",
           publisher: publisherDisplayName ? publisherDisplayName : "",
-          screenshots: keyImages.map((image) => {
-            return { url: image.url };
-          }),
+          screenshots: screenshots,
           genres: tags
             .filter((tag) => tag.groupName === "genre")
             .map((tag) => tag.name),
@@ -238,6 +301,7 @@ export class EpicStore extends Store {
     return games;
   }
 
+  //TODO: Feature para siguientes versiones
   // async scrapeFeaturedSales(currency: string) {
   //   // const topNewReleasesRes = await fetch(
   //   //   `https://store-site-backend-static-ipv4.ak.epicgames.com/storefrontLayout?locale=es-ES&country=${currency}&start=0&count=12`,
@@ -349,5 +413,56 @@ export class EpicStore extends Store {
     );
 
     return now >= start && now <= end;
+  }
+
+  private isCoomingSoon(release_date: string) {
+    const now = new Date();
+    const releaseDate = new Date(release_date);
+
+    return releaseDate >= now;
+  }
+
+  private GamePriceCheck(currPrice: {
+    releaseDate: string;
+    currencyCode: string;
+    discount_percent: string;
+    final_price: string;
+    initial_price: string;
+  }) {
+    const {
+      releaseDate,
+      currencyCode,
+      discount_percent,
+      final_price,
+      initial_price,
+    } = currPrice;
+
+    let price_overview: PriceOverview = {
+      currency: currencyCode,
+      discount_percent: discount_percent ?? "0",
+      final: final_price,
+      initial: initial_price,
+    };
+
+    if (!this.isCoomingSoon(releaseDate) && final_price === "0") {
+      price_overview.final = "Free";
+      price_overview = {
+        currency: currencyCode,
+        discount_percent: discount_percent ?? "0",
+        final: "Gratis",
+        initial: initial_price,
+      };
+    }
+
+    if (this.isCoomingSoon(releaseDate) && final_price === "0") {
+      price_overview = {
+        currency: currencyCode,
+        discount_percent: discount_percent ?? "0",
+        final: "Próximamente",
+        initial: "Próximamente",
+      };
+    }
+
+    return price_overview;
   }
 }

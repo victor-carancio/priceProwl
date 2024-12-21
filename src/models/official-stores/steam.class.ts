@@ -2,21 +2,15 @@ import { parseUrl, replaceSteam } from "../../utils/game.utils";
 import { Store } from "../store.class";
 import { SingleGame, StoreInfo } from "../../types";
 import {
-  // NewreleasesSteamFeatured,
   NewreleasesSteamFeatured,
   SpecialsSteamFeatured,
   SteamAppsSearch,
   SteamDetails,
-  // SteamFeaturedCategories,
-  // SteamFeaturedItems,
   SteamFeaturedTypeId,
   SteamSearch,
   TopsellerSteamFeatured,
 } from "../types";
 import { formatToDecimals } from "../utils.model";
-
-//https://github.com/Revadike/InternalSteamWebAPI/wiki/Get-App-Details
-//https://github.com/Revadike/InternalSteamWebAPI/wiki/Search-Apps
 
 export class SteamStore extends Store {
   constructor() {
@@ -49,7 +43,7 @@ export class SteamStore extends Store {
 
     return { store: this.name, type: this.type, storeInfo: games };
   }
-  // https://store.steampowered.com/api/appdetails?appids=${onlyIds}&filters=price_overview&cc=${currency}
+
   async scrapeGameFromUrl(storeId: string) {
     const res = await fetch(
       `https://store.steampowered.com/api/appdetails?appids=${storeId}&filters=price_overview&cc=CL`,
@@ -116,7 +110,7 @@ export class SteamStore extends Store {
         developers,
         genres,
         header_image,
-        movies,
+
         name,
         is_free,
         publishers,
@@ -134,14 +128,14 @@ export class SteamStore extends Store {
 
       let price_overview: {
         currency: string;
-        discount_percent: string | number;
-        final: string | number;
-        initial: string | number;
+        discount_percent: string;
+        final: string;
+        initial: string;
       } = {
         currency: "CLP",
-        discount_percent: 0,
-        final: 0,
-        initial: 0,
+        discount_percent: "0",
+        final: "0",
+        initial: "0",
       };
 
       if (
@@ -158,7 +152,36 @@ export class SteamStore extends Store {
         !release_date.coming_soon &&
         "price_overview" in data[item.toFixed(0)].data
       ) {
-        price_overview = { ...data[item.toFixed(0)].data.price_overview };
+        const { initial, final, currency, discount_percent } =
+          data[item.toFixed(0)].data.price_overview;
+        price_overview = {
+          initial: this.formatPrice(initial, currency),
+          final: this.formatPrice(final, currency),
+          currency: currency,
+          discount_percent: this.formatDiscount(discount_percent),
+        };
+      }
+
+      if (is_free && !("price_overview" in data[item.toFixed(0)].data)) {
+        price_overview = {
+          initial: "Gratis",
+          final: "Gratis",
+          currency: "CLP",
+          discount_percent: "0",
+        };
+      }
+
+      if (
+        !is_free &&
+        release_date.coming_soon &&
+        !("price_overview" in data[item.toFixed(0)].data)
+      ) {
+        price_overview = {
+          initial: "Próximamente",
+          final: "Próximamente",
+          currency: "CLP",
+          discount_percent: "0",
+        };
       }
 
       const {
@@ -190,14 +213,22 @@ export class SteamStore extends Store {
         });
       }
 
+      const languages = supported_languages
+        ? this.extractTextFromHtml(supported_languages)
+            .flatMap((language) => language.split(","))
+            .map((item) => item.trim())
+            .filter((item) => item && item !== "*")
+            .join(", ")
+        : "-";
+
       const game = {
         gameName: name,
         url: `https://store.steampowered.com/app/${item}/${urlTitle}/`,
 
         infoPrice: {
-          initial_price: this.formatPrice(initial, currencyStore),
-          final_price: this.formatPrice(final, currencyStore),
-          discount_percent: this.formatDiscount(discount_percent),
+          initial_price: initial,
+          final_price: final,
+          discount_percent: discount_percent,
           currency: currencyStore,
         },
         infoGame: {
@@ -206,9 +237,7 @@ export class SteamStore extends Store {
           storeName: this.name,
           about: short_description,
           type: type,
-          supported_languages: supported_languages
-            ? this.extractTextFromHtml(supported_languages).join(", ")
-            : "-",
+          supported_languages: languages,
           website: website,
           pc_requirements: {
             minimum: pc_requirements.minimum
@@ -229,25 +258,20 @@ export class SteamStore extends Store {
           categories: categories
             ? categories.map((category) => category.description)
             : [],
-          screenshots: screenshots.map((screenshot) => {
-            return {
-              url: screenshot.path_full,
-              thumbUrl: screenshot.path_thumbnail,
-            };
-          }),
-          videos: movies?.map((movie) => {
-            return {
-              title: movie.name,
-              url: movie.webm.max,
-              thumbnail: movie.thumbnail,
-            };
-          }),
+          screenshots: screenshots
+            ? screenshots.map((screenshot) => {
+                return {
+                  url: screenshot.path_full,
+                  thumbUrl: screenshot.path_thumbnail,
+                };
+              })
+            : [],
+
           genres: genres ? genres.map((genre) => genre.description) : [],
           ratings: ratings ? currRating : null,
-
-          //añadir cooming soon y ver que todas las store retornen datos iguales o similares
         },
       };
+
       gamesFounded.push(game);
     }
 
@@ -297,7 +321,6 @@ export class SteamStore extends Store {
     return { store: this.name, type: this.type, storeInfo: gameFormat };
   }
   async scrapeFeaturedSales(currency: string) {
-    //todo: usar como cron job, para evitar problemas de limitee de api request
     const specialRes = await fetch(
       `https://store.steampowered.com/api/getappsincategory/?category=cat_specials&cc=${currency}&l=english`,
     );

@@ -1,3 +1,5 @@
+//TODO: se utilizara en futuras versiones
+
 import * as bcrypt from "bcryptjs";
 // import { PrismaClient } from "@prisma/client";
 import {

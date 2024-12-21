@@ -51,7 +51,7 @@ export const completeInfo = {
   screenshots: true,
   storeIdGame: true,
   supportedLanguages: true,
-  videos: true,
+
   website: true,
   ratings: {
     include: {

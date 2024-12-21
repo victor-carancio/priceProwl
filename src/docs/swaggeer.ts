@@ -415,35 +415,7 @@ const swaggerDefinition: OAS3Definition = {
             example:
               "Inglés*, Francés*, Italiano*, Alemán*, Español de España*, Árabe, Japonés*",
           },
-          videos: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                id: {
-                  type: "integer",
-                  example: "1",
-                },
-                title: {
-                  type: "string",
-                  example: "Launch Trailer",
-                },
-                url: {
-                  type: "string",
-                  example:
-                    "https://store-images.s-microsoft.com/image/apps.38246.71571739681700792.c61fa2d7-3d69-4edf-8e51-accc41d47823.9197ae9d-181d-44ff-a98d-7f64086f509e",
-                },
-                thumbnail: {
-                  type: "string",
-                  example: "-",
-                },
-                info_game_id: {
-                  type: "number",
-                  example: 2,
-                },
-              },
-            },
-          },
+
           website: {
             type: "string",
             example: "https://www.residentevil.com/re4/",

@@ -25,17 +25,17 @@ export class XboxStore extends Store {
 
   private xboxSearchImage(images: XboxSearchImage) {
     return (
-      images.boxArt?.url ?? images.poster?.url ?? images.superHeroArt?.url ?? ""
+      images.superHeroArt?.url ??
+      images.boxArt?.url ??
+      images.poster?.url ??
+      null
     );
   }
 
   private allXboxImages(images: XboxSearchImage) {
-    let allImages = [
-      images.boxArt?.url,
-      images.poster?.url,
-      images.superHeroArt?.url,
-      ...images.screenshots?.map((image) => image.url),
-    ].filter(Boolean) as string[];
+    let allImages = [...images.screenshots?.map((image) => image.url)].filter(
+      Boolean,
+    ) as string[];
 
     return allImages.map((image) => {
       return { url: image };
@@ -170,8 +170,8 @@ export class XboxStore extends Store {
       offerEndDate: this.offerEndDate(discountPercentage, endDate),
       currency: currencyCode,
       discount_percent: discountPercentage.toFixed(),
-      initial_price: msrp.toFixed(),
-      final_price: listPrice.toFixed(),
+      initial_price: msrp === 0 ? "Gratis" : msrp.toFixed(),
+      final_price: listPrice === 0 ? "Gratis" : listPrice.toFixed(),
     };
   }
 
@@ -213,7 +213,7 @@ export class XboxStore extends Store {
         developerName,
         publisherName,
         shortDescription,
-        videos,
+
         description,
         images,
         productId,
@@ -221,7 +221,7 @@ export class XboxStore extends Store {
         specificPrices,
         title,
         capabilities,
-
+        systemRequirements,
         productKind,
       } = currGame;
 
@@ -252,20 +252,39 @@ export class XboxStore extends Store {
 
       const urlTitle = parseUrl(title.toLowerCase(), "-");
 
+      const imgStore = this.xboxSearchImage(images);
+      const screenshotsGame = this.allXboxImages(images);
+
+      let pc_requirements = {
+        minimum: ["Mínimo:\n"],
+        recommended: ["Recomendado:\n"],
+      };
+
+      if (systemRequirements.length > 0) {
+        for (const requirement of systemRequirements) {
+          pc_requirements.minimum.push(
+            `${requirement.title}: ${requirement.minimum}\n`,
+          );
+          pc_requirements.recommended.push(
+            `${requirement.title}: ${requirement.recommended}\n`,
+          );
+        }
+      }
+
       const game = {
         gameName: title,
         url: `https://www.xbox.com/es-CL/games/store/${urlTitle}/${productId}`,
         gamepass: "optimalSatisfyingPassId" in currGame ? true : false,
         offerEndDate: this.offerEndDate(discountPercentage, endDate),
         infoPrice: {
-          initial_price: msrp.toFixed(),
-          final_price: listPrice.toFixed(),
+          initial_price: msrp === 0 ? "Gratis" : msrp.toFixed(),
+          final_price: listPrice === 0 ? "Gratis" : listPrice.toFixed(),
           discount_percent: discountPercentage.toFixed(),
           currency: currencyCode,
         },
         infoGame: {
           storeId: productId,
-          imgStore: this.xboxSearchImage(images),
+          imgStore: imgStore ? imgStore : screenshotsGame[0].url,
           storeName: this.name,
           about: shortDescription,
           type: productKind,
@@ -274,13 +293,7 @@ export class XboxStore extends Store {
           developer: developerName ? developerName : "-",
           publisher: publisherName ? publisherName : "-",
           screenshots: this.allXboxImages(images),
-          videos: videos.map((video) => {
-            return {
-              url: video.url,
-              title: video.title,
-              thumbnail: video.previewImage.url,
-            };
-          }),
+
           genres: categories.map((category) => category),
           ratings: findRating?.contentRating
             ? [
@@ -295,8 +308,19 @@ export class XboxStore extends Store {
               ]
             : null,
           categories: capabilities ? Object.values(capabilities) : [],
+          pc_requirements:
+            systemRequirements.length > 0
+              ? {
+                  minimum: pc_requirements.minimum.join("\n"),
+                  recommended: pc_requirements.recommended.join("\n"),
+                }
+              : {
+                  minimum: "-",
+                  recommended: "-",
+                },
         },
       };
+
       games.push(game);
     }
     return games;
