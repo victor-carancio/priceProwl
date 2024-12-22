@@ -161,6 +161,9 @@ export const sortByPrice = (gamesFounded: Jio[], order?: string) => {
     const finalPriceA = parseInt(a.stores[0].info_price.final_price);
     const finalPriceB = parseInt(b.stores[0].info_price.final_price);
 
+    if (isNaN(finalPriceA)) return -1;
+    if (isNaN(finalPriceB)) return 1;
+
     if (finalPriceA > finalPriceB) {
       return 1 * desc;
     }
