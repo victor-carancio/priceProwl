@@ -227,6 +227,8 @@ export class EpicStore extends Store {
         ? extraInfo.slug
         : catalogNs.mappings[0].pageSlug;
 
+      // console.log(extraInfo.screenshots);
+
       const screenshots = extraInfo.screenshots
         ? extraInfo.screenshots.map((image) => {
             return { url: image };
@@ -295,7 +297,7 @@ export class EpicStore extends Store {
           ratings: null,
         },
       };
-
+      // console.log(gameDetail.infoGame.screenshots);
       games.push(gameDetail);
     }
     return games;

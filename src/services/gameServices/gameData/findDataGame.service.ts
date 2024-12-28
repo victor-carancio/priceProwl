@@ -490,11 +490,15 @@ export const getFeaturedGamesByStore = async () => {
     const filterStore = featureGames.map((game) => {
       return {
         ...game,
-        stores: game.stores.filter((store) =>
-          store.featuredIn.some(
-            (feature) => feature.feature_category.name === category.name,
-          ),
-        ),
+        stores: game.stores
+          .filter((store) =>
+            store.featuredIn.some(
+              (feature) => feature.feature_category.name === category.name,
+            ),
+          )
+          .map((store) => {
+            return { ...store, info_price: store.info_price[0] };
+          }),
       };
     });
 

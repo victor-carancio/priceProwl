@@ -62,6 +62,7 @@ export const findGamesByNameFromDb = async (
   if (filters.sort === SortFilters.PRICE || (!filters.sort && !filters.order)) {
     return sortByPrice(games as ShortFinalFormat[], filters.order);
   }
+
   return games;
 };
 
