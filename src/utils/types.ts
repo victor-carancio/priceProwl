@@ -176,7 +176,7 @@ export interface ShortFinalFormat {
   // infoGame: InfoGameFinalClassShort[];
 }
 
-export type Jio = Pick<ShortFinalFormat, "stores">;
+export type PriceShortFormat = Pick<ShortFinalFormat, "stores">;
 
 export interface StoreIds {
   id: number;

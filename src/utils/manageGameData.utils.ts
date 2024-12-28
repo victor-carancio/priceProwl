@@ -2,7 +2,7 @@
 // import { StorePrice } from "@prisma/client";
 import {
   CompleteInfoFormat,
-  Jio,
+  PriceShortFormat,
   // ShortFinalFormat,
   // ShortFinalFormat,
   ShortInfoFormat,
@@ -153,7 +153,10 @@ export const formatShortInfo = (gamesFounded: ShortInfoFormat[]) => {
   });
 };
 
-export const sortByPrice = (gamesFounded: Jio[], order?: string) => {
+export const sortByPrice = (
+  gamesFounded: PriceShortFormat[],
+  order?: string,
+) => {
   const sort = order ? order : "asc";
 
   const desc = sort === "asc" ? 1 : -1;
