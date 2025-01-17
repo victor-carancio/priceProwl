@@ -98,7 +98,7 @@ export const getCurrentFeaturedGames = async (_req: Request, res: Response) => {
 /* ------------------------------ test de funciones --------------------------*/
 
 // export const testUpdateGamePrice = async (_req: Request, res: Response) => {
-//   await featuredGamesCheck();
+//   // await featuredGamesCheck();
 //   await EpicFreeGamesCheck();
 //   const jio = await getFeaturedGamesByStore();
 

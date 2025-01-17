@@ -1,3 +1,4 @@
+// import { findGameByName } from "./../../services/gameServices/gameData/findDataGame.service";
 import { calculateDiscountPercent, formatToDecimals } from "./../utils.model";
 import { parseUrl, replaceSteam } from "../../utils/game.utils";
 import { Store } from "../store.class";
@@ -389,9 +390,47 @@ export class EpicStore extends Store {
           element.price.totalPrice.discountPrice === 0,
       );
 
-    const freeGames = await this.findDetail(filterFreeGames);
+    let gameToSearch: { namespace: string; id: string }[] = [];
 
-    return freeGames.map((game) => {
+    for (const gameSearch of filterFreeGames) {
+      const res = await fetch(this.searchUrl(gameSearch.title, currency));
+
+      const data = await res.json();
+
+      if (data.data.Catalog.searchStore.elements.length <= 0) {
+        continue;
+      }
+      const currData: EpicSearch[] = [
+        ...data.data.Catalog.searchStore.elements,
+      ];
+
+      const searchTermGames = currData.filter(
+        (game) =>
+          game.title
+            .toLowerCase()
+            .includes(gameSearch.title.trim().toLowerCase()) ||
+          gameSearch.title
+            .trim()
+            .toLowerCase()
+            .includes(game.title.toLowerCase()),
+      );
+      for (const element of searchTermGames) {
+        gameToSearch.push({ namespace: element.namespace, id: element.id });
+      }
+      // const idsAndNamespaces = searchTermGames.map((game) => {
+      //   return { namespace: game.namespace, id: game.id };
+      // });
+
+      // gameToSearch.push(idsAndNamespaces)
+    }
+
+    const gamesDetail = await this.findDetail(gameToSearch);
+
+    // const games = gamesDetail.map((el) => {
+    //   return { ...el, gameName: replaceSteam(el.gameName) };
+    // });
+
+    return gamesDetail.map((game) => {
       return {
         ...game,
         type: this.type,
@@ -399,6 +438,17 @@ export class EpicStore extends Store {
         feature: "Epic Free Game",
       };
     });
+
+    // const freeGames = await this.findDetail(filterFreeGames);
+
+    // return freeGames.map((game) => {
+    //   return {
+    //     ...game,
+    //     type: this.type,
+    //     store: this.name,
+    //     feature: "Epic Free Game",
+    //   };
+    // });
   }
 
   private isEffectiveDate(promotions: PromotionsEpicGames): boolean {

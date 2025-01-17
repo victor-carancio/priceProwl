@@ -108,7 +108,7 @@ export const findAllGamesAndFilters = async (filters: {
   };
 };
 
-cron.schedule("0 4 * * *", async () => {
+cron.schedule("0 20 * * *", async () => {
   await featuredGamesCheck();
   await EpicFreeGamesCheck();
 

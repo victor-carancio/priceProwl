@@ -321,6 +321,7 @@ export interface FreeGamesEpic {
     Catalog: {
       searchStore: {
         elements: {
+          title: string;
           id: string;
           namespace: string;
           price: {

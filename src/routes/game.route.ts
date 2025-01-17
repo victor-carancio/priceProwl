@@ -7,6 +7,7 @@ import {
   getGamesGenresInDatabase,
   getGamesCategoriesInDatabase,
   getCurrentFeaturedGames,
+  // testUpdateGamePrice,
 } from "../controllers/game.controller";
 import { validateDataQuery } from "../middlewares/validation";
 import { filtersSchema, searchByNameSchema } from "../schemas/game.schema";
